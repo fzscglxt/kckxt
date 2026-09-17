@@ -119,7 +119,7 @@
   .legend-dot.filled{background:var(--orange)}
 
   /* ===== Right Panel ===== */
-  .right-panel{width:440px;display:flex;flex-direction:column;gap:12px;flex-shrink:0}
+  .right-panel{display:none}
   .right-card{background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:12px 14px;position:relative}
   .right-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:40%;background:linear-gradient(180deg,var(--cyan),transparent)}
   .right-card-title{font-size:13px;color:var(--cyan-light);letter-spacing:2px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
@@ -362,7 +362,9 @@
       <span>用户:</span>
       <span class="user-name" id="currentUserName">-</span>
       <button class="logout-btn" id="btnLogout" type="button">退出</button>
-    </div>
+      <button class="logout-btn" id="btnLogout" type="button">退出</button>
+      <button onclick="manualSave()" style="background:#1a73e8;color:#fff;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;font-size:13px;margin-left:8px">💾 保存</button>
+      <button onclick="localBackup.choose()" style="background:#6b7280;color:#fff;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:13px;margin-left:6px">📁 备份</button>
   </div>
 
   <!-- Mode Banner (shown in standalone mode) -->
@@ -2385,6 +2387,3 @@ document.addEventListener('DOMContentLoaded', async () => {
 </script>
 </body>
 </html>
-    <button onclick="manualSave()" style="background:#1a73e8;color:#fff;border:none;padding:5px 16px;border-radius:4px;cursor:pointer;font-size:13px">💾 保存</button>
-    <button onclick="localBackup.choose()" style="background:#6b7280;color:#fff;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;font-size:13px">📁 备份文件夹</button>
-  </div>
