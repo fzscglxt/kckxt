@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>交付计划平衡表</title>
+<style>
+:root{--bg:#060e1f;--bg-card:#0d1f3c;--border:#1a3a5c;--cyan:#00d4ff;--cyan-light:#22d3ee;--cyan-dim:#0891b2;--orange:#f59e0b;--green:#22c55e;--red:#ef4444;--purple:#a855f7;--text:#fff;--text-muted:#8aa4be;--text-dim:#5a7a9a}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--text);font-family:'Microsoft YaHei','PingFang SC',sans-serif}
+body{background:radial-gradient(ellipse at 50% 0%,rgba(0,140,255,.08) 0%,transparent 50%),var(--bg)}
+.page{display:flex;flex-direction:column;min-height:100vh;padding:10px 16px 16px;gap:10px;max-width:1680px;margin:0 auto}
+.header{display:flex;align-items:center;justify-content:center;padding:4px 16px 10px;position:relative;flex-shrink:0}
+.header-deco{flex:1;height:1px;max-width:200px;background:linear-gradient(90deg,var(--cyan),transparent)}
+.header-deco.r{background:linear-gradient(270deg,var(--cyan),transparent)}
+.header-title{font-size:26px;font-weight:bold;letter-spacing:6px;text-shadow:0 0 16px rgba(0,212,255,.5);padding:0 30px}
+.header-info{position:absolute;right:20px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text-muted);text-align:right;line-height:1.6}
+.header-info b{color:var(--cyan-light)}
+.header::after{content:'';position:absolute;bottom:0;left:15%;right:15%;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
+.tabs{display:flex;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;overflow:hidden;flex-shrink:0}
+.tab-btn{padding:10px 28px;font-size:13px;color:var(--text-muted);cursor:pointer;border:none;background:transparent;font-family:inherit;letter-spacing:2px;transition:all .2s;position:relative;border-bottom:2px solid transparent}
+.tab-btn:hover{color:var(--cyan-light);background:rgba(0,212,255,.05)}
+.tab-btn.active{color:var(--cyan-light);background:rgba(0,212,255,.08);border-bottom-color:var(--cyan)}
+.tab-btn.active::before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;background:var(--cyan)}
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:10px 16px;position:relative;flex-shrink:0}
+.toolbar::before{content:'';position:absolute;top:0;left:0;width:3px;height:60%;background:linear-gradient(180deg,var(--cyan),transparent)}
+.toolbar-info{font-size:12px;color:var(--text-muted);margin-right:auto}
+.toolbar-info b{color:var(--cyan-light)}
+.btn{padding:7px 16px;border-radius:3px;font-size:12px;cursor:pointer;letter-spacing:1px;transition:all .2s;font-family:inherit;border:1px solid;white-space:nowrap}
+.btn:active{transform:translateY(1px)}
+.btn-import{background:linear-gradient(135deg,rgba(34,197,94,.2),rgba(22,163,74,.1));border-color:rgba(34,197,94,.5);color:#4ade80}
+.btn-import:hover{background:linear-gradient(135deg,rgba(34,197,94,.4),rgba(22,163,74,.25));color:#86efac}
+.btn-export{background:linear-gradient(135deg,rgba(0,212,255,.2),rgba(0,140,200,.1));border-color:rgba(0,212,255,.5);color:var(--cyan-light)}
+.btn-export:hover{background:linear-gradient(135deg,rgba(0,212,255,.4),rgba(0,140,200,.25));color:#7dd3fc}
+.btn-purple{background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(126,34,206,.1));border-color:rgba(168,85,247,.5);color:#c084fc}
+.btn-purple:hover{background:linear-gradient(135deg,rgba(168,85,247,.4),rgba(126,34,206,.25));color:#d8b4fe}
+.btn-clear{background:linear-gradient(135deg,rgba(239,68,68,.2),rgba(220,38,38,.1));border-color:rgba(239,68,68,.5);color:#fca5a5}
+.btn-clear:hover{background:linear-gradient(135deg,rgba(239,68,68,.4),rgba(220,38,38,.25));color:#fecaca}
+.btn-toggle{background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(5,150,105,.1));border-color:rgba(16,185,129,.5);color:#6ee7b7}
+.btn-toggle:hover{background:linear-gradient(135deg,rgba(16,185,129,.4),rgba(5,150,105,.25));color:#a7f3d0}
+.btn-add{background:linear-gradient(135deg,rgba(0,212,255,.15),rgba(0,140,200,.08));border-color:rgba(0,212,255,.4);color:var(--cyan-light);padding:5px 12px;font-size:11px}
+.btn-add:hover{background:linear-gradient(135deg,rgba(0,212,255,.3),rgba(0,140,200,.15))}
+.lt-ctrl{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted)}
+.lt-input{width:46px;padding:4px 6px;background:rgba(14,165,233,.08);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:12px;font-family:inherit;outline:none;text-align:center}
+.lt-input:focus{border-color:var(--cyan)}
+.search-box{padding:5px 10px;background:rgba(14,165,233,.06);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:12px;outline:none;width:180px}
+.search-box:focus{border-color:var(--cyan)}
+.search-box::placeholder{color:var(--text-dim)}
+.stats-bar{display:flex;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;overflow:hidden;flex-shrink:0}
+.stat-card{flex:1;padding:10px 14px;display:flex;flex-direction:column;gap:3px;border-right:1px solid var(--border);position:relative}
+.stat-card:last-child{border-right:none}
+.stat-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,var(--cyan),transparent)}
+.stat-card.green::before{background:linear-gradient(90deg,var(--green),transparent)}
+.stat-card.orange::before{background:linear-gradient(90deg,var(--orange),transparent)}
+.stat-card.purple::before{background:linear-gradient(90deg,var(--purple),transparent)}
+.stat-card.red::before{background:linear-gradient(90deg,var(--red),transparent)}
+.stat-label{font-size:11px;color:var(--text-muted);letter-spacing:1px}
+.stat-value{font-size:22px;font-weight:bold;color:var(--cyan-light);font-family:'Consolas',monospace}
+.stat-card.green .stat-value{color:#4ade80}.stat-card.orange .stat-value{color:#fbbf24}
+.stat-card.purple .stat-value{color:#c084fc}.stat-card.red .stat-value{color:#fca5a5}
+.stat-unit{font-size:10px;color:var(--text-dim)}
+.tab-content{flex:1;display:flex;flex-direction:column;gap:8px;min-height:0}
+.tab-content.hidden{display:none}
+.section{background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:12px 12px 10px;position:relative;display:flex;flex-direction:column;gap:6px;min-height:0;overflow:hidden}
+.section::before{content:'';position:absolute;top:0;left:0;width:3px;height:40%;background:linear-gradient(180deg,var(--cyan),transparent)}
+.section-title{position:absolute;top:-12px;left:20px;background:var(--bg);padding:3px 16px;font-size:13px;color:var(--cyan-light);letter-spacing:3px;z-index:2}
+.section-title small{color:var(--text-dim);font-size:10px;letter-spacing:0;margin-left:8px}
+.section.flex-auto{flex:1}.section.fixed-h{flex:0 0 auto;max-height:280px}
+.table-wrap{flex:1;overflow:auto;border:1px solid var(--border);border-radius:4px;min-height:0}
+.table-wrap::-webkit-scrollbar{width:8px;height:8px}
+.table-wrap::-webkit-scrollbar-thumb{background:var(--cyan-dim);border-radius:4px}
+.table-wrap::-webkit-scrollbar-track{background:rgba(10,22,40,.4)}
+table{width:100%;border-collapse:collapse;font-size:11px}
+thead{position:sticky;top:0;z-index:10}
+th{color:var(--cyan);font-weight:600;text-align:center;padding:8px 5px;background:rgba(14,165,233,.12);border-bottom:2px solid var(--cyan-dim);letter-spacing:1px;white-space:nowrap}
+td{padding:5px 5px;border-bottom:1px solid rgba(26,58,92,.4);color:var(--text-muted);text-align:center;white-space:nowrap}
+tbody tr:hover td{background:rgba(0,212,255,.05);color:var(--text)}
+tbody tr.row-shortage td{background:rgba(239,68,68,.06)}
+tbody tr.row-excess td{background:rgba(245,158,11,.06)}
+tbody tr.row-ok td{background:rgba(34,197,94,.03)}
+.row-num{color:var(--text-dim);font-size:10px;width:36px}
+.lvl-badge{display:inline-block;padding:1px 6px;border-radius:2px;font-size:10px;font-family:'Consolas',monospace}
+.lvl-0{background:rgba(0,212,255,.15);color:var(--cyan-light);border:1px solid rgba(0,212,255,.3)}
+.lvl-1{background:rgba(168,85,247,.15);color:#c084fc;border:1px solid rgba(168,85,247,.3)}
+.lvl-2{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
+.lvl-3{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3)}
+.cell-input{width:100%;min-width:50px;padding:3px 5px;background:rgba(14,165,233,.06);border:1px solid transparent;border-radius:2px;color:var(--text);font-size:11px;font-family:inherit;outline:none;text-align:center;transition:all .15s}
+.cell-input:hover{border-color:var(--border)}
+.cell-input:focus{border-color:var(--cyan);background:rgba(0,212,255,.1)}
+.cell-input.num{text-align:right;font-family:'Consolas',monospace}
+.cell-readonly{font-family:'Consolas',monospace;color:var(--cyan-light);font-weight:500}
+.cell-prod{color:#4ade80;font-weight:600}
+.cell-purchase{color:#c084fc;font-weight:600}
+.cell-name{text-align:left;padding-left:8px;max-width:260px;overflow:hidden;text-overflow:ellipsis}
+.cell-name.lvl1{padding-left:20px}.cell-name.lvl2{padding-left:32px}.cell-name.lvl3{padding-left:44px}
+.proc-badge{display:inline-block;padding:2px 8px;border-radius:2px;font-size:10px}
+.proc-inj{background:rgba(168,85,247,.15);color:#c084fc;border:1px solid rgba(168,85,247,.3)}
+.proc-asm{background:rgba(0,212,255,.15);color:var(--cyan-light);border:1px solid rgba(0,212,255,.3)}
+.proc-pur{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
+.status-badge{display:inline-block;padding:2px 8px;border-radius:2px;font-size:10px}
+.status-ok{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.4)}
+.status-shortage{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.4)}
+.status-excess{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.4)}
+.status-warn{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.4)}
+.action-btn{padding:2px 7px;font-size:10px;border-radius:2px;cursor:pointer;border:1px solid rgba(239,68,68,.4);background:rgba(239,68,68,.1);color:#fca5a5}
+.action-btn:hover{background:rgba(239,68,68,.25)}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-dim);font-size:13px}
+.modal-overlay{position:fixed;inset:0;background:rgba(6,14,31,.88);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.active{opacity:1;pointer-events:all}
+.modal{background:var(--bg-card);border:1px solid var(--cyan);border-radius:6px;padding:20px 24px;width:680px;max-width:90vw}
+.modal-title{font-size:15px;color:var(--cyan-light);font-weight:500;letter-spacing:2px;margin-bottom:12px}
+.modal-text{width:100%;height:280px;padding:10px;background:rgba(10,22,40,.6);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:12px;font-family:'Consolas',monospace;outline:none;resize:vertical;line-height:1.5}
+.modal-text:focus{border-color:var(--cyan)}
+.import-log-panel{margin-top:12px;border:1px solid var(--border);border-radius:4px;overflow:hidden;background:rgba(6,14,31,.8)}
+.import-log-panel.hidden{display:none}
+.log-panel-header{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(0,212,255,.08);border-bottom:1px solid var(--border);font-size:12px;font-weight:600;color:var(--cyan)}
+.log-summary{font-weight:400;font-size:11px;color:var(--text-muted)}
+.log-panel-body{max-height:240px;overflow-y:auto;font-size:11px;font-family:'Consolas',monospace}
+.log-row{display:grid;grid-template-columns:28px 1fr auto;gap:6px;padding:4px 12px;border-bottom:1px solid rgba(255,255,255,.04);align-items:center}
+.log-row:last-child{border-bottom:none}
+.log-icon{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;flex-shrink:0}
+.log-icon.ok{background:rgba(34,211,238,.2);color:#22d3ee}
+.log-icon.new{background:rgba(167,139,250,.2);color:#a78bfa}
+.log-icon.skip{background:rgba(251,191,36,.2);color:#fbbf24}
+.log-icon.err{background:rgba(252,165,165,.2);color:#fca5a5}
+.log-detail{color:var(--text-muted);line-height:1.4;word-break:break-all}
+.log-detail .log-name{color:var(--text);font-weight:500}
+.log-detail .log-delta{color:var(--cyan-light)}
+.log-detail .log-warn{color:#fbbf24}
+.log-status{font-size:10px;padding:2px 6px;border-radius:2px;white-space:nowrap}
+.log-status.updated{background:rgba(34,211,238,.12);color:#22d3ee}
+.log-status.created{background:rgba(167,139,250,.12);color:#a78bfa}
+.log-status.skipped{background:rgba(251,191,36,.12);color:#fbbf24}
+.log-status.error{background:rgba(252,165,165,.12);color:#fca5a5}
+.modal-hint{font-size:11px;color:var(--text-dim);margin:8px 0 12px;line-height:1.5}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);background:var(--bg-card);border:1px solid var(--cyan);border-radius:4px;padding:10px 24px;font-size:13px;z-index:2000;transition:transform .3s}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.error{border-color:var(--red)}.toast.success{border-color:var(--green)}
+.legend{display:flex;gap:14px;font-size:10px;color:var(--text-muted);flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:4px}
+.tip-text{font-size:11px;color:var(--text-dim);line-height:1.6}
+.tip-text b{color:var(--cyan-light)}
+.hidden{display:none!important}
+.expand-btn{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:3px;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:var(--cyan-light);cursor:pointer;font-size:10px;transition:all .15s}
+.expand-btn:hover{background:rgba(0,212,255,.25)}
+.expand-btn.open{background:rgba(0,212,255,.3);transform:rotate(90deg)}
+.expand-row{background:rgba(0,212,255,.03);border-top:1px dashed rgba(0,212,255,.15)}
+.expand-row td{padding:0;border-bottom:1px solid rgba(26,58,92,.4)}
+.expand-inner{padding:8px 12px 8px 52px;font-size:11px}
+.expand-inner table{width:100%;border-collapse:collapse}
+.expand-inner th{font-size:10px;padding:4px 6px;background:rgba(14,165,233,.08);color:var(--text-muted);font-weight:normal;border-bottom:1px solid var(--border)}
+.expand-inner td{padding:3px 6px;color:var(--text-muted);border-bottom:1px solid rgba(26,58,92,.3)}
+.expand-inner td.cell-qty{color:var(--cyan-light);font-family:'Consolas',monospace;font-weight:500;text-align:right}
+.expand-inner td.cell-parent{text-align:left;color:var(--text);max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.expand-inner td.cell-date{text-align:center;color:var(--text-dim)}
+.sub-tabs{display:flex;gap:2px;padding:0 2px;border-bottom:1px solid var(--border);margin-bottom:6px}
+.sub-tab{padding:7px 16px;font-size:12px;color:var(--text-muted);cursor:pointer;background:rgba(14,165,233,.04);border:1px solid transparent;border-bottom:none;border-radius:4px 4px 0 0;transition:all .15s;letter-spacing:1px;white-space:nowrap}
+.sub-tab:hover{color:var(--cyan-light);background:rgba(0,212,255,.06)}
+.sub-tab.active{color:var(--cyan-light);background:rgba(0,212,255,.1);border-color:var(--border);border-bottom-color:var(--bg-card);margin-bottom:-1px}
+.sub-tab-count{margin-left:6px;padding:1px 6px;border-radius:10px;font-size:10px;font-family:'Consolas',monospace;background:rgba(0,212,255,.15);color:var(--cyan-light)}
+.in-link{background:none;border:none;cursor:pointer;color:var(--cyan-light);font-family:inherit;font-size:11px;text-decoration:underline}
+.in-link:hover{color:#7dd3fc}
+.warn-badge{display:inline-block;padding:1px 6px;border-radius:2px;font-size:10px}
+.warn-critical{background:rgba(239,68,68,.2);color:#fca5a5;border:1px solid rgba(239,68,68,.4)}
+.warn-mild{background:rgba(245,158,11,.2);color:#fbbf24;border:1px solid rgba(245,158,11,.4)}
+.warn-info{background:rgba(168,85,247,.2);color:#c084fc;border:1px solid rgba(168,85,247,.4)}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div class="header-deco"></div>
+    <div class="header-title">交付计划平衡表</div>
+    <div class="header-deco r"></div>
+    <div class="header-info">系统日期：<b id="todayDate">--</b><br>工序周期：装配<b id="cycAsmDisp">7</b>/注塑<b id="cycInjDisp">5</b>/采购<b id="cycPurDisp">10</b> 天</div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('bom')">BOM 配置</button>
+    <button class="tab-btn" onclick="switchTab('balance')">交付平衡表</button>
+  </div>
+  <div class="toolbar">
+    <div class="toolbar-info" id="toolbarInfo">BOM 行数：<b id="infoBomCount">0</b> | 父件：<b id="infoParentCount">0</b> | 子件：<b id="infoChildCount">0</b></div>
+    <div class="lt-ctrl">装配周期：<input type="number" class="lt-input" id="cycAsm" value="7" min="0" max="60" onchange="updateProcCycles()"> 天</div>
+    <div class="lt-ctrl">注塑周期：<input type="number" class="lt-input" id="cycInj" value="5" min="0" max="60" onchange="updateProcCycles()"> 天</div>
+    <div class="lt-ctrl">采购周期：<input type="number" class="lt-input" id="cycPur" value="10" min="0" max="60" onchange="updateProcCycles()"> 天</div>
+    <button class="btn btn-purple" id="btnPaste" onclick="openPasteModal()">粘贴导入BOM</button>
+    <button class="btn btn-import" onclick="document.getElementById('bomFileInput').click()">导入BOM文件</button>
+    <button class="btn btn-toggle" onclick="openCapPasteModal()">导入班产</button>
+    <button class="btn btn-toggle" onclick="openStockPasteModal()">导入库存</button>
+    <button class="btn btn-export" onclick="exportBalanceCSV()">导出CSV</button>
+    <button class="btn btn-export" onclick="exportBalanceExcel()">导出Excel</button>
+    <button class="btn btn-toggle" onclick="toggleAllDetail(this)">展开全部明细</button>
+    <button class="btn btn-clear" onclick="clearAll()">清空全部</button>
+    <input type="file" id="bomFileInput" accept=".csv,.txt,.tsv" class="hidden">
+  </div>
+  <div class="stats-bar">
+    <div class="stat-card"><div class="stat-label">展开物料数</div><div class="stat-value" id="statItems">0</div><div class="stat-unit">种</div></div>
+    <div class="stat-card orange"><div class="stat-label">毛需求总量</div><div class="stat-value" id="statDemand">0</div><div class="stat-unit">--</div></div>
+    <div class="stat-card green"><div class="stat-label">建议生产量</div><div class="stat-value" id="statProduce">0</div><div class="stat-unit">--</div></div>
+    <div class="stat-card purple"><div class="stat-label">建议采购量</div><div class="stat-value" id="statPurchase">0</div><div class="stat-unit">--</div></div>
+    <div class="stat-card red"><div class="stat-label">短缺项</div><div class="stat-value" id="statShortage">0</div><div class="stat-unit">项</div></div>
+    <div class="stat-card orange"><div class="stat-label">超额项</div><div class="stat-value" id="statExcess">0</div><div class="stat-unit">项</div></div>
+  </div>
+  <div id="tabBom" class="tab-content">
+    <div class="section">
+      <div class="section-title">BOM 明细 <small>父件 -> 子件 物料清单</small></div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
+        <input type="text" class="search-box" id="bomSearch" placeholder="搜索父件/子件..." oninput="renderBOM()">
+        <div class="legend">
+          <div class="legend-item"><span class="proc-badge proc-asm">装配</span>装配成品仓</div>
+          <div class="legend-item"><span class="proc-badge proc-inj">注塑</span>自制/半成品仓</div>
+          <div class="legend-item"><span class="proc-badge proc-pur">采购</span>外购/原材料仓</div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr>
+          <th class="row-num">#</th><th>父件仓库</th><th>父件商品</th><th>成品率%</th>
+          <th>子件仓库</th><th>子件商品</th><th>版本号</th><th>单位</th><th>单位用量</th><th>固定损耗</th><th>子件工序</th><th>删除</th>
+        </tr></thead><tbody id="bomBody"></tbody></table>
+        <div id="bomEmpty" class="empty-state hidden"><div>暂无 BOM 数据，请点击「粘贴导入BOM」或「导入BOM文件」</div></div>
+      </div>
+    </div>
+  </div>
+  <div id="tabBalance" class="tab-content hidden">
+    <div class="section fixed-h">
+      <div class="section-title">父件需求输入 <small>确认订单 + 预测（按时间周期排列），系统自动按MRP流程展开计算</small></div>
+      <div style="margin-bottom:4px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-add" onclick="addDemand()">+ 添加父件需求</button>
+        <button class="btn btn-purple" onclick="openDemandPasteModal()">粘贴导入需求</button>
+        <button class="btn btn-import" onclick="document.getElementById('demandFileInput').click()">导入需求文件</button>
+        <button class="btn btn-export" onclick="exportDemandCSV()">导出需求</button>
+        <input type="file" id="demandFileInput" accept=".csv,.txt,.tsv" class="hidden">
+      </div>
+      <div class="table-wrap" style="max-height:180px">
+        <table><thead><tr>
+          <th class="row-num">#</th><th>父件商品</th><th>仓库</th><th>工序</th><th>需求数量</th><th>需求日期</th><th>删除</th>
+        </tr></thead><tbody id="demandBody"></tbody></table>
+      </div>
+    </div>
+    <div class="section flex-auto">
+      <div class="section-title">MRP 运行结果 <small>客户需求 → 成品平衡 → BOM展开(每层平衡) → 下一层 → 输出汇总</small></div>
+      <div class="sub-tabs">
+        <div class="sub-tab active" data-sub="overview" onclick="switchSubTab('overview')">📊 总览 <span class="sub-tab-count" id="cntOverview">0</span></div>
+        <div class="sub-tab" data-sub="production" onclick="switchSubTab('production')">🏭 生产计划 <span class="sub-tab-count" id="cntProduce">0</span></div>
+        <div class="sub-tab" data-sub="purchase" onclick="switchSubTab('purchase')">🛒 采购计划 <span class="sub-tab-count" id="cntPurchase">0</span></div>
+        <div class="sub-tab" data-sub="inventory" onclick="switchSubTab('inventory')">📦 库存预测 <span class="sub-tab-count" id="cntInv">0</span></div>
+        <div class="sub-tab" data-sub="warning" onclick="switchSubTab('warning')">⚠ 异常预警 <span class="sub-tab-count" id="cntWarn">0</span></div>
+        <div class="sub-tab" data-sub="kanban" onclick="switchSubTab('kanban')">🎨 排产看板</div>
+      </div>
+      <!-- Tab: 总览 -->
+      <div id="subOverview" class="sub-content" style="flex:1;display:flex;flex-direction:column;min-height:0">
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th class="row-num">#</th><th></th><th>层级</th><th>物料名称</th><th>仓库</th><th>工序</th><th>单位</th>
+            <th>期初库存</th><th>安全库存</th><th>计划接收</th><th>毛需求</th><th>建议生产量</th><th>建议采购量</th>
+            <th>预计期末</th><th>客户交付</th><th>本层需求</th><th>下达日期</th><th>班产</th><th>排产天数</th><th>状态</th>
+          </tr></thead><tbody id="overviewBody"></tbody></table>
+          <div id="overviewEmpty" class="empty-state hidden"><div>暂无平衡数据，请先导入BOM并添加父件需求</div></div>
+        </div>
+        <div class="tip-text" style="margin-top:6px">
+          <b>MRP流程：</b>1. 读取客户需求（逐期）→ 2. 扣减库存+计划接收 → 3. 成品级平衡（净需求→生产计划）→ 4. 按BOM展开下一层子件毛需求 → 5. 子件级平衡（自制→生产 / 外购→采购）→ 6. 是否还有下级BOM？（循环）→ 7. 输出汇总。
+          <br><b>公式：</b>毛需求 = 父项计划量 × 单位用量 / 成品率 + 固定损耗；净需求 = 毛需求 + 安全库存 - 期初库存 - 计划接收；<b>排产天数 = 有班产时 ceil(净需求/班产)，无班产时用工序周期</b>；<b>下达日期 = 需求日期 - 排产天数</b>；<b>子件需求日期 = 父件下达日期</b>。
+        </div>
+      </div>
+      <!-- Tab: 生产计划 -->
+      <div id="subProduction" class="sub-content hidden" style="flex:1;display:flex;flex-direction:column;min-height:0">
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th class="row-num">#</th><th>客户交付</th><th>下达日期</th><th>需求日期</th><th>物料名称</th><th>仓库</th><th>工序</th><th>单位</th><th>计划数量</th><th>班产</th><th>所需班次</th><th>排产天数</th><th>净需求</th><th>期初库存</th><th>安全库存</th><th>计划接收</th><th>提前期</th>
+          </tr></thead><tbody id="productionBody"></tbody></table>
+          <div id="productionEmpty" class="empty-state hidden"><div>暂无生产计划</div></div>
+        </div>
+      </div>
+      <!-- Tab: 采购计划 -->
+      <div id="subPurchase" class="sub-content hidden" style="flex:1;display:flex;flex-direction:column;min-height:0">
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th class="row-num">#</th><th>客户交付</th><th>下达日期</th><th>到货日期</th><th>物料名称</th><th>仓库</th><th>单位</th><th>采购数量</th><th>净需求</th><th>期初库存</th><th>安全库存</th><th>计划接收</th><th>工序周期</th><th>提前期</th>
+          </tr></thead><tbody id="purchaseBody"></tbody></table>
+          <div id="purchaseEmpty" class="empty-state hidden"><div>暂无采购计划</div></div>
+        </div>
+      </div>
+      <!-- Tab: 库存预测 -->
+      <div id="subInventory" class="sub-content hidden" style="flex:1;display:flex;flex-direction:column;min-height:0">
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th class="row-num">#</th><th>物料名称</th><th>仓库</th><th>单位</th><th>期初库存</th><th>安全库存</th><th>在途/在制</th><th>毛需求总量</th><th>预计期末</th><th>最低库存</th><th>是否短缺</th><th>操作</th>
+          </tr></thead><tbody id="inventoryBody"></tbody></table>
+          <div id="inventoryEmpty" class="empty-state hidden"><div>暂无预测数据</div></div>
+        </div>
+      </div>
+      <!-- Tab: 异常预警 -->
+      <div id="subWarning" class="sub-content hidden" style="flex:1;display:flex;flex-direction:column;min-height:0">
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th class="row-num">#</th><th>级别</th><th>类型</th><th>物料名称</th><th>预警内容</th><th>影响</th><th>建议</th>
+          </tr></thead><tbody id="warningBody"></tbody></table>
+          <div id="warningEmpty" class="empty-state hidden"><div>✅ 无异常预警</div></div>
+        </div>
+      </div>
+      <!-- Tab: 排产看板 -->
+      <div id="subKanban" class="sub-content hidden" style="flex:1;display:flex;flex-direction:column;min-height:0">
+        <div style="display:flex;gap:10px;margin-bottom:8px;align-items:center">
+          <button class="btn btn-export" onclick="renderKanban()">🔄 刷新看板</button>
+          <button class="btn btn-export" onclick="loadKanbanDemo()">🎲 加载演示数据</button>
+          <button class="btn btn-export" onclick="exportKanbanExcel()">📊 导出Excel</button>
+          <button class="btn btn-export" onclick="exportKanbanReport()">📄 导出报告</button>
+          <span id="kanbanDateRange" style="font-size:11px;color:var(--text-dim);margin-left:auto"></span>
+        </div>
+        <div id="kanbanContainer" style="flex:1;overflow:auto;background:rgba(6,14,31,.9);border:1px solid var(--border);border-radius:4px;padding:12px">
+          <div id="kanbanCanvasWrap" style="display:flex;justify-content:center;align-items:center;min-height:300px;color:var(--text-dim);font-size:13px">
+            请先添加父件需求并运行MRP计算，排产看板将在此处展示装配/注塑/采购计划的甘特图可视化
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="pasteModal">
+  <div class="modal">
+    <div class="modal-title">粘贴导入 BOM 数据</div>
+    <div class="modal-hint">将BOM数据粘贴到下方（支持Tab或逗号分隔）。表头应包含：父件预入仓库、父件商品、成品率、子件预出仓库、子件商品、子件版本号、计量单位、需用数量、固定损耗数量（可选）</div>
+    <textarea class="modal-text" id="pasteText" placeholder="在此粘贴BOM数据..."></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-clear" onclick="closePasteModal()">取消</button>
+      <button class="btn btn-import" onclick="doPasteImport()">导入</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="demandModal">
+  <div class="modal">
+    <div class="modal-title">粘贴导入父件需求</div>
+    <div class="modal-hint">将需求数据粘贴到下方（支持Tab或逗号分隔）。表头应包含：<b>父件商品</b>（或商品名称）、<b>需求数量</b>（或数量/需求量）、<b>需求日期</b>（可选，YYYY-MM-DD格式，默认今天）<br>示例：父件商品[TAB]需求数量[TAB]需求日期</div>
+    <textarea class="modal-text" id="demandPasteText" placeholder="父件商品	需求数量	需求日期&#10;C673装饰件总成-慕夜黑	100	2026-09-01&#10;V206侧底座_894组件-新	200	2026-09-15"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-clear" onclick="closeDemandPasteModal()">取消</button>
+      <button class="btn btn-import" onclick="doDemandPasteImport()">导入</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="capModal">
+  <div class="modal">
+    <div class="modal-title">粘贴导入班产数据</div>
+    <div class="modal-hint">将班产数据粘贴到下方（支持Tab或逗号分隔）。表头应包含：<b>物料名称</b>（或商品/子件商品）、<b>班产</b>（或班产量/每班产量/产能）<br>仅对装配/注塑工序物料生效，采购件无需班产。导入后按需求量÷班产计算排产天数，替代固定工序周期。<br>示例：物料名称[TAB]班产<br>V206侧底座_894组件-新	50</div>
+    <textarea class="modal-text" id="capPasteText" placeholder="物料名称	班产&#10;V206侧底座_894组件-新	50&#10;V206 侧转向手柄底座_894-新	100"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-clear" onclick="closeCapPasteModal()">取消</button>
+      <button class="btn btn-import" onclick="doCapPasteImport()">导入</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="stockPasteModal">
+  <div class="modal" style="width:680px">
+    <div class="modal-title">粘贴导入库存数据</div>
+    <div class="modal-hint">将库存数据粘贴到下方（支持Tab或逗号分隔）。表头应包含：<b>物料名称</b>（或商品/子件商品）、<b>期初库存</b>（或库存/现有库存/当前库存）、<b>安全库存</b>（或安全库存量/最低库存）、<b>班产</b>（可选，或班产量/产能）<br>导入后覆盖对应物料的库存数据，计划接收量保持不变。<br>示例：物料名称[TAB]期初库存[TAB]安全库存[TAB]班产<br>V206侧底座_894组件-新	100	20	40</div>
+    <textarea class="modal-text" id="stockPasteText" placeholder="物料名称	期初库存	安全库存	班产&#10;V206侧底座_894组件-新	100	20	40&#10;V206 减震垫	50	30	"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-clear" onclick="closeStockPasteModal()">取消</button>
+      <button class="btn btn-import" onclick="doStockPasteImport()">导入</button>
+    </div>
+    <div id="stockLogPanel" class="import-log-panel hidden">
+      <div class="log-panel-header">
+        <span>导入日志</span>
+        <span id="stockLogSummary" class="log-summary"></span>
+      </div>
+      <div id="stockLogBody" class="log-panel-body"></div>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="stockModal">
+  <div class="modal" style="width:560px">
+    <div class="modal-title">编辑库存 & 计划接收量：<span id="stockModalName" style="color:var(--text)"></span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
+      <div><label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">期初库存（当前现有）</label>
+        <input type="number" id="smStock" class="cell-input num" style="width:100%" placeholder="0" min="0"></div>
+      <div><label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">安全库存（最低持有量）</label>
+        <input type="number" id="smSafety" class="cell-input num" style="width:100%" placeholder="0" min="0"></div>
+      <div><label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">班产（每班产量，装配/注塑）</label>
+        <input type="number" id="smShiftCap" class="cell-input num" style="width:100%" placeholder="0" min="0"></div>
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">计划接收量（在制/在途，按到达日期逐行填写）：</div>
+    <div id="smReceiptList" style="border:1px solid var(--border);border-radius:4px;max-height:200px;overflow:auto"></div>
+    <button class="btn btn-add" style="margin-top:8px" onclick="addReceiptRow()">+ 添加计划接收行</button>
+    <div class="modal-actions">
+      <button class="btn btn-clear" onclick="closeStockModal()">取消</button>
+      <button class="btn btn-import" onclick="saveStockModal()">保存</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+'use strict';
+const SK='delivery_balance_v2';
+let leadTime=7,bom=[],parentDemand=[],itemStock={},activeTab='bom';
+// 工序周期（天）：按工序类型分别配置，用于计算各层级下达日期
+let procCycles={装配:7,注塑:5,采购:10};
+// 获取物料对应工序的周期天数（按工序标签：装配/注塑/采购）
+function getProcCycle(proc){if(!proc||!proc.label)return 0;return parseNum(procCycles[proc.label])||0}
+function toast(m,t){const e=document.getElementById('toast');e.textContent=m;e.className='toast show'+(t?' '+t:'');setTimeout(()=>{e.className='toast'},2500)}
+function todayStr(){const d=new Date(),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())}
+function parseNum(v){if(v===null||v===undefined||v==='')return 0;const n=parseFloat(String(v).replace(/[^\d.\-]/g,''));return isNaN(n)?0:n}
+function fmtQty(n){if(n===null||n===undefined||isNaN(n))return'0';n=Number(n);if(n===0)return'0';const a=Math.abs(n);if(a<1&&a>0)return n.toFixed(4).replace(/\.?0+$/,'');if(a<100)return n.toFixed(2).replace(/\.?0+$/,'');return Math.round(n).toLocaleString('zh-CN')}
+function daysBetween(ds,base){if(!ds)return 9999;const d=new Date(ds);if(isNaN(d.getTime()))return 9999;return Math.ceil((d-base)/86400000)}
+function getProcess(wh){if(!wh)return{mode:'',label:'-',cls:'proc-pur'};if(wh.includes('装配'))return{mode:'生产',label:'装配',cls:'proc-asm'};if(wh.includes('自制')||wh==='半成品仓')return{mode:'生产',label:'注塑',cls:'proc-inj'};if(wh.includes('外购')||wh.includes('原材料'))return{mode:'采购',label:'采购',cls:'proc-pur'};return{mode:'',label:'-',cls:'proc-pur'}}
+function switchTab(t){activeTab=t;document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',(t==='bom'?0:1)===i));document.getElementById('tabBom').classList.toggle('hidden',t!=='bom');document.getElementById('tabBalance').classList.toggle('hidden',t!=='balance');document.getElementById('btnPaste').style.display=t==='bom'?'':'none';if(t==='balance')renderBalance()}
+// BOM parse
+function detectDelim(l){if(l.includes('\t'))return'\t';if(l.includes(','))return',';if(l.includes(';'))return';';return'\t'}
+function splitLine(l,d){const r=[];let c='',q=false;for(let i=0;i<l.length;i++){const ch=l[i];if(ch==='"'){if(q&&l[i+1]==='"'){c+='"';i++}else q=!q}else if(ch===d&&!q){r.push(c);c=''}else c+=ch}r.push(c);return r.map(s=>s.trim())}
+function parseDelimited(text){text=text.replace(/^\uFEFF/,'');const lines=text.split(/\r\n|\n|\r/).filter(l=>l.trim()!=='');if(lines.length<2)return{headers:[],data:[]};const d=detectDelim(lines[0]);const headers=splitLine(lines[0],d);const data=[];for(let i=1;i<lines.length;i++){const cells=splitLine(lines[i],d);const o={};headers.forEach((h,idx)=>{o[h]=(cells[idx]||'').trim()});data.push(o)}return{headers,data}}
+function mapBOM(p){const alias={parentWh:['父件预入仓库','父件仓库','预入仓库'],parent:['父件商品','父件','父件名称','父件物料'],yieldRate:['成品率%','成品率','良率','成品率(%)'],childWh:['子件预出仓库','子件仓库','预出仓库'],child:['子件商品','子件','子件名称','子件物料'],childVer:['子件版本号','版本号','版本','子件版本'],unit:['计量单位','单位','uom'],qtyPerUnit:['需用数量','单位用量','用量','数量','定额'],fixedLoss:['固定损耗数量','固定损耗','损耗数量','损耗']};const fm={};p.headers.forEach(h=>{const low=h.toLowerCase();for(const[f,al]of Object.entries(alias)){if(al.some(a=>a.toLowerCase()===low)){fm[f]=h;break}}});return p.data.map(d=>({parentWh:fm.parentWh?d[fm.parentWh]:'',parent:fm.parent?d[fm.parent]:'',yieldRate:parseNum((fm.yieldRate?d[fm.yieldRate]:'100').replace('%',''))||100,childWh:fm.childWh?d[fm.childWh]:'',child:fm.child?d[fm.child]:'',childVer:fm.childVer?d[fm.childVer]:'',unit:fm.unit?d[fm.unit]:'',qtyPerUnit:parseNum(fm.qtyPerUnit?d[fm.qtyPerUnit]:1)||1,fixedLoss:parseNum(fm.fixedLoss?d[fm.fixedLoss]:0)||0})).filter(r=>r.parent&&r.child)}
+function importBOMText(text){try{const p=parseDelimited(text);if(p.data.length===0){toast('未解析到数据','error');return}const m=mapBOM(p);if(m.length===0){toast('未识别到有效BOM行','error');return}if(bom.length>0&&!confirm('当前已有'+bom.length+'行BOM，是否覆盖？\n确定=覆盖，取消=追加')){bom=bom.concat(m)}else{bom=m}saveData();renderBOM();updateInfo();toast('成功导入 '+m.length+' 行BOM','success')}catch(e){toast('导入失败：'+e.message,'error')}}
+document.getElementById('bomFileInput').addEventListener('change',function(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>importBOMText(ev.target.result);r.readAsText(f,'UTF-8');this.value=''});
+function openPasteModal(){document.getElementById('pasteModal').classList.add('active')}
+function closePasteModal(){document.getElementById('pasteModal').classList.remove('active')}
+function doPasteImport(){const t=document.getElementById('pasteText').value;if(!t.trim()){toast('请粘贴数据','error');return}importBOMText(t);document.getElementById('pasteText').value='';closePasteModal()}
+// BOM render
+function renderBOM(){const body=document.getElementById('bomBody');const empty=document.getElementById('bomEmpty');const q=document.getElementById('bomSearch').value.trim().toLowerCase();const f=q?bom.filter(r=>(r.parent||'').toLowerCase().includes(q)||(r.child||'').toLowerCase().includes(q)):bom;if(f.length===0){body.innerHTML='';empty.classList.remove('hidden');return}empty.classList.add('hidden');body.innerHTML=f.map((r,i)=>{const idx=bom.indexOf(r);const pr=getProcess(r.childWh);const fl=(r.fixedLoss&&r.fixedLoss>0)?'<span style="color:#fbbf24;font-weight:500">'+fmtQty(r.fixedLoss)+'</span>':'<span style="color:var(--text-dim)">-</span>';return'<tr><td class="row-num">'+(i+1)+'</td><td>'+r.parentWh+'</td><td style="text-align:left;padding-left:8px">'+r.parent+'</td><td class="cell-readonly">'+r.yieldRate+'%</td><td>'+r.childWh+'</td><td style="text-align:left;padding-left:8px">'+r.child+'</td><td>'+(r.childVer||'')+'</td><td>'+r.unit+'</td><td class="cell-readonly">'+fmtQty(r.qtyPerUnit)+'</td><td>'+fl+'</td><td><span class="proc-badge '+pr.cls+'">'+pr.label+'</span></td><td><button class="action-btn" onclick="delBOM('+idx+')">删除</button></td></tr>'}).join('')}
+function delBOM(i){bom.splice(i,1);saveData();renderBOM();updateInfo()}
+function updateInfo(){const p=new Set(bom.map(r=>r.parent)),c=new Set(bom.map(r=>r.child));document.getElementById('infoBomCount').textContent=bom.length;document.getElementById('infoParentCount').textContent=p.size;document.getElementById('infoChildCount').textContent=c.size}
+// Demand
+function getParentList(){const ap=new Set(bom.map(r=>r.parent)),ac=new Set(bom.map(r=>r.child));const tl=[...ap].filter(p=>!ac.has(p));return tl.length>0?tl:[...ap]}
+function getParentWh(n){const i=bom.find(r=>r.parent===n);return i?i.parentWh:''}
+function addDemand(){parentDemand.push({product:'',demand:0,date:todayStr()});saveData();renderDemand();renderBalance()}
+function updateDemand(i,f,v){if(!parentDemand[i])return;parentDemand[i][f]=v;if(f==='product')parentDemand[i].wh=getParentWh(v);saveData();renderDemand();renderBalance()}
+function delDemand(i){parentDemand.splice(i,1);saveData();renderDemand();renderBalance()}
+// Demand import
+function mapDemand(p){const alias={product:['父件商品','商品名称','商品','父件','产品','物料'],demand:['需求数量','数量','需求量','订单数','数量需求'],date:['需求日期','日期','交付日期','到货日期','日期需求']};const fm={};p.headers.forEach(h=>{const low=h.toLowerCase();for(const[f,al]of Object.entries(alias)){if(al.some(a=>a.toLowerCase()===low)){fm[f]=h;break}}});const today=todayStr();return p.data.map(d=>{const product=fm.product?d[fm.product]:'';const qty=parseNum(fm.demand?d[fm.demand]:0);let date=fm.date?d[fm.date]:'';if(!date)date=today;date=date.replace(/[.\-\/年]/g,'-').replace(/月/g,'-').replace(/日/g,'').replace(/\s+/g,'');const m=date.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);if(!m){const m2=date.match(/^(\d{4})(\d{2})(\d{2})$/);if(m2)date=m2[1]+'-'+m2[2]+'-'+m2[3];else date=today}const wh=getParentWh(product);return{product:product.trim(),demand:qty,date:date,wh:wh}}).filter(r=>r.product&&r.demand>0)}
+function importDemandText(text){try{const p=parseDelimited(text);if(p.data.length===0){toast('未解析到数据','error');return}const m=mapDemand(p);if(m.length===0){toast('未识别到有效需求行','error');return}const valid=m.filter(r=>getParentList().some(p=>p===r.product)||bom.some(b=>b.parent===r.product));if(valid.length<m.length){const skipped=m.length-valid.length;toast(skipped+' 行商品不在BOM中已跳过','warn')}if(valid.length===0){toast('无有效需求（商品不在BOM中）','error');return}if(parentDemand.length>0&&!confirm('当前已有'+parentDemand.length+'行需求，是否覆盖？\n确定=覆盖，取消=追加')){parentDemand=parentDemand.concat(valid)}else{parentDemand=valid}saveData();renderDemand();renderBalance();toast('成功导入 '+valid.length+' 行需求','success')}catch(e){toast('导入失败：'+e.message,'error')}}
+function openDemandPasteModal(){document.getElementById('demandModal').classList.add('active')}
+function closeDemandPasteModal(){document.getElementById('demandModal').classList.remove('active')}
+function doDemandPasteImport(){const t=document.getElementById('demandPasteText').value;if(!t.trim()){toast('请粘贴数据','error');return}importDemandText(t);document.getElementById('demandPasteText').value='';closeDemandPasteModal()}
+document.getElementById('demandFileInput').addEventListener('change',function(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>importDemandText(ev.target.result);r.readAsText(f,'UTF-8');this.value=''})
+function exportDemandCSV(){if(parentDemand.length===0){toast('暂无需求数据','error');return}const H=['父件商品','仓库','工序','需求数量','需求日期'];const lines=[H.join(',')];parentDemand.forEach(d=>{const wh=d.wh||getParentWh(d.product);const pr=getProcess(wh);const v=[d.product,wh,pr.label,d.demand,d.date];lines.push(v.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(','))});dlFile(lines.join('\n'),'父件需求.csv','text/csv;charset=utf-8');toast('需求已导出','success')}
+function renderDemand(){const body=document.getElementById('demandBody');const pl=getParentList();body.innerHTML=parentDemand.map((d,i)=>{const wh=d.wh||getParentWh(d.product);const pr=getProcess(wh);return'<tr><td class="row-num">'+(i+1)+'</td><td><input class="cell-input" list="parentOpts" value="'+(d.product||'')+'" onchange="updateDemand('+i+',\'product\',this.value)" placeholder="选择父件"></td><td>'+(wh||'-')+'</td><td><span class="proc-badge '+pr.cls+'">'+pr.label+'</span></td><td><input class="cell-input num" type="number" value="'+(d.demand||0)+'" onchange="updateDemand('+i+',\'demand\',this.value)" min="0"></td><td><input class="cell-input" type="date" value="'+(d.date||'')+'" onchange="updateDemand('+i+',\'date\',this.value)"></td><td><button class="action-btn" onclick="delDemand('+i+')">删除</button></td></tr>'}).join('');let dl=document.getElementById('parentOpts');if(!dl){dl=document.createElement('datalist');dl.id='parentOpts';document.body.appendChild(dl)}dl.innerHTML=pl.map(p=>'<option value="'+p+'">').join('')}
+// Shift capacity (班产) import
+function mapCapacity(p){const alias={name:['物料名称','商品名称','商品','子件商品','父件商品','物料','名称'],shiftCap:['班产','班产量','每班产量','产能','日产量','产量']};const fm={};p.headers.forEach(h=>{const low=h.toLowerCase();for(const[f,al]of Object.entries(alias)){if(al.some(a=>a.toLowerCase()===low)){fm[f]=h;break}}});return p.data.map(d=>({name:(fm.name?d[fm.name]:'').trim(),shiftCap:parseNum(fm.shiftCap?d[fm.shiftCap]:0)})).filter(r=>r.name&&r.shiftCap>0)}
+function importCapacityText(text){try{const p=parseDelimited(text);if(p.data.length===0){toast('未解析到数据','error');return}const m=mapCapacity(p);if(m.length===0){toast('未识别到有效班产行','error');return}let cnt=0;m.forEach(r=>{if(!itemStock[r.name])itemStock[r.name]={stock:0,safety:0,scheduled:[]};itemStock[r.name].shiftCap=r.shiftCap;cnt++});saveData();invalidateMRP();renderBalance();toast('成功导入 '+cnt+' 条班产数据','success')}catch(e){toast('导入失败：'+e.message,'error')}}
+function openCapPasteModal(){document.getElementById('capModal').classList.add('active')}
+function closeCapPasteModal(){document.getElementById('capModal').classList.remove('active')}
+function doCapPasteImport(){const t=document.getElementById('capPasteText').value;if(!t.trim()){toast('请粘贴数据','error');return}importCapacityText(t);document.getElementById('capPasteText').value='';closeCapPasteModal()}
+// Stock import (库存导入)
+function mapStock(p){
+  const alias={
+    name:['物料名称','商品名称','商品','子件商品','父件商品','物料','名称'],
+    stock:['期初库存','库存','现有库存','当前库存','现有量','库存量'],
+    safety:['安全库存','安全库存量','最低库存','安全量','最低持有量'],
+    shiftCap:['班产','班产量','每班产量','产能','日产量','产量']
+  };
+  const fm={};
+  p.headers.forEach(h=>{const low=h.toLowerCase();for(const[f,al]of Object.entries(alias)){if(al.some(a=>a.toLowerCase()===low)){fm[f]=h;break}}});
+  return p.data.map(d=>({
+    name:(fm.name?d[fm.name]:'').trim(),
+    stock:parseNum(fm.stock?d[fm.stock]:0),
+    safety:parseNum(fm.safety?d[fm.safety]:0),
+    shiftCap:parseNum(fm.shiftCap?d[fm.shiftCap]:0)
+  })).filter(r=>r.name)
+}
+function importStockText(text){
+  try{
+    const p=parseDelimited(text);
+    if(p.data.length===0){toast('未解析到数据','error');return false}
+    const m=mapStock(p);
+    if(m.length===0){toast('未识别到有效库存行（需含"物料名称"列）','error');return false}
+    // 获取BOM中所有已知物料名称用于匹配检查
+    const knownItems=new Set();
+    bom.forEach(b=>{if(b.parent)knownItems.add(b.parent);if(b.child)knownItems.add(b.child)});
+    const logs=[];
+    let updated=0,created=0,skipped=0,errors=0;
+    m.forEach((r,idx)=>{
+      const existed=!!itemStock[r.name];
+      const inBom=knownItems.size===0||knownItems.has(r.name);
+      // 校验数据
+      if(!r.name){logs.push({idx:idx+1,icon:'err',status:'error',name:'(空名称)',detail:'第'+(idx+1)+'行：物料名称为空，已跳过'});errors++;return}
+      if(r.stock<0||r.safety<0){logs.push({idx:idx+1,icon:'err',status:'error',name:r.name,detail:'库存或安全库存为负数，已跳过'});errors++;return}
+      // 记录变更前数据
+      const before=existed?{stock:itemStock[r.name].stock||0,safety:itemStock[r.name].safety||0,shiftCap:itemStock[r.name].shiftCap||0}:null;
+      // 写入数据
+      if(!itemStock[r.name])itemStock[r.name]={stock:0,safety:0,scheduled:[]};
+      itemStock[r.name].stock=r.stock;
+      itemStock[r.name].safety=r.safety;
+      if(r.shiftCap>0)itemStock[r.name].shiftCap=r.shiftCap;
+      // 构建日志详情
+      let parts=[];
+      if(before){
+        if(r.stock!==before.stock)parts.push('库存: '+before.stock+' → <span class="log-delta">'+r.stock+'</span>');
+        else parts.push('库存: '+r.stock);
+        if(r.safety!==before.safety)parts.push('安全: '+before.safety+' → <span class="log-delta">'+r.safety+'</span>');
+        else parts.push('安全: '+r.safety);
+        if(r.shiftCap>0&&r.shiftCap!==before.shiftCap)parts.push('班产: '+before.shiftCap+' → <span class="log-delta">'+r.shiftCap+'</span>');
+        else if(r.shiftCap>0)parts.push('班产: '+r.shiftCap);
+      }else{
+        parts.push('库存: <span class="log-delta">'+r.stock+'</span>');
+        parts.push('安全: <span class="log-delta">'+r.safety+'</span>');
+        if(r.shiftCap>0)parts.push('班产: <span class="log-delta">'+r.shiftCap+'</span>');
+      }
+      let warn='';
+      if(!inBom)warn=' <span class="log-warn">⚠ 不在BOM中</span>';
+      if(existed){
+        logs.push({idx:idx+1,icon:'ok',status:'updated',name:r.name,detail:parts.join(' | ')+warn});
+        updated++;
+      }else{
+        logs.push({idx:idx+1,icon:'new',status:'created',name:r.name,detail:parts.join(' | ')+warn});
+        created++;
+      }
+    });
+    // 渲染日志面板
+    const panel=document.getElementById('stockLogPanel');
+    const body=document.getElementById('stockLogBody');
+    const summary=document.getElementById('stockLogSummary');
+    if(panel&&body){
+      panel.classList.remove('hidden');
+      summary.textContent='共 '+m.length+' 条 | 更新 '+updated+' | 新建 '+created+(skipped>0?' | 跳过 '+skipped:'')+(errors>0?' | 错误 '+errors:'');
+      body.innerHTML=logs.map(l=>
+        '<div class="log-row"><div class="log-icon '+l.icon+'">'+(l.icon==='ok'?'✓':l.icon==='new'?'+':l.icon==='err'?'✕':'-')+'</div>'+
+        '<div class="log-detail"><span class="log-name">'+l.name+'</span> — '+l.detail+'</div>'+
+        '<span class="log-status '+l.status+'">'+(l.status==='updated'?'已更新':l.status==='created'?'已新建':l.status==='error'?'错误':'跳过')+'</span></div>'
+      ).join('');
+      body.scrollTop=0;
+    }
+    saveData();invalidateMRP();renderBalance();
+    toast('成功导入 '+m.length+' 条库存数据（更新 '+updated+'，新建 '+created+'）','success');
+    return true
+  }catch(e){
+    toast('导入失败：'+e.message,'error');
+    return false
+  }
+}
+function openStockPasteModal(){document.getElementById('stockPasteModal').classList.add('active');document.getElementById('stockLogPanel').classList.add('hidden')}
+function closeStockPasteModal(){document.getElementById('stockPasteModal').classList.remove('active')}
+function doStockPasteImport(){const t=document.getElementById('stockPasteText').value;if(!t.trim()){toast('请粘贴数据','error');return}const ok=importStockText(t);if(ok)document.getElementById('stockPasteText').value=''}
+// ================ KANBAN: GANTT CHART RENDERING ================
+let _kanbanCanvas=null;
+function renderKanban(){
+  const mrp=getMRP();
+  if(!mrp||(mrp.productionPlan.length===0&&mrp.purchasePlan.length===0)){
+    document.getElementById('kanbanCanvasWrap').innerHTML='<div style="color:var(--text-dim);font-size:13px">暂无计划数据，请先添加父件需求并运行MRP计算</div>';
+    document.getElementById('kanbanDateRange').textContent='';
+    return;
+  }
+  // Collect all plans
+  const asmPlan=mrp.productionPlan.filter(r=>r.proc.label==='装配');
+  const injPlan=mrp.productionPlan.filter(r=>r.proc.label==='注塑');
+  const purPlan=mrp.purchasePlan;
+  // Calculate date range
+  const allDates=[];
+  [...asmPlan,...injPlan,...purPlan].forEach(r=>{
+    if(r.releaseDate)allDates.push(r.releaseDate);
+    if(r.needDate)allDates.push(r.needDate);
+  });
+  if(allDates.length===0)return;
+  const minDate=new Date(Math.min(...allDates.map(d=>d.getTime())));
+  const maxDate=new Date(Math.max(...allDates.map(d=>d.getTime())));
+  minDate.setDate(minDate.getDate()-2);maxDate.setDate(maxDate.getDate()+2);
+  // Build canvas
+  const wrap=document.getElementById('kanbanCanvasWrap');
+  wrap.innerHTML='';
+  const days=Math.max(1,Math.round((maxDate-minDate)/86400000)+1);
+  const dayWidth=42;
+  const labelWidth=220;
+  const groupGap=30;
+  const rowHeight=36;
+  const headerH=60;
+  const footerH=30;
+  const groups=[
+    {title:'🏭 装配计划',color:'#22d3ee',color2:'#0891b2',items:asmPlan},
+    {title:'🔧 注塑计划',color:'#f59e0b',color2:'#d97706',items:injPlan},
+    {title:'🛒 采购计划',color:'#a78bfa',color2:'#7c3aed',items:purPlan}
+  ].filter(g=>g.items.length>0);
+  const totalRows=groups.reduce((s,g)=>s+g.items.length,0)+groups.length;
+  const canvasW=labelWidth+days*dayWidth+20;
+  const canvasH=headerH+totalRows*rowHeight+footerH;
+  const canvas=document.createElement('canvas');
+  canvas.width=Math.min(canvasW,2400);
+  canvas.height=canvasH;
+  canvas.style.maxWidth='100%';
+  canvas.style.borderRadius='4px';
+  wrap.appendChild(canvas);
+  _kanbanCanvas=canvas;
+  // Draw
+  const ctx=canvas.getContext('2d');
+  const scale=canvas.width/canvasW;
+  ctx.scale(scale,1);
+  // Background
+  ctx.fillStyle='#060e1f';
+  ctx.fillRect(0,0,canvasW,canvasH);
+  // Title
+  ctx.fillStyle='#22d3ee';
+  ctx.font='bold 16px "Microsoft YaHei", sans-serif';
+  ctx.fillText('MRP 排产看板',16,26);
+  ctx.fillStyle='rgba(255,255,255,.5)';
+  ctx.font='11px "Consolas", monospace';
+  const p=n=>String(n).padStart(2,'0');
+  ctx.fillText('周期: '+fmtDate(minDate)+' ~ '+fmtDate(maxDate)+' | 装配: '+asmPlan.length+'项 | 注塑: '+injPlan.length+'项 | 采购: '+purPlan.length+'项',16,44);
+  ctx.fillStyle='rgba(255,255,255,.2)';
+  ctx.fillRect(0,52,canvasW,1);
+  // Date header
+  let cursorY=headerH;
+  let dayMs=86400000;
+  for(let i=0;i<days;i++){
+    const d=new Date(minDate.getTime()+i*dayMs);
+    const x=labelWidth+i*dayWidth;
+    const isWeekend=d.getDay()===0||d.getDay()===6;
+    const isToday=d.toDateString()===new Date().toDateString();
+    ctx.fillStyle=isToday?'#22d3ee':(isWeekend?'rgba(255,255,255,.06)':'rgba(255,255,255,.02)');
+    ctx.fillRect(x,cursorY,dayWidth-1,rowHeight*totalRows);
+    ctx.fillStyle=isToday?'#22d3ee':(isWeekend?'rgba(255,255,255,.3)':'rgba(255,255,255,.5)');
+    ctx.font='10px "Consolas", monospace';
+    const dayStr=(d.getMonth()+1)+'/'+d.getDate();
+    ctx.fillText(dayStr,x+4,62);
+    const wd=['日','一','二','三','四','五','六'][d.getDay()];
+    ctx.fillStyle=isWeekend?'rgba(255,255,255,.3)':'rgba(255,255,255,.25)';
+    ctx.fillText(wd,x+4,76);
+  }
+  // Draw groups and bars
+  cursorY=headerH;
+  const dayToX=d=>{
+    const diff=Math.round((new Date(d)-minDate)/dayMs);
+    return labelWidth+Math.max(0,diff)*dayWidth;
+  };
+  groups.forEach(g=>{
+    // Group title
+    ctx.fillStyle=g.color;
+    ctx.font='bold 12px "Microsoft YaHei", sans-serif';
+    ctx.fillText(g.title,16,cursorY+20);
+    ctx.fillStyle=g.color;
+    ctx.fillRect(10,cursorY+24,canvasW-20,1);
+    cursorY+=rowHeight;
+    g.items.forEach((item,idx)=>{
+      // Row background
+      ctx.fillStyle=idx%2===0?'rgba(255,255,255,.02)':'rgba(255,255,255,.04)';
+      ctx.fillRect(0,cursorY,canvasW,rowHeight);
+      // Item name
+      ctx.fillStyle='#e2e8f0';
+      ctx.font='11px "Microsoft YaHei", sans-serif';
+      const name=item.item.length>18?item.item.slice(0,16)+'..':item.item;
+      ctx.fillText(name,16,cursorY+22);
+      // Delivery date
+      if(item.deliveryDate){
+        const dx=dayToX(item.deliveryDate);
+        ctx.strokeStyle='rgba(239,68,68,.6)';
+        ctx.lineWidth=1;
+        ctx.setLineDash([3,3]);
+        ctx.beginPath();
+        ctx.moveTo(dx,cursorY+4);
+        ctx.lineTo(dx,cursorY+rowHeight-4);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle='rgba(239,68,68,.8)';
+        ctx.font='9px "Consolas", monospace';
+        ctx.fillText('交付',dx-10,cursorY+rowHeight-2);
+      }
+      // Draw bar
+      if(item.releaseDate&&item.needDate){
+        const x1=dayToX(item.releaseDate);
+        const x2=dayToX(item.needDate);
+        const barW=Math.max(dayWidth-2,x2-x1);
+        // Bar gradient
+        const grad=ctx.createLinearGradient(x1,cursorY+8,x1,cursorY+rowHeight-8);
+        grad.addColorStop(0,g.color);
+        grad.addColorStop(1,g.color2);
+        ctx.fillStyle=grad;
+        ctx.fillRect(x1,cursorY+8,barW,rowHeight-16);
+        // Bar border
+        ctx.strokeStyle=g.color;
+        ctx.lineWidth=1;
+        ctx.strokeRect(x1,cursorY+8,barW,rowHeight-16);
+        // Bar text
+        ctx.fillStyle='#fff';
+        ctx.font='bold 10px "Consolas", monospace';
+        const barText=item.qty.toFixed(0)+(item.byCap?' ('+item.shiftCap+'/班)':'');
+        const textW=ctx.measureText(barText).width;
+        if(textW<barW-4){
+          ctx.fillText(barText,x1+4,cursorY+22);
+        }else{
+          ctx.fillText(item.qty.toFixed(0),x1+4,cursorY+22);
+        }
+        // Release date marker
+        ctx.fillStyle=g.color;
+        ctx.beginPath();
+        ctx.moveTo(x1,cursorY+8);
+        ctx.lineTo(x1-5,cursorY+2);
+        ctx.lineTo(x1+5,cursorY+2);
+        ctx.closePath();
+        ctx.fill();
+      }
+      cursorY+=rowHeight;
+    });
+    cursorY+=10;
+  });
+  // Legend
+  const ly=cursorY+10;
+  ctx.font='10px "Microsoft YaHei", sans-serif';
+  let lx=16;
+  const legends=[
+    {color:'#22d3ee',text:'装配计划'},
+    {color:'#f59e0b',text:'注塑计划'},
+    {color:'#a78bfa',text:'采购计划'},
+    {color:'rgba(239,68,68,.6)',text:'客户交付日期'}
+  ];
+  legends.forEach(l=>{
+    if(l.text==='客户交付日期'){
+      ctx.strokeStyle=l.color;
+      ctx.setLineDash([3,3]);
+      ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(lx+20,ly);ctx.stroke();
+      ctx.setLineDash([]);
+    }else{
+      ctx.fillStyle=l.color;
+      ctx.fillRect(lx,ly-4,16,8);
+    }
+    ctx.fillStyle='rgba(255,255,255,.6)';
+    ctx.fillText(l.text,lx+24,ly+4);
+    lx+=ctx.measureText(l.text).width+60;
+  });
+  document.getElementById('kanbanDateRange').textContent='显示周期: '+fmtDate(minDate)+' 至 '+fmtDate(maxDate);
+}
+// 一键加载演示数据（供测试Excel甘特图导出）
+function loadKanbanDemo(){
+  const p=n=>String(n).padStart(2,'0');
+  const f=d=>{const t=new Date(d);return t.getFullYear()+'-'+p(t.getMonth()+1)+'-'+p(t.getDate())};
+  const today=new Date();today.setHours(0,0,0,0);
+  const d14=new Date(today);d14.setDate(d14.getDate()+14);
+  const d21=new Date(today);d21.setDate(d21.getDate()+21);
+  const d30=new Date(today);d30.setDate(d30.getDate()+30);
+  // 1. BOM 数据（含装配 / 注塑 / 采购 三类）
+  const demoBom=[
+    // 成品 A：装配体
+    {parent:'产品A-主控装配体',parentWh:'装配成品仓',child:'A1-侧外壳总成',childWh:'自制/半成品仓',qtyPerUnit:1,yieldRate:1,fixedLoss:0,unit:'套'},
+    {parent:'产品A-主控装配体',parentWh:'装配成品仓',child:'A2-卡扣组件',childWh:'自制/半成品仓',qtyPerUnit:4,yieldRate:1,fixedLoss:0,unit:'个'},
+    {parent:'产品A-主控装配体',parentWh:'装配成品仓',child:'A3-注塑支架',childWh:'自制/半成品仓',qtyPerUnit:2,yieldRate:0.95,fixedLoss:1,unit:'件'},
+    {parent:'产品A-主控装配体',parentWh:'装配成品仓',child:'A4-装饰盖',childWh:'自制/半成品仓',qtyPerUnit:1,yieldRate:1,fixedLoss:0,unit:'件'},
+    // 成品 B：装配体
+    {parent:'产品B-仪表总成',parentWh:'装配成品仓',child:'B1-仪表上盖',childWh:'自制/半成品仓',qtyPerUnit:1,yieldRate:1,fixedLoss:0,unit:'件'},
+    {parent:'产品B-仪表总成',parentWh:'装配成品仓',child:'B2-仪表下盖',childWh:'自制/半成品仓',qtyPerUnit:1,yieldRate:1,fixedLoss:0,unit:'件'},
+    {parent:'产品B-仪表总成',parentWh:'装配成品仓',child:'B3-按键模块',childWh:'外购/原材料仓',qtyPerUnit:1,yieldRate:1,fixedLoss:0,unit:'个'},
+    // 成品 C：装配体（含更深层级）
+    {parent:'产品C-门板总成',parentWh:'装配成品仓',child:'C1-门板骨架',childWh:'自制/半成品仓',qtyPerUnit:1,yieldRate:1,fixedLoss:0,unit:'件'},
+    {parent:'产品C-门板总成',parentWh:'装配成品仓',child:'C2-门锁总成',childWh:'装配成品仓',qtyPerUnit:1,yieldRate:1,fixedLoss:0,unit:'套'},
+    // 子装配 → 零件
+    {parent:'C2-门锁总成',parentWh:'装配成品仓',child:'C2-1锁芯',childWh:'自制/半成品仓',qtyPerUnit:1,yieldRate:1,fixedLoss:0,unit:'件'},
+    {parent:'C2-门锁总成',parentWh:'装配成品仓',child:'C2-2锁扣',childWh:'外购/原材料仓',qtyPerUnit:2,yieldRate:1,fixedLoss:0,unit:'个'},
+    // 注塑件 → 原材料
+    {parent:'A1-侧外壳总成',parentWh:'自制/半成品仓',child:'PC+ABS 704',childWh:'外购/原材料仓',qtyPerUnit:0.35,yieldRate:1,fixedLoss:0.02,unit:'kg'},
+    {parent:'A3-注塑支架',parentWh:'自制/半成品仓',child:'PP+TD20',childWh:'外购/原材料仓',qtyPerUnit:0.18,yieldRate:1,fixedLoss:0.01,unit:'kg'},
+    {parent:'A4-装饰盖',parentWh:'自制/半成品仓',child:'ABS 757K',childWh:'外购/原材料仓',qtyPerUnit:0.08,yieldRate:1,fixedLoss:0,unit:'kg'},
+    {parent:'B1-仪表上盖',parentWh:'自制/半成品仓',child:'PC+ABS 704',childWh:'外购/原材料仓',qtyPerUnit:0.22,yieldRate:1,fixedLoss:0.01,unit:'kg'},
+    {parent:'B2-仪表下盖',parentWh:'自制/半成品仓',child:'PP 原料',childWh:'外购/原材料仓',qtyPerUnit:0.3,yieldRate:1,fixedLoss:0.02,unit:'kg'},
+    {parent:'C1-门板骨架',parentWh:'自制/半成品仓',child:'钢材 1.5mm',childWh:'外购/原材料仓',qtyPerUnit:1.2,yieldRate:1,fixedLoss:0.05,unit:'kg'},
+    {parent:'C2-1锁芯',parentWh:'自制/半成品仓',child:'锌合金 3#',childWh:'外购/原材料仓',qtyPerUnit:0.05,yieldRate:1,fixedLoss:0,unit:'kg'},
+    // 注塑件需用额外外购辅料
+    {parent:'A3-注塑支架',parentWh:'自制/半成品仓',child:'色母粒-黑色',childWh:'外购/原材料仓',qtyPerUnit:0.005,yieldRate:1,fixedLoss:0,unit:'kg'}
+  ];
+  // 2. 库存（含班产、安全库存）
+  const demoStock={
+    // 装配成品（有班产）
+    '产品A-主控装配体':{stock:80,safety:30,shiftCap:60},
+    '产品B-仪表总成':{stock:50,safety:20,shiftCap:50},
+    '产品C-门板总成':{stock:40,safety:25,shiftCap:40},
+    'C2-门锁总成':{stock:20,safety:10,shiftCap:20},
+    // 注塑半成品（有班产）
+    'A1-侧外壳总成':{stock:30,safety:15,shiftCap:40},
+    'A2-卡扣组件':{stock:100,safety:40,shiftCap:80},
+    'A3-注塑支架':{stock:60,safety:20,shiftCap:50},
+    'A4-装饰盖':{stock:200,safety:50,shiftCap:100},
+    'B1-仪表上盖':{stock:20,safety:15,shiftCap:30},
+    'B2-仪表下盖':{stock:40,safety:15,shiftCap:35},
+    'C1-门板骨架':{stock:30,safety:15,shiftCap:25},
+    'C2-1锁芯':{stock:5,safety:5,shiftCap:15},
+    // 采购件（无班产，用固定周期）
+    'A3-卡扣组件':{stock:0,safety:0.5},
+    'B3-按键模块':{stock:150,safety:80},
+    'C2-2锁扣':{stock:2,safety:1},
+    'PC+ABS 704':{stock:2,safety:2},
+    'PP+TD20':{stock:3,safety:1},
+    'ABS 757K':{stock:1,safety:0.5},
+    'PP 原料':{stock:0,safety:1},
+    '钢材 1.5mm':{stock:10,safety:5},
+    '锌合金 3#':{stock:0.2,safety:0.3},
+    '色母粒-黑色':{stock:0.1,safety:0.05}
+  };
+  // 3. 父件需求（不同交付日期 → 甘特图有时间跨度）
+  const demoDemand=[
+    {product:'产品A-主控装配体',demand:500,date:f(d21),wh:'装配成品仓'},
+    {product:'产品B-仪表总成',demand:300,date:f(d14),wh:'装配成品仓'},
+    {product:'产品C-门板总成',demand:400,date:f(d30),wh:'装配成品仓'}
+  ];
+  // 4. 工序周期配置
+  const demoCycles={装配:7,注塑:10,采购:15};
+  // 5. 应用到全局
+  bom=demoBom;
+  itemStock=JSON.parse(JSON.stringify(demoStock));
+  parentDemand=demoDemand;
+  procCycles=demoCycles;
+  saveData();
+  invalidateMRP();
+  // 6. 渲染平衡表 & 甘特图
+  switchSubTab('kanban');
+  renderKanban();
+  toast('已加载演示数据：'+demoDemand.length+' 个父件需求 / '+bom.length+' 条BOM / '+Object.keys(itemStock).length+' 个物料','success');
+}
+function exportKanbanExcel(){
+  const mrp=getMRP();
+  if(!mrp||(mrp.productionPlan.length===0&&mrp.purchasePlan.length===0)){toast('暂无计划数据','error');return}
+  const asm=mrp.productionPlan.filter(r=>r.proc.label==='装配');
+  const inj=mrp.productionPlan.filter(r=>r.proc.label==='注塑');
+  const pur=mrp.purchasePlan;
+  // ============== Excel XML SpreadsheetML 2003 Generator ==============
+  const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const p=n=>String(n).padStart(2,'0');
+  const fmt=d=>{if(!d)return'';const dt=d instanceof Date?d:parseDate(d);if(!dt)return'';return dt.getFullYear()+'-'+p(dt.getMonth()+1)+'-'+p(dt.getDate())};
+  const cyans='-webkit-fill-color:#00d4ff;-webkit-fill-color:#00d4ff;';
+  // Build styles
+  let styles=`<Styles>
+    <Style ss:ID="Default" ss:Name="Normal"><Font ss:FontName="Microsoft YaHei" x:CharSet="134" ss:Size="11"/><Interior ss:Color="#FFFFFF" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CCCCCC"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CCCCCC"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CCCCCC"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CCCCCC"/></Borders></Style>
+    <Style ss:ID="Title"><Font ss:FontName="Microsoft YaHei" x:CharSet="134" ss:Size="16" ss:Color="#0066cc" ss:Bold="1"/><Interior ss:Color="#E8F4FF" ss:Pattern="Solid"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/></Style>
+    <Style ss:ID="Sub"><Font ss:FontName="Microsoft YaHei" x:CharSet="134" ss:Size="11" ss:Color="#555555"/><Alignment ss:Horizontal="Left"/><Interior ss:Color="#F7FAFF" ss:Pattern="Solid"/></Style>
+    <Style ss:ID="HAsm"><Font ss:FontName="Microsoft YaHei" x:CharSet="134" ss:Size="11" ss:Color="#FFFFFF" ss:Bold="1"/><Interior ss:Color="#0099CC" ss:Pattern="Solid"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#006699"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#006699"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#006699"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#006699"/></Borders></Style>
+    <Style ss:ID="HInj"><Font ss:FontName="Microsoft YaHei" x:CharSet="134" ss:Size="11" ss:Color="#FFFFFF" ss:Bold="1"/><Interior ss:Color="#FF8800" ss:Pattern="Solid"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CC6600"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CC6600"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CC6600"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CC6600"/></Borders></Style>
+    <Style ss:ID="HPur"><Font ss:FontName="Microsoft YaHei" x:CharSet="134" ss:Size="11" ss:Color="#FFFFFF" ss:Bold="1"/><Interior ss:Color="#7C3AED" ss:Pattern="Solid"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#5B21B6"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#5B21B6"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#5B21B6"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#5B21B6"/></Borders></Style>
+    <Style ss:ID="HGT"><Font ss:FontName="Microsoft YaHei" x:CharSet="134" ss:Size="11" ss:Color="#FFFFFF" ss:Bold="1"/><Interior ss:Color="#333333" ss:Pattern="Solid"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/></Style>
+    <Style ss:ID="CName"><Font ss:FontName="Microsoft YaHei" x:CharSet="134" ss:Size="11" ss:Color="#111111" ss:Bold="1"/><Alignment ss:Vertical="Center" ss:Horizontal="Left"/></Style>
+    <Style ss:ID="CNum"><Font ss:FontName="Consolas" ss:Size="11" ss:Color="#006699" ss:Bold="1"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/><NumberFormat ss:Format="0"/></Style>
+    <Style ss:ID="CDate"><Font ss:FontName="Consolas" ss:Size="10" ss:Color="#111111"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/></Style>
+    <Style ss:ID="CDateDel"><Font ss:FontName="Consolas" ss:Size="10" ss:Color="#CC0000" ss:Bold="1"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/><Interior ss:Color="#FFE6E6" ss:Pattern="Solid"/></Style>
+    <Style ss:ID="CCap"><Font ss:FontName="Consolas" ss:Size="10" ss:Color="#7C3AED" ss:Bold="1"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/></Style>
+    <Style ss:ID="RAlt"><Interior ss:Color="#F7F9FC" ss:Pattern="Solid"/></Style>
+    <Style ss:ID="BarASM"><Interior ss:Color="#00D4FF" ss:Pattern="Solid"/><Borders><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#0099CC"/><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#0099CC"/></Borders></Style>
+    <Style ss:ID="BarINJ"><Interior ss:Color="#FFAA00" ss:Pattern="Solid"/><Borders><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CC6600"/><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CC6600"/></Borders></Style>
+    <Style ss:ID="BarPUR"><Interior ss:Color="#A78BFA" ss:Pattern="Solid"/><Borders><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#7C3AED"/><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#7C3AED"/></Borders></Style>
+    <Style ss:ID="BarQTY"><Font ss:FontName="Consolas" ss:Size="9" ss:Color="#FFFFFF" ss:Bold="1"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/></Style>
+    <Style ss:ID="WDWE"><Interior ss:Color="#FFF8E6" ss:Pattern="Solid"/><Font ss:FontName="Consolas" ss:Size="10" ss:Color="#AA8833"/></Style>
+    <Style ss:ID="TDY"><Interior ss:Color="#CCEEFF" ss:Pattern="Solid"/><Font ss:FontName="Consolas" ss:Size="10" ss:Color="#006699" ss:Bold="1"/></Style>
+    <Style ss:ID="DMK"><Interior ss:Color="#FFD1D1" ss:Pattern="Solid"/><Font ss:FontName="Consolas" ss:Size="9" ss:Color="#CC0000" ss:Bold="1"/><Alignment ss:Vertical="Center" ss:Horizontal="Center"/></Style>
+  </Styles>`;
+  // Worksheet helper: data table
+  function dataSheet(name,headerStyle,rows,isPur){
+    let cols='';
+    if(!isPur){
+      cols=['140,100,100,100,220,120,80,70,70,70,70'].map(w=>'<Column ss:Width="'+w+'"/>').join('');
+    }else{
+      cols=['140,100,100,100,220,120,80,70,70,70,70'].map(w=>'<Column ss:Width="'+w+'"/>').join('');
+    }
+    let headers;
+    if(!isPur){
+      headers=['序号','客户交付','下达日期','需求日期','物料名称','仓库/工序','单位','计划数量','班产','所需班次','排产天数'];
+    }else{
+      headers=['序号','客户交付','下达日期','到货日期','物料名称','仓库','单位','采购数量','净需求','期初库存','安全库存','周期'];
+    }
+    let hw=headers.map(h=>`<Cell ss:StyleID="${headerStyle}"><Data ss:Type="String">${esc(h)}</Data></Cell>`).join('');
+    let headerRow=`<Row ss:Height="34">${hw}</Row>`;
+    const today=new Date();today.setHours(0,0,0,0);
+    let body='';
+    rows.forEach((r,i)=>{
+      const alt=i%2===1?' ss:StyleID="RAlt"':'';
+      let cells;
+      if(!isPur){
+        const shifts=r.shiftCap>0?Math.ceil(r.qty/r.shiftCap):'-';
+        const procName=r.proc.label;
+        const isTdyDel=r.deliveryDate&&new Date(r.deliveryDate).toDateString()===today.toDateString();
+        const dateStyle=isTdyDel?'CDateDel':'CDate';
+        cells=[
+          `<Cell><Data ss:Type="Number">${i+1}</Data></Cell>`,
+          `<Cell ss:StyleID="${dateStyle}"><Data ss:Type="String">${fmt(r.deliveryDate)}</Data></Cell>`,
+          `<Cell ss:StyleID="CDate"><Data ss:Type="String">${fmt(r.releaseDate)}</Data></Cell>`,
+          `<Cell ss:StyleID="CDate"><Data ss:Type="String">${fmt(r.needDate)}</Data></Cell>`,
+          `<Cell ss:StyleID="CName"><Data ss:Type="String">${esc(r.item)}</Data></Cell>`,
+          `<Cell><Data ss:Type="String">${esc(r.wh||'')+' / '+procName}</Data></Cell>`,
+          `<Cell><Data ss:Type="String">${esc(r.unit||'')}</Data></Cell>`,
+          `<Cell ss:StyleID="CNum"><Data ss:Type="Number">${Math.round(r.qty)}</Data></Cell>`,
+          `<Cell ss:StyleID="CCap"><Data ss:Type="String">${r.shiftCap>0?r.shiftCap:'-'}</Data></Cell>`,
+          `<Cell><Data ss:Type="String">${shifts}</Data></Cell>`,
+          `<Cell><Data ss:Type="Number">${r.procCycle||0}</Data></Cell>`
+        ].join('');
+      }else{
+        cells=[
+          `<Cell><Data ss:Type="Number">${i+1}</Data></Cell>`,
+          `<Cell ss:StyleID="CDate"><Data ss:Type="String">${fmt(r.deliveryDate)}</Data></Cell>`,
+          `<Cell ss:StyleID="CDate"><Data ss:Type="String">${fmt(r.releaseDate)}</Data></Cell>`,
+          `<Cell ss:StyleID="CDate"><Data ss:Type="String">${fmt(r.needDate)}</Data></Cell>`,
+          `<Cell ss:StyleID="CName"><Data ss:Type="String">${esc(r.item)}</Data></Cell>`,
+          `<Cell><Data ss:Type="String">${esc(r.wh||'')}</Data></Cell>`,
+          `<Cell><Data ss:Type="String">${esc(r.unit||'')}</Data></Cell>`,
+          `<Cell ss:StyleID="CNum"><Data ss:Type="Number">${Math.round(r.qty)}</Data></Cell>`,
+          `<Cell><Data ss:Type="Number">${Math.round(r.netDemand)}</Data></Cell>`,
+          `<Cell><Data ss:Type="Number">${Math.round(r.stock)}</Data></Cell>`,
+          `<Cell><Data ss:Type="Number">${Math.round(r.safety)}</Data></Cell>`,
+          `<Cell><Data ss:Type="Number">${r.procCycle||0}</Data></Cell>`
+        ].join('');
+      }
+      body+=`<Row ss:Height="22"${alt}>${cells}</Row>`;
+    });
+    const pn=p;
+    const title=name.includes('装配')?'🏭 装配生产计划':name.includes('注塑')?'🔧 注塑生产计划':'🛒 采购需求计划';
+    const cnt=rows.length;
+    const headerRowCnt=`<Row><Cell ss:StyleID="Sub" ss:MergeAcross="10"><Data ss:Type="String">生成时间：${new Date().getFullYear()}-${pn(new Date().getMonth()+1)}-${pn(new Date().getDate())} | 共 ${cnt} 条计划</Data></Cell></Row>`;
+    return `<Worksheet ss:Name="${esc(name)}"><Table>${cols}<Column ss:Width="16"/><Row ss:Height="40"><Cell ss:StyleID="Title" ss:MergeAcross="${isPur?11:10}"><Data ss:Type="String">${esc(title)}</Data></Cell></Row>${headerRowCnt}${headerRow}${body}</Table><WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>4</TopRowBottomPane><ActivePane>2</ActivePane></WorksheetOptions></Worksheet>`;
+  }
+  // ============ Build Worksheets ============
+  let sheets='';
+  sheets+=dataSheet('装配计划','HAsm',asm,false);
+  sheets+=dataSheet('注塑计划','HInj',inj,false);
+  sheets+=dataSheet('采购计划','HPur',pur,true);
+  // ============ Gantt Chart Worksheet (by cell coloring) ============
+  const allDates=[];const dayMs=86400000;
+  [...asm,...inj,...pur].forEach(r=>{if(r.releaseDate)allDates.push(new Date(r.releaseDate).getTime());if(r.needDate)allDates.push(new Date(r.needDate).getTime());if(r.deliveryDate)allDates.push(new Date(r.deliveryDate).getTime())});
+  let minD=new Date(Math.min(...allDates));let maxD=new Date(Math.max(...allDates));
+  minD.setDate(minD.getDate()-2);maxD.setDate(maxD.getDate()+2);
+  const days=Math.round((maxD-minD)/dayMs)+1;
+  const today=new Date();today.setHours(0,0,0,0);
+  // Build groups
+  const gts=[
+    {name:'🏭 装配生产计划',color:'ASM',items:asm},
+    {name:'🔧 注塑生产计划',color:'INJ',items:inj},
+    {name:'🛒 采购需求计划',color:'PUR',items:pur}
+  ].filter(g=>g.items.length>0);
+  // Col widths
+  let gCols='<Column ss:Width="60"/><Column ss:Width="220"/>';
+  for(let i=0;i<days;i++)gCols+='<Column ss:Width="24"/>';
+  let gRows='';
+  // Title
+  gRows+=`<Row ss:Height="40"><Cell ss:StyleID="Title" ss:MergeAcross="${days+1}"><Data ss:Type="String">MRP 排产甘特图 · ${new Date().getFullYear()}-${p(new Date().getMonth()+1)}-${p(new Date().getDate())}</Data></Cell></Row>`;
+  // Subtitle
+  gRows+=`<Row><Cell ss:StyleID="Sub" ss:MergeAcross="${days+1}"><Data ss:Type="String">时间轴：${fmt(minD)} ~ ${fmt(maxD)}　|　装配：${asm.length}条　注塑：${inj.length}条　采购：${pur.length}条　|　红色竖线=客户交付日期</Data></Cell></Row>`;
+  // Day headers (row 1: date, row2: weekday)
+  let hdr1='<Cell ss:StyleID="HGT">序号</Cell><Cell ss:StyleID="HGT">物料名称</Cell>';
+  let hdr2='<Cell ss:StyleID="HGT"></Cell><Cell ss:StyleID="HGT"></Cell>';
+  const wd=['日','一','二','三','四','五','六'];
+  for(let i=0;i<days;i++){
+    const d=new Date(minD.getTime()+i*dayMs);
+    const isWknd=d.getDay()===0||d.getDay()===6;
+    const isTdy=d.toDateString()===today.toDateString();
+    let sid=isTdy?'TDY':(isWknd?'WDWE':'');
+    const ds=d.getMonth()+1+'/'+d.getDate();
+    hdr1+=`<Cell ss:StyleID="HGT${sid?' '+sid:''}"><Data ss:Type="String">${ds}</Data></Cell>`;
+    hdr2+=`<Cell ss:StyleID="${sid||'HGT'}"><Data ss:Type="String">${wd[d.getDay()]}</Data></Cell>`;
+  }
+  gRows+=`<Row ss:Height="22">${hdr1}</Row>`;
+  gRows+=`<Row ss:Height="18">${hdr2}</Row>`;
+  // Groups & items
+  const idxToDay=ts=>Math.max(0,Math.min(days-1,Math.round((new Date(ts).getTime()-minD.getTime())/dayMs)));
+  gts.forEach(g=>{
+    const gHdrStyle=g.color==='ASM'?'HAsm':g.color==='INJ'?'HInj':'HPur';
+    const barStyle=g.color==='ASM'?'BarASM':g.color==='INJ'?'BarINJ':'BarPUR';
+    gRows+=`<Row ss:Height="24"><Cell ss:StyleID="${gHdrStyle}"></Cell><Cell ss:StyleID="${gHdrStyle}"><Data ss:Type="String">${esc(g.name)}（${g.items.length}条）</Data></Cell>`;
+    for(let i=0;i<days;i++)gRows+=`<Cell ss:StyleID="${gHdrStyle}"></Cell>`;
+    gRows+=`</Row>`;
+    g.items.forEach((r,gi)=>{
+      const alt=gi%2===1?' ss:StyleID="RAlt"':'';
+      gRows+=`<Row ss:Height="26">`;
+      gRows+=`<Cell><Data ss:Type="Number">${gi+1}</Data></Cell>`;
+      gRows+=`<Cell ss:StyleID="CName"><Data ss:Type="String">${esc(r.item.length>22?r.item.slice(0,20)+'..':r.item)}（${Math.round(r.qty)}${r.shiftCap?'·'+r.shiftCap+'/班':''}）</Data></Cell>`;
+      // Compute delivery marker
+      let deliveryIdx=-1;
+      if(r.deliveryDate)deliveryIdx=idxToDay(new Date(r.deliveryDate).getTime());
+      // Compute bar positions
+      const relIdx=r.releaseDate?idxToDay(new Date(r.releaseDate).getTime()):-1;
+      const needIdx=r.needDate?idxToDay(new Date(r.needDate).getTime()):-1;
+      const sIdx=relIdx>=0?relIdx:(needIdx>=0?needIdx:0);
+      const eIdx=needIdx>=0?needIdx:sIdx;
+      for(let i=0;i<days;i++){
+        const d=new Date(minD.getTime()+i*dayMs);
+        const isWknd=d.getDay()===0||d.getDay()===6;
+        const isTdy=d.toDateString()===today.toDateString();
+        const isBar=i>=sIdx&&i<=eIdx;
+        let sid='';
+        if(i===deliveryIdx) sid='DMK';
+        else if(isBar) sid=barStyle;
+        else if(isTdy) sid='TDY';
+        else if(isWknd&&gi%2===1) sid='WDWE';
+        const qtyLabel=(isBar&&i===Math.floor((sIdx+eIdx)/2)&&(eIdx-sIdx)>=1)?`<Data ss:Type="String">${Math.round(r.qty)}</Data>`:'';
+        const fullStyle=sid?` ss:StyleID="${sid+(isBar?' BarQTY':'')}"`:(gi%2===1?' ss:StyleID="RAlt"':'');
+        const cellContent=qtyLabel?`<Cell${fullStyle}>${qtyLabel}</Cell>`:(sid||gi%2===1?`<Cell${fullStyle}></Cell>`:'<Cell></Cell>');
+        gRows+=cellContent;
+      }
+      gRows+=`</Row>`;
+    });
+    // Separator row
+    gRows+=`<Row ss:Height="6">`;for(let i=0;i<days+2;i++)gRows+=`<Cell ss:StyleID="RAlt"></Cell>`;gRows+=`</Row>`;
+  });
+  // Legend row
+  gRows+=`<Row ss:Height="22"><Cell></Cell><Cell ss:StyleID="CName"><Data ss:Type="String">图例：</Data></Cell>`;
+  const legends=[['BarASM','装配计划'],['BarINJ','注塑计划'],['BarPUR','采购计划'],['DMK','客户交付日'],['TDY','今日'],['WDWE','周末']];
+  for(let i=0;i<legends.length;i++)gRows+=`<Cell ss:StyleID="${legends[i][0]} BarQTY"><Data ss:Type="String">${legends[i][1]}</Data></Cell>`;
+  for(let i=0;i<days-legends.length;i++)gRows+=`<Cell></Cell>`;
+  gRows+=`</Row>`;
+  sheets+=`<Worksheet ss:Name="排产甘特图"><Table ss:DefaultRowHeight="20">${gCols}${gRows}</Table><WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><FreezePanes/><FrozenNoSplit/><SplitHorizontal>3</SplitHorizontal><TopRowBottomPane>4</TopRowBottomPane><ActivePane>2</ActivePane><SplitVertical>2</SplitVertical><LeftColumnRightPane>2</LeftColumnRightPane></WorksheetOptions></Worksheet>`;
+  // ============ Full XML ==============
+  const xml=`<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:html="http://www.w3.org/TR/REC-html40">
+  ${styles}
+  ${sheets}
+</Workbook>`;
+  // Download
+  const blob=new Blob(['\ufeff'+xml],{type:'application/vnd.ms-excel;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='MRP排产计划_'+todayStr()+'.xls';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Excel已导出（装配/注塑/采购/甘特图 4个Sheet）','success');
+}
+// ================ NEW MRP ENGINE (Level-by-Level, per-period netting) ================
+// Date helpers
+function parseDate(s){if(!s)return null;const t=new Date(String(s).replace(/\//g,'-'));return isNaN(t.getTime())?null:(t.setHours(0,0,0,0),t)}
+function fmtDate(d){if(!d)return'';const dt=d instanceof Date?d:parseDate(d);if(!dt)return'';const p=n=>String(n).padStart(2,'0');return dt.getFullYear()+'-'+p(dt.getMonth()+1)+'-'+p(dt.getDate())}
+function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r}
+function diffDays(a,b){return Math.ceil((a-b)/86400000)}
+function normalizeItemStock(){for(const k in itemStock){const s=itemStock[k];if(!s.scheduled||!Array.isArray(s.scheduled))s.scheduled=[];s.scheduled=s.scheduled.filter(r=>r&&parseNum(r.qty)>0);s.stock=parseNum(s.stock);s.safety=parseNum(s.safety);if(s.shiftCap===undefined)s.shiftCap=0;s.shiftCap=parseNum(s.shiftCap)}}
+// Low-level code (BOM level assignment) via topological sort
+function computeBomLevels(){
+  const allItems=new Set();bom.forEach(b=>{allItems.add(b.parent);allItems.add(b.child)});
+  const children=new Map(),parents=new Map();
+  allItems.forEach(i=>{children.set(i,[]);parents.set(i,[])});
+  bom.forEach(b=>{children.get(b.parent).push(b.child);parents.get(b.child).push(b.parent)});
+  const level=new Map(),queue=[],inRank=new Map();
+  allItems.forEach(i=>{const pr=parents.get(i).length;inRank.set(i,pr);if(pr===0)queue.push(i)});
+  while(queue.length){const n=queue.shift();const lv=level.get(n)||0;for(const ch of children.get(n)){level.set(ch,Math.max(level.get(ch)||0,lv+1));inRank.set(ch,inRank.get(ch)-1);if(inRank.get(ch)===0)queue.push(ch)}}
+  allItems.forEach(i=>{if(!level.has(i))level.set(i,0)});
+  return {level,maxLv:Math.max(0,...[...level.values()])}
+}
+// Item metadata lookup
+function itemMeta(name){
+  const asParent=bom.find(b=>b.parent===name);
+  const asChild=bom.find(b=>b.child===name);
+  let wh='';
+  if(asParent)wh=asParent.parentWh;
+  else if(asChild)wh=asChild.childWh;
+  const proc=getProcess(wh);
+  return{wh,proc,unit:asChild?asChild.unit:''}
+}
+// Get BOM children rows for a parent
+function childrenOf(parent){return bom.filter(b=>b.parent===parent)}
+// ========== CORE MRP RUN ==========
+let _mrpCache=null;
+function runMRP(){
+  normalizeItemStock();
+  const lvInfo=computeBomLevels();
+  const today=parseDate(todayStr());
+  const items=new Map();
+  const getOrCreateItem=(name,depth)=>{
+    if(!items.has(name)){
+      const meta=itemMeta(name);
+      const st=itemStock[name]||{stock:0,safety:0,scheduled:[],shiftCap:0};
+      items.set(name,{
+        name, wh:meta.wh, unit:meta.unit, level:lvInfo.level.get(name)||0, proc:meta.proc,
+        stock:parseNum(st.stock), safety:parseNum(st.safety),
+        shiftCap:parseNum(st.shiftCap)||0,
+        scheduled:(st.scheduled||[]).map(r=>({qty:parseNum(r.qty),date:parseDate(r.date)||today})),
+        grossByDate:new Map(),plannedOrders:[],sources:[],
+        endingInventory:0, minInventory:Infinity, shortages:[]
+      })
+    }
+    const it=items.get(name);
+    if(depth!==undefined&&depth>it.level)it.level=depth;
+    return it
+  };
+  const validDemands=parentDemand.filter(d=>parseNum(d.demand)>0&&d.product);
+  // 记录每个物料对应的"客户交付日期"（最终成品的needDate，用于追溯）
+  const deliveryDates=new Map();
+  validDemands.forEach(d=>{
+    const item=getOrCreateItem(d.product,0);
+    const nd=parseDate(d.date)||addDays(today,leadTime);
+    item.grossByDate.set(nd,(item.grossByDate.get(nd)||0)+parseNum(d.demand));
+    item.sources.push({parentName:d.product,qty:parseNum(d.demand),needDate:nd,depth:0});
+    // 记录交付日期（成品层级）
+    if(!deliveryDates.has(d.product))deliveryDates.set(d.product,nd);
+  });
+  const {maxLv}=lvInfo;
+  for(let level=0;level<=maxLv;level++){
+    const levelItems=[...items.values()].filter(it=>it.level===level);
+    for(const it of levelItems){
+      const dateMap=new Map();
+      it.grossByDate.forEach((q,d)=>{if(!dateMap.has(d))dateMap.set(d,{gross:0,sched:0});dateMap.get(d).gross+=q});
+      it.scheduled.forEach(r=>{if(!dateMap.has(r.date))dateMap.set(r.date,{gross:0,sched:0});dateMap.get(r.date).sched+=r.qty});
+      const dates=[...dateMap.keys()].sort((a,b)=>a-b);
+      let onHand=it.stock;
+      it.minInventory=Math.min(it.minInventory,onHand);
+      // 本物料工序周期（天）：如有班产则按需求÷班产计算排产天数，否则用固定工序周期
+      const fixedCyc=getProcCycle(it.proc);
+      const isProduce=it.proc.mode==='生产';
+      for(const d of dates){
+        const ev=dateMap.get(d);
+        const startOn=onHand+ev.sched;
+        const afterGross=startOn-ev.gross;
+        if(afterGross<it.safety){
+          const needQty=Math.max(0,it.safety-afterGross);
+          const mode=it.proc.mode;
+          // 排产天数计算：装配/注塑且有班产时按产能计算，否则用固定工序周期
+          let schedDays=0,byCap=false;
+          if(isProduce&&it.shiftCap>0){
+            schedDays=Math.ceil(needQty/it.shiftCap);
+            byCap=true;
+          }else{
+            schedDays=fixedCyc;
+          }
+          const releaseDate=addDays(d,-schedDays);
+          it.plannedOrders.push({qty:needQty,needDate:d,releaseDate,mode:mode||(it.wh.includes('外购')||it.wh.includes('原材料')?'采购':'生产'),procCycle:schedDays,byCap,shiftCap:it.shiftCap});
+          onHand=afterGross+needQty;
+          if(onHand<0){it.shortages.push({date:d,qty:Math.abs(onHand)})}
+        }else{
+          onHand=afterGross
+        }
+        it.minInventory=Math.min(it.minInventory,onHand);
+      }
+      it.endingInventory=onHand;
+      // BOM展开：子件需求日期 = 父件下达日期（父件开始生产时子件需到位）
+      for(const po of it.plannedOrders){
+        const children=childrenOf(it.name);
+        for(const b of children){
+          const yr=(b.yieldRate||100)/100;
+          const cq=po.qty*b.qtyPerUnit/yr+(b.fixedLoss||0);
+          if(cq<=0)continue;
+          // 子件需求日期 = 父件下达日期（关键：时间节点层层前移）
+          const childNeedDate=po.releaseDate;
+          const child=getOrCreateItem(b.child,it.level+1);
+          if(!child.unit&&b.unit)child.unit=b.unit;
+          if(!child.wh&&b.childWh)child.wh=b.childWh;
+          if(!child.proc.mode){child.proc=getProcess(b.childWh)||child.proc}
+          child.grossByDate.set(childNeedDate,(child.grossByDate.get(childNeedDate)||0)+cq);
+          child.sources.push({parentName:it.name,qty:cq,needDate:childNeedDate,depth:it.level+1});
+        }
+      }
+    }
+  }
+  const itemList=[...items.values()].sort((a,b)=>a.level-b.level||b.plannedOrders.reduce((s,p)=>s+p.qty,0)-a.plannedOrders.reduce((s,p)=>s+p.qty,0));
+  // 找出每个物料的最终客户交付日期（沿sources向上追溯到L0成品）
+  function findDeliveryDate(name){
+    if(deliveryDates.has(name))return deliveryDates.get(name);
+    const it=items.get(name);
+    if(!it||!it.sources.length)return null;
+    // 取最早的父件交付日期
+    let earliest=null;
+    for(const s of it.sources){
+      const dd=findDeliveryDate(s.parentName);
+      if(dd&&(!earliest||dd<earliest))earliest=dd;
+    }
+    return earliest;
+  }
+  itemList.forEach(it=>{
+    it.totalGross=0;it.grossByDate.forEach(q=>it.totalGross+=q);
+    it.produceQty=it.plannedOrders.filter(p=>p.mode==='生产').reduce((s,p)=>s+p.qty,0);
+    it.purchaseQty=it.plannedOrders.filter(p=>p.mode==='采购').reduce((s,p)=>s+p.qty,0);
+    it.netDemand=Math.max(0,it.totalGross+it.safety-it.stock-it.scheduled.reduce((s,r)=>s+r.qty,0));
+    it.earliestNeed=it.grossByDate.size?new Date(Math.min(...[...it.grossByDate.keys()])):null;
+    it.releaseDate=null;if(it.plannedOrders.length>0){it.releaseDate=it.plannedOrders.map(p=>p.releaseDate).sort((a,b)=>a-b)[0]}
+    // 工序周期/班产信息（取首个计划订单的排产信息）
+    if(it.plannedOrders.length>0){
+      const po0=it.plannedOrders[0];
+      it.procCycle=po0.procCycle||0;
+      it.byCap=po0.byCap||false;
+    }else{
+      it.procCycle=getProcCycle(it.proc);
+      it.byCap=false;
+    }
+    // 客户交付日期（追溯至成品）
+    it.deliveryDate=findDeliveryDate(it.name);
+    if(it.minInventory<0){it.status='shortage';it.label='短缺';}
+    else if(it.endingInventory>it.safety&&it.safety>0&&it.totalGross>0){it.status='excess';it.label='超额';}
+    else if(it.plannedOrders.length>0){
+      const daysLeft=it.releaseDate?diffDays(it.releaseDate,today):9999;
+      if(daysLeft<0){it.status='shortage';it.label='下单延误';}else{it.status='ok';it.label='平衡';}
+    }else{it.status='ok';it.label='平衡';}
+  });
+  const productionPlan=[],purchasePlan=[],warnings=[];
+  itemList.forEach((it,idx)=>{
+    for(const po of it.plannedOrders){
+      const dl=diffDays(po.releaseDate,today);
+      const row={idx,item:it.name,wh:it.wh,proc:it.proc,unit:it.unit,qty:po.qty,
+        needDate:po.needDate,releaseDate:po.releaseDate,
+        deliveryDate:it.deliveryDate,procCycle:po.procCycle||0,
+        byCap:po.byCap||false,shiftCap:po.shiftCap||it.shiftCap||0,
+        stock:it.stock,safety:it.safety,
+        scheduledTotal:it.scheduled.reduce((s,r)=>s+r.qty,0),
+        netDemand:it.netDemand,leadDays:po.procCycle||0,daysLeft:dl};
+      if(po.mode==='生产')productionPlan.push(row);
+      else if(po.mode==='采购')purchasePlan.push(row);
+    }
+    if(it.shortages.length>0){
+      warnings.push({level:'critical',type:'缺料',item:it.name,
+        content:fmtQty(it.shortages.reduce((s,r)=>s+r.qty,0))+'件无法按时供给（'+it.shortages.length+'个时点）',
+        impact:'父件排程将被延迟',suggestion:'紧急下单或代用料'});
+    }
+    if(it.releaseDate&&diffDays(it.releaseDate,today)<0&&it.plannedOrders.length>0){
+      warnings.push({level:'critical',type:'下单延误',item:it.name,
+        content:'下达日期已过期 '+(-diffDays(it.releaseDate,today))+' 天，计划量 '+fmtQty(it.produceQty+it.purchaseQty),
+        impact:it.proc.mode==='采购'?'原材料无法按时到货':'产能不能满足交付期',
+        suggestion:'立即下单并跟催，或协商调整交期'});
+    }else if(it.releaseDate&&diffDays(it.releaseDate,today)<=3&&it.plannedOrders.length>0){
+      warnings.push({level:'mild',type:'临近下达',item:it.name,
+        content:diffDays(it.releaseDate,today)+' 天后需下达'+(it.proc.mode==='采购'?'采购':'生产')+'单，数量 '+fmtQty(it.produceQty+it.purchaseQty),
+        impact:'逾期将影响供给',suggestion:'尽快准备下达'});
+    }
+    if(it.endingInventory>it.safety*2&&it.safety>0&&it.totalGross>0){
+      warnings.push({level:'info',type:'库存过高',item:it.name,
+        content:'预计期末库存 '+fmtQty(it.endingInventory)+'，为安全库存('+fmtQty(it.safety)+')的 '+Math.round(it.endingInventory/Math.max(1e-9,it.safety))+' 倍',
+        impact:'占用资金和库位',suggestion:'后续适当减少采购/生产或优先消耗'});
+    }
+  });
+  productionPlan.sort((a,b)=>a.releaseDate-b.releaseDate);
+  purchasePlan.sort((a,b)=>a.releaseDate-b.releaseDate);
+  warnings.sort((a,b)=>(a.level==='critical'?0:a.level==='mild'?1:2)-(b.level==='critical'?0:b.level==='mild'?1:2));
+  _mrpCache={items:itemList,productionPlan,purchasePlan,warnings};
+  return _mrpCache
+}
+function getMRP(){if(!_mrpCache)_mrpCache=runMRP();return _mrpCache}
+function invalidateMRP(){_mrpCache=null}
+// ================ UI: SUB TABS ================
+let activeSubTab='overview';
+function switchSubTab(name){
+  activeSubTab=name;
+  document.querySelectorAll('.sub-tab').forEach(t=>t.classList.toggle('active',t.dataset.sub===name));
+  ['overview','production','purchase','inventory','warning','kanban'].forEach(k=>{
+    const el=document.getElementById('sub'+k.charAt(0).toUpperCase()+k.slice(1));
+    if(!el)return;
+    if(k===name){el.classList.remove('hidden');el.style.display='flex'}else el.classList.add('hidden')
+  });
+  renderBalance();
+  if(name==='kanban')renderKanban();
+}
+// ================ UI: STOCK MODAL ================
+let _currentStockItem=null,_receiptRows=[];
+function openStockModal(name){
+  _currentStockItem=name;
+  const s=itemStock[name]||{stock:0,safety:0,scheduled:[],shiftCap:0};
+  document.getElementById('stockModalName').textContent=name;
+  document.getElementById('smStock').value=parseNum(s.stock);
+  document.getElementById('smSafety').value=parseNum(s.safety);
+  document.getElementById('smShiftCap').value=parseNum(s.shiftCap);
+  _receiptRows=((s.scheduled||[]).slice()).map(r=>({qty:parseNum(r.qty),date:r.date||todayStr()}));
+  if(_receiptRows.length===0)_receiptRows.push({qty:0,date:todayStr()});
+  renderReceiptRows();
+  document.getElementById('stockModal').classList.add('active');
+}
+function closeStockModal(){document.getElementById('stockModal').classList.remove('active')}
+function addReceiptRow(){_receiptRows.push({qty:0,date:todayStr()});renderReceiptRows()}
+function removeReceiptRow(i){_receiptRows.splice(i,1);if(_receiptRows.length===0)_receiptRows.push({qty:0,date:todayStr()});renderReceiptRows()}
+function updateReceiptRow(i,f,v){if(_receiptRows[i]){_receiptRows[i][f]=f==='date'?v:parseNum(v)}}
+function renderReceiptRows(){
+  const body=document.getElementById('smReceiptList');
+  body.innerHTML='<table style="width:100%;border-collapse:collapse"><thead><tr>'+
+    '<th style="font-size:10px;padding:4px;color:var(--cyan);background:rgba(14,165,233,.1)">到达日期</th>'+
+    '<th style="font-size:10px;padding:4px;color:var(--cyan);background:rgba(14,165,233,.1)">数量</th>'+
+    '<th style="width:50px"></th></tr></thead><tbody>'+
+    _receiptRows.map((r,i)=>'<tr>'+
+      '<td style="padding:3px"><input type="date" class="cell-input" value="'+r.date+'" onchange="updateReceiptRow('+i+',\'date\',this.value)"></td>'+
+      '<td style="padding:3px"><input type="number" class="cell-input num" value="'+r.qty+'" onchange="updateReceiptRow('+i+',\'qty\',this.value)" min="0"></td>'+
+      '<td style="padding:3px;text-align:center"><button class="action-btn" onclick="removeReceiptRow('+i+')">删除</button></td>'+
+      '</tr>').join('')+'</tbody></table>';
+}
+function saveStockModal(){
+  if(!_currentStockItem)return;
+  const sched=_receiptRows.filter(r=>r.qty>0).map(r=>({qty:parseNum(r.qty),date:r.date}));
+  itemStock[_currentStockItem]={
+    stock:parseNum(document.getElementById('smStock').value),
+    safety:parseNum(document.getElementById('smSafety').value),
+    shiftCap:parseNum(document.getElementById('smShiftCap').value),
+    scheduled:sched
+  };
+  saveData();invalidateMRP();renderBalance();closeStockModal();
+  toast('库存信息已保存','success');
+}
+// ================ UI: RENDER BALANCE ================
+let _allExpanded=false;
+let _itemNameRegistry=[];
+function _regName(n){_itemNameRegistry.push(n);return _itemNameRegistry.length-1}
+function _getName(i){return _itemNameRegistry[i]}
+function renderBalance(){
+  _itemNameRegistry=[];
+  invalidateMRP();
+  const mrp=getMRP();
+  const {items,productionPlan,purchasePlan,warnings}=mrp;
+  const count=(el,n)=>{const e=document.getElementById(el);if(e)e.textContent=n};
+  count('cntOverview',items.length);
+  count('cntProduce',productionPlan.length);
+  count('cntPurchase',purchasePlan.length);
+  count('cntInv',items.filter(i=>i.totalGross>0||i.stock>0).length);
+  count('cntWarn',warnings.length);
+  let tr=0,tp=0,tu=0,s=0,e=0;
+  items.forEach(it=>{
+    tr+=it.totalGross;tp+=it.produceQty;tu+=it.purchaseQty;
+    if(it.status==='shortage')s++;
+    if(it.status==='excess')e++
+  });
+  document.getElementById('statItems').textContent=items.length;
+  document.getElementById('statDemand').textContent=fmtQty(tr);
+  document.getElementById('statProduce').textContent=fmtQty(tp);
+  document.getElementById('statPurchase').textContent=fmtQty(tu);
+  document.getElementById('statShortage').textContent=s;
+  document.getElementById('statExcess').textContent=e;
+  renderOverview(items);
+  renderProduction(productionPlan);
+  renderPurchase(purchasePlan);
+  renderInventory(items);
+  renderWarnings(warnings);
+}
+function renderOverview(items){
+  const body=document.getElementById('overviewBody');
+  const empty=document.getElementById('overviewEmpty');
+  if(items.length===0){body.innerHTML='';empty.classList.remove('hidden');return}
+  empty.classList.add('hidden');
+  let html='';
+  items.forEach((it,i)=>{
+    const rc=it.status==='shortage'?'row-shortage':it.status==='excess'?'row-excess':'row-ok';
+    const lc='lvl-'+Math.min(it.level,3);
+    const nc='lvl-'+Math.min(it.level,3);
+    const schedTotal=it.scheduled.reduce((s,r)=>s+r.qty,0);
+    const dv=it.deliveryDate?fmtDate(it.deliveryDate):'-';
+    const nd=it.earliestNeed?fmtDate(it.earliestNeed):'-';
+    const rel=it.releaseDate?fmtDate(it.releaseDate):'-';
+    const cyc=it.procCycle!==undefined?it.procCycle+'天':'-';
+    const capTxt=it.shiftCap>0?fmtQty(it.shiftCap):'-';
+    const capStyle=it.byCap?'color:#a78bfa;font-weight:500':'color:var(--text-dim)';
+    const ni=_regName(it.name);
+    const hasSrc=it.sources.length>0;
+    const ebtn=hasSrc?'<button class="expand-btn" id="ev_'+i+'" onclick="toggleOverviewExpand('+i+')">▶</button>':'<span style="display:inline-block;width:18px"></span>';
+    const stClass='status-'+it.status;
+    html+='<tr class="'+rc+'" id="ov_'+i+'"><td class="row-num">'+(i+1)+'</td><td>'+ebtn+'</td>'+
+    '<td><span class="lvl-badge '+lc+'">L'+it.level+'</span></td>'+
+    '<td class="cell-name '+nc+'">'+it.name+'</td><td>'+(it.wh||'-')+'</td>'+
+    '<td><span class="proc-badge '+it.proc.cls+'">'+it.proc.label+'</span></td>'+
+    '<td>'+(it.unit||'')+'</td>'+
+    '<td><button class="in-link" onclick="openStockModal(_getName('+ni+'))">'+fmtQty(it.stock)+'</button></td>'+
+    '<td><button class="in-link" onclick="openStockModal(_getName('+ni+'))">'+fmtQty(it.safety)+'</button></td>'+
+    '<td>'+fmtQty(schedTotal)+(schedTotal>0?' <span style="color:#6ee7b7;font-size:10px">('+it.scheduled.length+'批)</span>':'')+'</td>'+
+    '<td class="cell-readonly">'+fmtQty(it.totalGross)+'</td>'+
+    '<td class="cell-prod">'+(it.produceQty>0?fmtQty(it.produceQty):'-')+'</td>'+
+    '<td class="cell-purchase">'+(it.purchaseQty>0?fmtQty(it.purchaseQty):'-')+'</td>'+
+    '<td class="cell-readonly" style="color:'+(it.endingInventory<0?'#fca5a5':(it.endingInventory<it.safety?'#fbbf24':'#22d3ee'))+'">'+fmtQty(it.endingInventory)+'</td>'+
+    '<td style="color:#c084fc">'+dv+'</td>'+
+    '<td>'+nd+'</td><td style="color:#4ade80;font-weight:500">'+rel+'</td>'+
+    '<td style="'+capStyle+'">'+capTxt+'</td>'+
+    '<td><span style="color:var(--cyan-light);font-family:Consolas,monospace">'+cyc+'</span></td>'+
+    '<td><span class="status-badge '+stClass+'">'+it.label+'</span></td></tr>';
+    if(hasSrc){
+      html+='<tr class="expand-row hidden" id="ove_'+i+'"><td colspan="20"><div class="expand-inner"><table><thead><tr><th>来源父件</th><th>贡献毛需求</th><th>子项层级</th><th>对应需求日期</th></tr></thead><tbody>';
+      it.sources.slice().sort((a,b)=>a.depth-b.depth||a.needDate-b.needDate).forEach(s=>{
+        const dl='lvl-badge lvl-'+Math.min(s.depth,3);
+        html+='<tr><td class="cell-parent" title="'+s.parentName+'">'+s.parentName+'</td><td class="cell-qty">'+fmtQty(s.qty)+'</td><td><span class="lvl-badge '+dl+'">L'+s.depth+'</span></td><td class="cell-date">'+fmtDate(s.needDate)+'</td></tr>'
+      });
+      html+='</tbody></table></div></td></tr>';
+    }
+  });
+  body.innerHTML=html;
+}
+function toggleOverviewExpand(i){const row=document.getElementById('ove_'+i);const btn=document.getElementById('ev_'+i);if(!row)return;if(row.classList.contains('hidden')){row.classList.remove('hidden');btn.classList.add('open');btn.textContent='▼'}else{row.classList.add('hidden');btn.classList.remove('open');btn.textContent='▶'}}
+function renderProduction(plan){
+  const body=document.getElementById('productionBody');
+  const empty=document.getElementById('productionEmpty');
+  if(plan.length===0){body.innerHTML='';empty.classList.remove('hidden');return}
+  empty.classList.add('hidden');
+  body.innerHTML=plan.map((r,i)=>{
+    const dl=r.daysLeft<0?'row-shortage':(r.daysLeft<=3?'row-excess':'row-ok');
+    const lbl=r.daysLeft<0?'<span class="status-badge status-shortage">延误'+(-r.daysLeft)+'天</span>':(r.daysLeft<=3?'<span class="status-badge status-warn">仅'+r.daysLeft+'天</span>':'<span class="status-badge status-ok">充足('+r.daysLeft+'天)</span>');
+    const dv=r.deliveryDate?fmtDate(r.deliveryDate):'-';
+    const capTxt=r.shiftCap>0?fmtQty(r.shiftCap):'-';
+    const capStyle=r.byCap?'color:#a78bfa;font-weight:500':'color:var(--text-dim)';
+    const shifts=r.shiftCap>0?Math.ceil(r.qty/r.shiftCap):'-';
+    const cycTxt=(r.byCap?'产能排产':'固定周期')+' '+(r.procCycle||0)+'天';
+    return'<tr class="'+dl+'"><td class="row-num">'+(i+1)+'</td>'+
+    '<td style="color:#c084fc">'+dv+'</td>'+
+    '<td style="color:#4ade80;font-weight:500">'+fmtDate(r.releaseDate)+'</td><td>'+fmtDate(r.needDate)+'</td>'+
+    '<td style="text-align:left;padding-left:8px">'+r.item+'</td>'+
+    '<td>'+(r.wh||'-')+'</td><td><span class="proc-badge '+r.proc.cls+'">'+r.proc.label+'</span></td>'+
+    '<td>'+(r.unit||'')+'</td>'+
+    '<td class="cell-prod" style="font-weight:bold">'+fmtQty(r.qty)+'</td>'+
+    '<td style="'+capStyle+'">'+capTxt+'</td>'+
+    '<td style="color:#fbbf24">'+shifts+'</td>'+
+    '<td><span style="color:var(--cyan-light);font-family:Consolas,monospace;font-size:11px">'+cycTxt+'</span></td>'+
+    '<td class="cell-readonly">'+fmtQty(r.netDemand)+'</td>'+
+    '<td>'+fmtQty(r.stock)+'</td><td>'+fmtQty(r.safety)+'</td>'+
+    '<td>'+fmtQty(r.scheduledTotal)+'</td>'+
+    '<td>'+lbl+'</td></tr>'
+  }).join('');
+}
+function renderPurchase(plan){
+  const body=document.getElementById('purchaseBody');
+  const empty=document.getElementById('purchaseEmpty');
+  if(plan.length===0){body.innerHTML='';empty.classList.remove('hidden');return}
+  empty.classList.add('hidden');
+  body.innerHTML=plan.map((r,i)=>{
+    const dl=r.daysLeft<0?'row-shortage':(r.daysLeft<=3?'row-excess':'row-ok');
+    const lbl=r.daysLeft<0?'<span class="status-badge status-shortage">延误'+(-r.daysLeft)+'天</span>':(r.daysLeft<=3?'<span class="status-badge status-warn">仅'+r.daysLeft+'天</span>':'<span class="status-badge status-ok">充足('+r.daysLeft+'天)</span>');
+    const dv=r.deliveryDate?fmtDate(r.deliveryDate):'-';
+    return'<tr class="'+dl+'"><td class="row-num">'+(i+1)+'</td>'+
+    '<td style="color:#c084fc">'+dv+'</td>'+
+    '<td style="color:#4ade80;font-weight:500">'+fmtDate(r.releaseDate)+'</td><td>'+fmtDate(r.needDate)+'</td>'+
+    '<td style="text-align:left;padding-left:8px">'+r.item+'</td>'+
+    '<td>'+(r.wh||'-')+'</td>'+
+    '<td>'+(r.unit||'')+'</td>'+
+    '<td class="cell-purchase" style="font-weight:bold">'+fmtQty(r.qty)+'</td>'+
+    '<td class="cell-readonly">'+fmtQty(r.netDemand)+'</td>'+
+    '<td>'+fmtQty(r.stock)+'</td><td>'+fmtQty(r.safety)+'</td>'+
+    '<td>'+fmtQty(r.scheduledTotal)+'</td>'+
+    '<td><span style="color:var(--cyan-light);font-family:Consolas,monospace">'+(r.procCycle||0)+'天</span></td>'+
+    '<td>'+lbl+'</td></tr>'
+  }).join('');
+}
+function renderInventory(items){
+  const body=document.getElementById('inventoryBody');
+  const empty=document.getElementById('inventoryEmpty');
+  const f=items.filter(i=>i.totalGross>0||i.stock>0||i.scheduled.length>0);
+  if(f.length===0){body.innerHTML='';empty.classList.remove('hidden');return}
+  empty.classList.add('hidden');
+  body.innerHTML=f.map((it,i)=>{
+    const short=it.minInventory<0;
+    const under=it.endingInventory<it.safety&&it.safety>0;
+    const cls=short?'row-shortage':(under?'row-excess':'row-ok');
+    const ni=_regName(it.name);
+    const schedTotal=it.scheduled.reduce((s,r)=>s+r.qty,0);
+    const shortageLabel=short?'<span class="status-badge status-shortage">短缺 '+fmtQty(Math.abs(it.minInventory))+'</span>':
+      (under?'<span class="status-badge status-warn">低于安全库存</span>':'<span class="status-badge status-ok">正常</span>');
+    return'<tr class="'+cls+'"><td class="row-num">'+(i+1)+'</td>'+
+    '<td style="text-align:left;padding-left:8px">'+it.name+'</td>'+
+    '<td>'+(it.wh||'-')+'</td><td>'+(it.unit||'')+'</td>'+
+    '<td>'+fmtQty(it.stock)+'</td><td>'+fmtQty(it.safety)+'</td>'+
+    '<td>'+fmtQty(schedTotal)+(schedTotal>0?' <span style="color:#6ee7b7;font-size:10px">('+it.scheduled.length+'批)</span>':'')+'</td>'+
+    '<td class="cell-readonly">'+fmtQty(it.totalGross)+'</td>'+
+    '<td style="color:'+(it.endingInventory<0?'#fca5a5':'#22d3ee')+'">'+fmtQty(it.endingInventory)+'</td>'+
+    '<td style="color:'+(it.minInventory<it.safety?'#fca5a5':'#22d3ee')+'">'+fmtQty(it.minInventory)+'</td>'+
+    '<td>'+shortageLabel+'</td>'+
+    '<td><button class="in-link" onclick="openStockModal(_getName('+ni+'))">编辑</button></td></tr>'
+  }).join('');
+}
+function renderWarnings(list){
+  const body=document.getElementById('warningBody');
+  const empty=document.getElementById('warningEmpty');
+  if(list.length===0){body.innerHTML='';empty.classList.remove('hidden');return}
+  empty.classList.add('hidden');
+  const clsOf=l=>l==='critical'?'warn-critical':(l==='mild'?'warn-mild':'warn-info');
+  const labelOf=l=>l==='critical'?'🔴 严重':(l==='mild'?'🟡 警告':'🔵 提示');
+  body.innerHTML=list.map((w,i)=>{
+    return'<tr><td class="row-num">'+(i+1)+'</td>'+
+    '<td><span class="warn-badge '+clsOf(w.level)+'">'+labelOf(w.level)+'</span></td>'+
+    '<td>'+w.type+'</td>'+
+    '<td style="text-align:left;padding-left:8px">'+w.item+'</td>'+
+    '<td style="color:var(--text);text-align:left;padding-left:8px">'+w.content+'</td>'+
+    '<td style="color:var(--text-muted);text-align:left;padding-left:8px">'+w.impact+'</td>'+
+    '<td style="color:#6ee7b7;text-align:left;padding-left:8px">'+w.suggestion+'</td></tr>'
+  }).join('');
+}
+// Backwards-compat stubs
+function calcRequirements(){const r=getMRP();return r.items.map(it=>({
+  name:it.name,wh:it.wh,unit:it.unit,depth:it.level,needDate:it.earliestNeed,qty:it.totalGross,
+  sources:it.sources.map(s=>({name:s.parentName,qty:s.qty,date:fmtDate(s.needDate),depth:s.depth}))
+}))}
+function calcBalance(item){
+  const mrp=getMRP();const it=mrp.items.find(x=>x.name===item.name);
+  if(!it)return{stock:0,safety:0,req:0,produce:0,purchase:0,ending:0,status:'ok',label:'-',leadStatus:'ok',leadLabel:'-',proc:getProcess(item.wh),daysLeft:9999};
+  const today=parseDate(todayStr());
+  const dl=it.releaseDate?diffDays(it.releaseDate,today):9999;
+  return{stock:it.stock,safety:it.safety,req:it.totalGross,produce:it.produceQty,purchase:it.purchaseQty,ending:it.endingInventory,
+    status:it.status,label:it.label,proc:it.proc,
+    leadStatus:dl<0?'shortage':(dl<=3?'warn':'ok'),
+    leadLabel:dl<0?('延误'+(-dl)+'天'):(dl===9999?'无日期':'距下达'+dl+'天'),daysLeft:dl}
+}
+function toggleExpand(i){toggleOverviewExpand(i)}
+function toggleAllDetail(){
+  const mrp=getMRP();const n=mrp.items.length;let has=false;
+  for(let i=0;i<n;i++){
+    const row=document.getElementById('ove_'+i);const btn=document.getElementById('ev_'+i);if(!row||!btn)continue;
+    has=true;if(!_allExpanded){row.classList.remove('hidden');btn.classList.add('open');btn.textContent='▼'}
+    else{row.classList.add('hidden');btn.classList.remove('open');btn.textContent='▶'}
+  }
+  if(!has){toast('暂无明细数据','error');return}
+  _allExpanded=!_allExpanded;
+}
+function updateStock(n,f,v){openStockModal(n)}
+// ================ EXPORTS ================
+function exportBalanceCSV(){
+  const mrp=getMRP();
+  if(mrp.items.length===0){toast('暂无数据','error');return}
+  let csv='';
+  csv+='=== 总览 ===\n';
+  const H1=['层级','物料名称','仓库','工序','单位','期初库存','安全库存','计划接收','毛需求','建议生产量','建议采购量','预计期末','客户交付','本层需求','下达日期','工序周期','状态','明细来源'];
+  csv+=H1.join(',')+'\n';
+  mrp.items.forEach(it=>{
+    const schedTotal=it.scheduled.reduce((s,r)=>s+r.qty,0);
+    const src=it.sources.map(s=>s.parentName+'('+fmtQty(s.qty)+')').join('; ');
+    const v=['L'+it.level,it.name,it.wh||'',it.proc.label,it.unit||'',it.stock,it.safety,schedTotal,it.totalGross,it.produceQty,it.purchaseQty,it.endingInventory,fmtDate(it.deliveryDate),fmtDate(it.earliestNeed),fmtDate(it.releaseDate),(it.procCycle||0)+'天',it.label,src];
+    csv+=v.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')+'\n';
+  });
+  csv+='\n=== 生产计划 ===\n';
+  const H2=['客户交付','下达日期','需求日期','物料名称','仓库','工序','单位','计划数量','净需求','期初库存','安全库存','计划接收','工序周期','提前期状态'];
+  csv+=H2.join(',')+'\n';
+  mrp.productionPlan.forEach(r=>{
+    const dl=r.daysLeft<0?'延误'+(-r.daysLeft)+'天':(r.daysLeft<=3?'临近('+r.daysLeft+'天)':'充足('+r.daysLeft+'天)');
+    const v=[fmtDate(r.deliveryDate),fmtDate(r.releaseDate),fmtDate(r.needDate),r.item,r.wh||'',r.proc.label,r.unit||'',r.qty,r.netDemand,r.stock,r.safety,r.scheduledTotal,(r.procCycle||0)+'天',dl];
+    csv+=v.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')+'\n';
+  });
+  csv+='\n=== 采购计划 ===\n';
+  const H3=['客户交付','下达日期','到货日期','物料名称','仓库','单位','采购数量','净需求','期初库存','安全库存','计划接收','工序周期','提前期状态'];
+  csv+=H3.join(',')+'\n';
+  mrp.purchasePlan.forEach(r=>{
+    const dl=r.daysLeft<0?'延误'+(-r.daysLeft)+'天':(r.daysLeft<=3?'临近('+r.daysLeft+'天)':'充足('+r.daysLeft+'天)');
+    const v=[fmtDate(r.deliveryDate),fmtDate(r.releaseDate),fmtDate(r.needDate),r.item,r.wh||'',r.unit||'',r.qty,r.netDemand,r.stock,r.safety,r.scheduledTotal,(r.procCycle||0)+'天',dl];
+    csv+=v.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')+'\n';
+  });
+  csv+='\n=== 库存预测 ===\n';
+  const H4=['物料名称','仓库','单位','期初库存','安全库存','在途/在制','毛需求总量','预计期末','最低库存','是否短缺'];
+  csv+=H4.join(',')+'\n';
+  mrp.items.filter(it=>it.totalGross>0||it.stock>0||it.scheduled.length>0).forEach(it=>{
+    const schedTotal=it.scheduled.reduce((s,r)=>s+r.qty,0);
+    const shortLabel=it.minInventory<0?'短缺':(it.endingInventory<it.safety&&it.safety>0?'低于安全':'正常');
+    const v=[it.name,it.wh||'',it.unit||'',it.stock,it.safety,schedTotal,it.totalGross,it.endingInventory,it.minInventory,shortLabel];
+    csv+=v.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')+'\n';
+  });
+  csv+='\n=== 异常预警 ===\n';
+  const H5=['级别','类型','物料名称','预警内容','影响','建议'];
+  csv+=H5.join(',')+'\n';
+  mrp.warnings.forEach(w=>{
+    const lbl=w.level==='critical'?'严重':(w.level==='mild'?'警告':'提示');
+    const v=[lbl,w.type,w.item,w.content,w.impact,w.suggestion];
+    csv+=v.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')+'\n';
+  });
+  dlFile(csv,'MRP运行结果.csv','text/csv;charset=utf-8');toast('CSV已导出（含5个区块）','success')
+}
+function exportBalanceExcel(){exportBalanceCSV()}
+function dlFile(c,f,m){const b=new Blob([c],{type:m});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=f;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(u),1000)}
+function clearAll(){if(bom.length===0&&parentDemand.length===0){toast('暂无数据');return}if(!confirm('确认清空所有BOM和需求数据？'))return;bom=[];parentDemand=[];saveData();renderBOM();renderDemand();renderBalance();updateInfo();toast('已清空','success')}
+function updateProcCycles(){
+  procCycles.装配=Math.max(0,Math.min(60,parseInt(document.getElementById('cycAsm').value)||7));
+  procCycles.注塑=Math.max(0,Math.min(60,parseInt(document.getElementById('cycInj').value)||5));
+  procCycles.采购=Math.max(0,Math.min(60,parseInt(document.getElementById('cycPur').value)||10));
+  document.getElementById('cycAsmDisp').textContent=procCycles.装配;
+  document.getElementById('cycInjDisp').textContent=procCycles.注塑;
+  document.getElementById('cycPurDisp').textContent=procCycles.采购;
+  saveData();invalidateMRP();renderBalance();toast('工序周期已更新：装配'+procCycles.装配+'天/注塑'+procCycles.注塑+'天/采购'+procCycles.采购+'天','success')
+}
+function saveData(){try{localStorage.setItem(SK,JSON.stringify({leadTime,procCycles,bom,parentDemand,itemStock}))}catch(e){}}
+function loadData(){try{const r=localStorage.getItem(SK);if(r){const d=JSON.parse(r);if(d.leadTime!==undefined)leadTime=d.leadTime;if(d.procCycles){procCycles=Object.assign({装配:7,注塑:5,采购:10},d.procCycles)}if(Array.isArray(d.bom))bom=d.bom;if(Array.isArray(d.parentDemand))parentDemand=d.parentDemand;if(d.itemStock)itemStock=d.itemStock}}catch(e){}}
+// URL param: ?bom=1 auto-import BOM data
+function autoImportBOM(){
+  const p=new URLSearchParams(location.search);
+  if(p.get('bom')==='1'){
+    fetch('/bom-data.tsv?_t='+Date.now()).then(r=>{
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return r.text();
+    }).then(text=>{
+      const parsed=parseDelimited(text);
+      const mapped=mapBOM(parsed);
+      if(mapped.length>0){
+        bom=mapped;parentDemand=[];saveData();renderBOM();renderDemand();renderBalance();updateInfo();
+        toast('已重新导入 '+mapped.length+' 行BOM数据（最新）','success');
+        setTimeout(()=>switchTab('balance'),500);
+      }else{
+        toast('BOM文件未解析到有效数据','error');
+      }
+    }).catch(e=>{toast('BOM自动导入失败：'+e.message,'error')});
+    return true;
+  }
+  return false;
+}
+// Sample
+function loadSample(){
+  bom=[
+    {parentWh:'装配成品仓',parent:'V206侧底座_894组件-新',yieldRate:100,childWh:'自制半成品仓',child:'V206 侧转向手柄底座_894-新',childVer:'V1.0',unit:'PC',qtyPerUnit:1,fixedLoss:0},
+    {parentWh:'装配成品仓',parent:'V206侧底座_894组件-新',yieldRate:100,childWh:'外购半成品仓',child:'V206 减震垫',childVer:'',unit:'PC',qtyPerUnit:1,fixedLoss:0},
+    {parentWh:'装配成品仓',parent:'V206侧底座_894组件-新',yieldRate:100,childWh:'外购半成品仓',child:'V206 旋转支架2',childVer:'',unit:'PC',qtyPerUnit:1,fixedLoss:0},
+    {parentWh:'自制半成品仓',parent:'V206 侧转向手柄底座_894-新',yieldRate:100,childWh:'原材料仓',child:'PC+ABS 704',childVer:'',unit:'千克',qtyPerUnit:0.0116,fixedLoss:0.0006},
+    {parentWh:'装配成品仓',parent:'C673装饰件总成-慕夜黑',yieldRate:100,childWh:'外购半成品仓',child:'C673侧围装饰件-慕夜黑',childVer:'',unit:'PC',qtyPerUnit:1,fixedLoss:0},
+    {parentWh:'装配成品仓',parent:'C673装饰件总成-慕夜黑',yieldRate:100,childWh:'外购半成品仓',child:'C673开关装饰件',childVer:'',unit:'PC',qtyPerUnit:1,fixedLoss:0}
+  ];
+  const t=new Date();t.setDate(t.getDate()+21);const p=n=>String(n).padStart(2,'0');
+  const ds=t.getFullYear()+'-'+p(t.getMonth()+1)+'-'+p(t.getDate());
+  parentDemand=[{product:'V206侧底座_894组件-新',demand:200,date:ds,wh:'装配成品仓'},{product:'C673装饰件总成-慕夜黑',demand:150,date:ds,wh:'装配成品仓'}];
+  itemStock={'V206 侧转向手柄底座_894-新':{stock:30,safety:20},'V206 减震垫':{stock:50,safety:30},'V206 旋转支架2':{stock:80,safety:40},'PC+ABS 704':{stock:1,safety:0.5},'C673侧围装饰件-慕夜黑':{stock:100,safety:50},'C673开关装饰件':{stock:200,safety:80}};
+  saveData();
+}
+// Init
+document.getElementById('todayDate').textContent=todayStr();
+loadData();
+document.getElementById('cycAsm').value=procCycles.装配;
+document.getElementById('cycInj').value=procCycles.注塑;
+document.getElementById('cycPur').value=procCycles.采购;
+document.getElementById('cycAsmDisp').textContent=procCycles.装配;
+document.getElementById('cycInjDisp').textContent=procCycles.注塑;
+document.getElementById('cycPurDisp').textContent=procCycles.采购;
+if(!autoImportBOM()){
+  if(bom.length===0){loadSample()}
+  renderBOM();renderDemand();updateInfo();
+}
+</script>
+</body>
+</html>

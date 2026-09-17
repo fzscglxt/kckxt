@@ -1,0 +1,11 @@
+{
+  "name": "warehouse-kanban",
+  "version": "1.0.0",
+  "description": "库位看板多用户系统",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "MIT"
+}
