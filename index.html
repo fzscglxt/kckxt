@@ -697,7 +697,7 @@ const localBackup = {
       tx.objectStore('handles').put({ handle: dirHandle, savedAt: new Date().toISOString() }, 'kc_backupDir');
       await tx.done;
       await this.save();
-      alert('备份文件夹已选择，以后每次点"保存"会自动写入该文件夹');
+      alert('备份文件夹已选择！建议路径：D:\系统数据\仓库备份。以后每次点保存会自动写入latest.json');
     } catch(e) {
       if (e.name !== 'AbortError') alert('选择文件夹失败：' + e.message);
     }
