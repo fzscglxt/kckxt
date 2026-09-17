@@ -619,15 +619,18 @@ async function pushCloud() {
       signal: controller2.signal
     });
     clearTimeout(timeout2);
+    const result = await resp.json();
+    if (result.error === 'conflict') {
+      cloudVersion = result.version || 0;
+      if (result.db) {
         try { localStorage.setItem(STANDALONE_KEY, JSON.stringify(result.db)); } catch(e) {}
         _cache = null;
         if (typeof renderAll === 'function') renderAll();
       }
       setCloudStatusUI('error', '冲突已刷新');
-      setCloudStatusUI('error', '冲突已刷新');
       return false;
+    }
     if (result.error) throw new Error(result.message || 'push failed');
-    cloudVersion = result.version;
     cloudVersion = result.version;
     setCloudStatusUI('synced');
     return true;
@@ -635,6 +638,8 @@ async function pushCloud() {
     console.warn('pushCloud error', e);
     setCloudStatusUI('error', e.message || '保存失败');
     throw e;
+  }
+}
 function markPendingSave() {
   setCloudStatusUI('pending', '有未保存修改，点"保存"按钮上传');
 }
