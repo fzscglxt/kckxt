@@ -807,7 +807,7 @@ function updateLoginModeHint() {
   const hint = document.getElementById('loginModeHint');
   if (!hint) return;
   if (_mode === 'standalone') {
-    hint.textContent = '当前为单机模式，数据保存在此电脑的浏览器中';
+    hint.textContent = '已同步云端，多用户共享数据';
     hint.className = 'login-mode-hint standalone';
   } else {
     hint.textContent = '服务器已连接，多用户模式可用';
