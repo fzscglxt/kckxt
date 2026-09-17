@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -564,6 +564,90 @@ function loadLocalData() {
 }
 function saveLocalData(data) {
   try { localStorage.setItem(STANDALONE_KEY, JSON.stringify(data)); } catch {}
+  scheduleCloudPush();
+}
+
+/* ===== 云端同步（Cloudflare Pages Functions + KV） ===== */
+let cloudVersion = 0;
+let cloudPushTimer = null;
+
+function setCloudStatusUI(status, msg) {
+  const el = document.getElementById('cloudStatus');
+  if (!el) return;
+  if (status === 'synced') {
+    el.textContent = '☁️ 已同步 ' + new Date().toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'});
+    el.style.background = '#e6f4ea'; el.style.color = '#1e8e3e';
+  } else if (status === 'pending') {
+    el.textContent = '📝 待保存…';
+    el.style.background = '#fef7e0'; el.style.color = '#b06000';
+  } else if (status === 'error') {
+    el.textContent = '⚠️ 云端失败 ' + (msg || '');
+    el.style.background = '#fce8e6'; el.style.color = '#d93025';
+  } else {
+    el.textContent = '⏳ ' + (msg || '同步中…');
+    el.style.background = '#e8f0fe'; el.style.color = '#1a73e8';
+  }
+}
+
+async function pullCloud() {
+  try {
+    const resp = await fetch('/api/db', { method: 'GET' });
+    const data = await resp.json();
+    if (data && data.error) throw new Error(data.message || data.error);
+    cloudVersion = data.version || 0;
+    if (data.db) {
+      try { localStorage.setItem(STANDALONE_KEY, JSON.stringify(data.db)); } catch(e) {}
+      return data.db;
+    }
+    return null;
+  } catch(e) {
+    console.warn('pullCloud error', e);
+    return null;
+  }
+}
+
+async function pushCloud() {
+  try {
+    const data = loadLocalData();
+    const resp = await fetch('/api/db', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'If-Version': String(cloudVersion) },
+      body: JSON.stringify({ db: data, savedBy: (_user && _user.username) || '' })
+    });
+    const result = await resp.json();
+    if (result.error === 'conflict') {
+      cloudVersion = result.version || 0;
+      if (result.db) {
+        try { localStorage.setItem(STANDALONE_KEY, JSON.stringify(result.db)); } catch(e) {}
+        _cache = null;
+        if (typeof renderAll === 'function') renderAll();
+      }
+      setCloudStatusUI('error', '冲突已刷新');
+      return;
+    }
+    if (result.error) throw new Error(result.message || 'push failed');
+    cloudVersion = result.version;
+    setCloudStatusUI('synced');
+  } catch(e) {
+    console.warn('pushCloud error', e);
+    setCloudStatusUI('error');
+  }
+}
+
+function scheduleCloudPush() {
+  setCloudStatusUI('pending');
+  if (cloudPushTimer) clearTimeout(cloudPushTimer);
+  cloudPushTimer = setTimeout(() => { pushCloud(); }, 1500);
+}
+
+async function initCloud() {
+  setCloudStatusUI('loading', '连接云端…');
+  const remote = await pullCloud();
+  if (remote) {
+    setCloudStatusUI('synced', '已同步云端');
+  } else {
+    await pushCloud();
+  }
 }
 function buildDemoData() {
   const now = Date.now();
@@ -629,31 +713,10 @@ function buildDemoData() {
 
 /* ===== Mode detection & indicator ===== */
 async function detectServerMode() {
-  try {
-    const resp = await fetch('/api/me', {
-      method: 'GET',
-      headers: { 'Authorization': 'Bearer invalid' }
-    });
-    // Check for real API server: it returns JSON with 401 status
-    const ct = resp.headers.get('content-type') || '';
-    if (resp.status === 401 && ct.includes('json')) {
-      _mode = 'server';
-    } else if (resp.ok && ct.includes('json')) {
-      _mode = 'server';
-    } else {
-      // Not a real API server (likely old static file server)
-      _mode = 'standalone';
-    }
-  } catch (e) {
-    // Network error - definitely standalone
-    _mode = 'standalone';
-  }
+  _mode = 'standalone';
   updateModeIndicator();
   updateLoginModeHint();
-
-  // If switching to standalone mode, clear any stale server token
-  if (_mode === 'standalone' && _token) {
-    console.log('[Init] Standalone mode: clearing stale server token');
+  if (_token) {
     _token = null;
     sessionStorage.removeItem('wh_token');
   }
@@ -669,16 +732,7 @@ function updateLoginModeHint() {
     hint.className = 'login-mode-hint server';
   }
 }
-function updateModeIndicator() {
-  const banner = document.getElementById('modeBanner');
-  if (!banner) return;
-  if (_mode === 'standalone') {
-    banner.textContent = '单机模式 · 数据保存在本机';
-    banner.style.display = 'block';
-  } else {
-    banner.style.display = 'none';
-  }
-}
+function updateModeIndicator() { /* 云端状态由 setCloudStatusUI 控制 */ }
 
 async function api(path, opts = {}) {
   // Standalone mode: handle locally
