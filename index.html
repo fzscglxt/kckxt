@@ -591,10 +591,11 @@ function setCloudStatusUI(status, msg) {
 
 async function pullCloud() {
   try {
-    const resp = await fetch('/api/db', { method: 'GET' });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const resp = await fetch('/api/db', { method: 'GET', signal: controller.signal });
+    clearTimeout(timeout);
     const data = await resp.json();
-    if (data && data.error) throw new Error(data.message || data.error);
-    cloudVersion = data.version || 0;
     if (data.db) {
       try { localStorage.setItem(STANDALONE_KEY, JSON.stringify(data.db)); } catch(e) {}
       return data.db;
@@ -609,15 +610,15 @@ async function pullCloud() {
 async function pushCloud() {
   try {
     const data = loadLocalData();
+    const controller2 = new AbortController();
+    const timeout2 = setTimeout(() => controller2.abort(), 5000);
     const resp = await fetch('/api/db', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'If-Version': String(cloudVersion) },
-      body: JSON.stringify({ db: data, savedBy: (_user && _user.username) || '' })
+      body: JSON.stringify({ db: data, savedBy: (_user && _user.username) || '' }),
+      signal: controller2.signal
     });
-    const result = await resp.json();
-    if (result.error === 'conflict') {
-      cloudVersion = result.version || 0;
-      if (result.db) {
+    clearTimeout(timeout2);
         try { localStorage.setItem(STANDALONE_KEY, JSON.stringify(result.db)); } catch(e) {}
         _cache = null;
         if (typeof renderAll === 'function') renderAll();
