@@ -366,8 +366,8 @@
   </div>
 
   <!-- Mode Banner (shown in standalone mode) -->
-  <div class="mode-banner" id="modeBanner" style="display:none">单机模式 · 数据保存在本机</div>
-
+  <div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:6px 14px;background:#e8f0fe;border-radius:6px;margin-bottom:4px">
+    <span id="cloudStatus" style="font-size:13px;color:#1a73e8">⏳ 连接云端…</span>
   <!-- Stats Bar -->
   <div class="stats-bar">
     <div class="stat-item">
@@ -623,30 +623,106 @@ async function pushCloud() {
         if (typeof renderAll === 'function') renderAll();
       }
       setCloudStatusUI('error', '冲突已刷新');
-      return;
-    }
+      setCloudStatusUI('error', '冲突已刷新');
+      return false;
     if (result.error) throw new Error(result.message || 'push failed');
     cloudVersion = result.version;
+    cloudVersion = result.version;
     setCloudStatusUI('synced');
+    return true;
   } catch(e) {
     console.warn('pushCloud error', e);
-    setCloudStatusUI('error');
+    setCloudStatusUI('error', e.message || '保存失败');
+    throw e;
+function markPendingSave() {
+  setCloudStatusUI('pending', '有未保存修改，点"保存"按钮上传');
+}
+
+async function manualSave() {
+  setCloudStatusUI('loading', '正在保存到云端…');
+  try {
+    // 先拉取最新版本号
+    await pullCloud();
+    // 再推送
+    const ok = await pushCloud();
+    if (ok !== false) {
+      // 本地备份
+      if (window.localBackup && localBackup.dirHandle) {
+        await localBackup.save();
+      }
+      setCloudStatusUI('synced', '已保存并备份 ' + new Date().toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'}));
+      alert('保存成功，已上传云端并备份到本地');
+    }
+  } catch(e) {
+    console.error('manualSave error', e);
+    setCloudStatusUI('error', '保存失败');
+    alert('保存失败：' + e.message);
   }
 }
 
-function scheduleCloudPush() {
-  setCloudStatusUI('pending');
-  if (cloudPushTimer) clearTimeout(cloudPushTimer);
-  cloudPushTimer = setTimeout(() => { pushCloud(); }, 1500);
-}
+// 本地自动备份（File System Access API）
+const localBackup = {
+  dirHandle: null,
+  async init() {
+    try {
+      const db = await this._openDB();
+      const tx = db.transaction('handles', 'readonly');
+      const rec = await tx.objectStore('handles').get('kc_backupDir');
+      if (rec && rec.handle) {
+        const allowed = await rec.handle.queryPermission({ mode: 'readwrite' });
+        if (allowed === 'granted') {
+          this.dirHandle = rec.handle;
+        }
+      }
+    } catch(e) { console.warn('localBackup init', e); }
+  },
+  _openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open('kc_local_backup', 1);
+      req.onupgradeneeded = () => req.result.createObjectStore('handles');
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  },
+  async choose() {
+    if (!window.showDirectoryPicker) {
+      alert('当前浏览器不支持本地备份，请用最新版Chrome或Edge');
+      return;
+    }
+    try {
+      const dirHandle = await window.showDirectoryPicker({ id: 'kc_backup', mode: 'readwrite' });
+      this.dirHandle = dirHandle;
+      const db = await this._openDB();
+      const tx = db.transaction('handles', 'readwrite');
+      tx.objectStore('handles').put({ handle: dirHandle, savedAt: new Date().toISOString() }, 'kc_backupDir');
+      await tx.done;
+      await this.save();
+      alert('备份文件夹已选择，以后每次点"保存"会自动写入该文件夹');
+    } catch(e) {
+      if (e.name !== 'AbortError') alert('选择文件夹失败：' + e.message);
+    }
+  },
+  async save() {
+    if (!this.dirHandle) return;
+    try {
+      const data = loadLocalData();
+      const f = await this.dirHandle.getFileHandle('latest.json', { create: true });
+      const w = await f.createWritable();
+      await w.write(JSON.stringify(data));
+      await w.close();
+    } catch(e) { console.warn('localBackup save', e); }
+  }
+};
+window.localBackup = localBackup;
 
 async function initCloud() {
   setCloudStatusUI('loading', '连接云端…');
+  await localBackup.init();
   const remote = await pullCloud();
   if (remote) {
-    setCloudStatusUI('synced', '已同步云端');
+    setCloudStatusUI('synced', '已同步云端最新');
   } else {
-    await pushCloud();
+    setCloudStatusUI('synced', '已就绪，点保存上传');
   }
 }
 function buildDemoData() {
@@ -2303,3 +2379,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 </script>
 </body>
 </html>
+    <button onclick="manualSave()" style="background:#1a73e8;color:#fff;border:none;padding:5px 16px;border-radius:4px;cursor:pointer;font-size:13px">💾 保存</button>
+    <button onclick="localBackup.choose()" style="background:#6b7280;color:#fff;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;font-size:13px">📁 备份文件夹</button>
+  </div>
