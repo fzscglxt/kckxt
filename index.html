@@ -1200,6 +1200,7 @@ function pullCloudDB() {
     .then(data => {
       if (data && data.error) throw new Error(data.message || data.error);
       cloud.version = data.version || 0;
+      cloudVersion = data.version || 0;
       cloud.remoteUpdatedAt = data.updatedAt || 0;
       return data.db ? data.db : null;
     });
