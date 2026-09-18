@@ -2605,7 +2605,7 @@ function doInbound() {
   api('/api/inbound', {
     method: 'POST',
     body: JSON.stringify(reqBody)
-  }).then(r => {
+  }, _currentSet).then(r => {
     _cache.cells[currentEditCell] = r.cell;
     const type = r.isNewCell ? '入库' : (r.mode === 'new_batch' ? '二次入库' : '更新');
     const status = r.isNewCell ? '已入库' : (r.mode === 'new_batch' ? '已入库' : '已更新');
@@ -2635,7 +2635,7 @@ function doOutboundFromModal() {
   api('/api/outbound', {
     method: 'POST',
     body: JSON.stringify({ location: currentEditCell, quantity: outQuantity, batchIndex: currentSelectedBatchIndex })
-  }).then(r => {
+  }, _currentSet).then(r => {
     if (r.cleared) {
       delete _cache.cells[currentEditCell];
     } else if (_cache.cells[currentEditCell]) {
@@ -2688,7 +2688,7 @@ function doOutbound() {
     api('/api/outbound', {
       method: 'POST',
       body: JSON.stringify({ location: currentEditCell, quantity: 999999, batchIndex: 0 })
-    }).then(r => {
+    }, _currentSet).then(r => {
       if (_cache.cells[currentEditCell]) {
         if (r.remainByBatch) {
           _cache.cells[currentEditCell] = {
@@ -3182,7 +3182,7 @@ function doImport() {
   api('/api/import', {
     method: 'POST',
     body: JSON.stringify({ rows: importRows })
-  }).then(r => {
+  }, _currentSet).then(r => {
     invalidateCache();
     return loadData();
   }).then(() => {
