@@ -1643,7 +1643,7 @@ async function standaloneApi(path, opts = {}) {
 
 async function loadData() {
   if (_cache) return _cache;
-  _cache = await api('/api/data');
+  _cache = await api('/api/data', {}, _currentSet);
   Object.keys(_cache.cells).forEach(k => _cache.cells[k]=migrateCellLocally(_cache.cells[k]));
   _whCellsCache[_currentSet] = _cache.cells;
   // 后台预取另外两个仓的存货（用于商品搜索跨仓筛选），不阻塞渲染
