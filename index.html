@@ -1712,7 +1712,6 @@ async function standaloneApi(path, opts = {}) {
 }
 
 async function loadData() {
-  if (_cache) return _cache;
   _cache = await api('/api/data', {}, _currentSet);
   Object.keys(_cache.cells).forEach(k => _cache.cells[k]=migrateCellLocally(_cache.cells[k]));
   _whCellsCache[_currentSet] = _cache.cells;
