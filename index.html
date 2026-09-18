@@ -1370,39 +1370,69 @@ function updateModeIndicator() {
   }
 }
 
-async function api(path, opts = {}, whTypeOverride) {
-  // Standalone mode: handle locally
-  if (_mode === 'standalone') {
-    if (whTypeOverride && WH_TYPES.includes(whTypeOverride) && !/[?&]whType=/.test(path)) {
-      const sep = path.includes('?') ? '&' : '?';
-      return standaloneApi(path + sep + 'whType=' + encodeURIComponent(whTypeOverride), opts);
-    }
-    return standaloneApi(path, opts);
-  }
-  const headers = { 'Content-Type': 'application/json' };
-  if (_token) headers.Authorization = 'Bearer ' + _token;
-  // Inject whType: GET via query param, POST via body or query
-  const wt = (whTypeOverride && WH_TYPES.includes(whTypeOverride)) ? whTypeOverride : _currentSet;
-  const sep = path.includes('?') ? '&' : '?';
-  const url = path + sep + 'whType=' + encodeURIComponent(wt);
+let cloudVersion = 0;
+async function pullCloud() {
   try {
-    const resp = await fetch(url, { ...opts, headers });
-    if (resp.status === 401) { handleUnauthorized(); throw new Error('未登录或会话已过期'); }
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const resp = await fetch('/api/db', { method: 'GET', signal: controller.signal });
+    clearTimeout(timeout);
     const data = await resp.json();
-    if (!resp.ok) throw new Error(data.error || '请求失败');
-    return data;
-  } catch (e) {
-    if (e.message === '未登录或会话已过期') throw e;
-    // Network error: auto switch to standalone mode
-    if (e instanceof TypeError || e.message.includes('Failed to fetch')) {
-      console.log('[API] Server unreachable, switching to standalone mode');
-      _mode = 'standalone';
-      updateModeIndicator();
-      // Don't auto-login, just throw
-      throw new Error('无法连接服务器，已切换为单机模式，请使用本地账号登录');
+    if (data.db) {
+      cloudVersion = data.version || 0;
+      try { localStorage.setItem(STANDALONE_KEY, JSON.stringify(data.db)); } catch(e) {}
+      return data.db;
     }
+    return null;
+  } catch(e) {
+    console.warn('pullCloud error', e);
+    return null;
+  }
+}
+async function pushCloud() {
+  try {
+    const data = loadLocalData();
+    const controller2 = new AbortController();
+    const timeout2 = setTimeout(() => controller2.abort(), 5000);
+    const resp = await fetch('/api/db', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'If-Version': String(cloudVersion) },
+      body: JSON.stringify({ db: data, savedBy: (_user && _user.username) || '' }),
+      signal: controller2.signal
+    });
+    clearTimeout(timeout2);
+    const result = await resp.json();
+    if (result.error === 'conflict') {
+      cloudVersion = result.version || 0;
+      if (result.db) {
+        try { localStorage.setItem(STANDALONE_KEY, JSON.stringify(result.db)); } catch(e) {}
+        _cache = null;
+        if (typeof renderAll === 'function') renderAll();
+      }
+      return false;
+    }
+    if (result.error) throw new Error(result.message || 'push failed');
+    cloudVersion = result.version;
+    return true;
+  } catch(e) {
+    console.warn('pushCloud error', e);
     throw e;
   }
+}
+async function api(path, opts = {}, whTypeOverride) {
+  // 总是本地处理
+  let result;
+  if (whTypeOverride && WH_TYPES.includes(whTypeOverride) && !/[?&]whType=/.test(path)) {
+    const sep = path.includes('?') ? '&' : '?';
+    result = await standaloneApi(path + sep + 'whType=' + encodeURIComponent(whTypeOverride), opts);
+  } else {
+    result = await standaloneApi(path, opts);
+  }
+  // 修改数据后自动推送云端
+  if (path !== '/api/data' && path !== '/api/me' && path !== '/api/login' && path !== '/api/logout') {
+    try { await pushCloud(); } catch(e) { console.warn('auto push failed', e); }
+  }
+  return result;
 }
 
 /* ===== Standalone API (localStorage-based) ===== */
@@ -3246,6 +3276,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // 自动探测服务器可用性
+  // 启动时从云端拉取数据
+  await pullCloud();
   // 启动时从云端拉取数据
   await pullCloud();
   await detectServerMode();
