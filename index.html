@@ -3248,8 +3248,8 @@ async function doLogin() {
       hideLoginMask();
       updateUserDisplay();
       invalidateCache();
-      _cache = { ...loadLocalData() };
-      renderAll();
+      loadData().then(() => { renderAll(); }).catch(()=>{});
+
     } else {
       // Server mode: try API first
       const resp = await fetch('/api/login', {
