@@ -377,7 +377,7 @@
 <body data-inspector-id="html:e79a0f13:1">
 
 <!-- Login Overlay -->
-<div class="login-overlay hide" id="loginOverlay" data-inspector-id="html:e79a0f13:2">
+<div class="login-overlay" id="loginOverlay" data-inspector-id="html:e79a0f13:2">
   <div class="login-card" data-inspector-id="html:e79a0f13:3">
     <div class="login-title" data-inspector-id="html:e79a0f13:4">库位看板</div>
     <div class="login-subtitle" data-inspector-id="html:e79a0f13:5">多用户仓库管理系统</div>
@@ -397,7 +397,7 @@
   </div>
 </div>
 
-<div class="page" data-inspector-id="html:e79a0f13:18">
+<div class="page" style="display:none" data-inspector-id="html:e79a0f13:18">
 
   <!-- Header -->
   <div class="header" data-inspector-id="html:e79a0f13:19">
@@ -3210,18 +3210,18 @@ function updateTime() {
 
 /* ===== Login / Auth ===== */
 function showLoginMask() {
+function showLoginMask() {
   document.getElementById('loginOverlay').classList.remove('hide');
+  document.querySelector('.page').style.display = 'none';
   document.getElementById('userBar').style.display = 'none';
   const user = document.getElementById('loginUser');
   if (user) setTimeout(() => user.focus(), 100);
 }
 function hideLoginMask() {
   document.getElementById('loginOverlay').classList.add('hide');
+  document.querySelector('.page').style.display = '';
   document.getElementById('userBar').style.display = 'flex';
 }
-function updateUserDisplay() {
-  const el = document.getElementById('currentUserName');
-  if (el) el.textContent = _user ? `${_user.name} (${_user.username})` : '-';
 }
 async function doLogin() {
   const username = document.getElementById('loginUser').value.trim();
