@@ -3411,8 +3411,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('正在从云端拉取最新数据...');
     const cloudDB = await pullCloudDB();
     if (cloudDB) {
+      // 确保每个仓库数据结构完整
+      WH_TYPES.forEach(t => {
+        if (!cloudDB[t]) cloudDB[t] = { version: 1, cells: {}, records: [], updatedAt: Date.now() };
+        if (!cloudDB[t].cells) cloudDB[t].cells = {};
+        if (!cloudDB[t].records) cloudDB[t].records = [];
+      });
       localStorage.setItem(STANDALONE_KEY, JSON.stringify(cloudDB));
-      console.log('云端数据拉取成功，已更新本地缓存');
+      const verify = JSON.parse(localStorage.getItem(STANDALONE_KEY));
+      console.log('云端数据拉取成功，semi cells:', Object.keys(verify.semi.cells).length);
       const statusEl = document.getElementById('cloudStatus');
       if (statusEl) statusEl.textContent = '已同步云端最新数据';
     } else {
