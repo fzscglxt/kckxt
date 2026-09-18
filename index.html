@@ -1218,7 +1218,7 @@ const WH_TYPES = ['semi', 'assembly', 'selfmade', 'raw'];
 const WH_NAMES = { semi: '半成品仓库', assembly: '装配成品仓', selfmade: '自制成品仓（一楼）', raw: '原材料仓' };
 let _token = sessionStorage.getItem('wh_token') || null;
 let _user = null;
-let _mode = 'server'; // 'server' | 'standalone'
+let _mode = 'standalone'; // 纯本地模式，不连接远程服务器
 try { _user = JSON.parse(sessionStorage.getItem('wh_user') || 'null'); } catch { _user = null; }
 
 /* ===== Local accounts (fallback when server unavailable) ===== */
@@ -3344,10 +3344,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 自动探测服务器可用性
   // 启动时从云端拉取数据
-  await pullCloud();
-  // 启动时从云端拉取数据
-  await pullCloud();
-  await detectServerMode();
+  // 纯本地模式，不连接远程服务器
+  // await pullCloud();
+  // await pullCloud();
+  // await detectServerMode();
 
   // 探测登录状态
   if (_mode === 'standalone') {
