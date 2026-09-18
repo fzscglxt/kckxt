@@ -3315,7 +3315,7 @@ async function migrateOldLocalData() {
     const r = await api('/api/import', {
       method: 'POST',
       body: JSON.stringify({ rows, mode: 'replace' })
-    });
+    }, _currentSet);
     localStorage.removeItem(STORAGE_KEY);
     invalidateCache();
     await loadData();
