@@ -1430,7 +1430,18 @@ async function api(path, opts = {}, whTypeOverride) {
   }
   // 修改数据后自动推送云端
   if (path !== '/api/data' && path !== '/api/me' && path !== '/api/login' && path !== '/api/logout') {
-    try { await pushCloud(); } catch(e) { console.warn('auto push failed', e); }
+    try { await pushCloud();
+      // 自动备份下载
+      const data = loadLocalData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const now = new Date();
+      const ts = now.getFullYear() + '' + String(now.getMonth()+1).padStart(2,'0') + '' + String(now.getDate()).padStart(2,'0') + '_' + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0');
+      a.href = url;
+      a.download = '库存备份_' + ts + '.json';
+      a.click();
+      URL.revokeObjectURL(url); } catch(e) { console.warn('auto push failed', e); }
   }
   return result;
 }
@@ -3364,6 +3375,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     btn.textContent = '保存中...';
     try {
       await pushCloud();
+      // 自动备份下载
+      const data = loadLocalData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const now = new Date();
+      const ts = now.getFullYear() + '' + String(now.getMonth()+1).padStart(2,'0') + '' + String(now.getDate()).padStart(2,'0') + '_' + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0');
+      a.href = url;
+      a.download = '库存备份_' + ts + '.json';
+      a.click();
+      URL.revokeObjectURL(url);
       statusEl.style.display = 'inline-block';
       setTimeout(() => statusEl.style.display = 'none', 3000);
       btn.textContent = '保存成功';
