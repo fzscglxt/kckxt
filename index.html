@@ -430,7 +430,12 @@
       <span class="stat-value" id="statOut" data-inspector-id="html:e79a0f13:40">64</span>
       <span class="stat-label" data-inspector-id="html:e79a0f13:41">今年出库</span>
     </div>
-    <button class="import-btn" id="btnSaveCloud" style="background:#0ea5e9;margin-right:8px;" title="保存并同步到云端">保存</button><button class="import-btn" id="btnBackupLocal" style="background:#10b981;margin-right:8px;" title="备份数据到本地">备份</button><span id="syncStatus" style="margin-right:8px;color:#22c55e;font-size:13px;display:none;">已同步</span><button class="import-btn" id="btnImport" title="从Excel/CSV导入数据" data-inspector-id="html:e79a0f13:42" data-scu-ref="e4">导入数据</button>
+    <div style="position:absolute;right:20px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:8px;">
+  <button class="import-btn" id="btnSaveCloud" style="position:static;transform:none;margin:0;" title="保存并同步到云端">保存</button>
+  <button class="import-btn" id="btnBackupLocal" style="position:static;transform:none;margin:0;" title="选择备份文件夹">备份</button>
+  <span id="syncStatus" style="color:#22c55e;font-size:13px;display:none;">已同步</span>
+  <button class="import-btn" id="btnImport" style="position:static;transform:none;margin:0;" title="从Excel/CSV导入数据" data-inspector-id="html:e79a0f13:42" data-scu-ref="e4">导入数据</button>
+</div>
   </div>
   <input type="file" class="import-file" id="importFile" accept=".xlsx,.xls,.csv,.txt" data-inspector-id="html:e79a0f13:43">
 
