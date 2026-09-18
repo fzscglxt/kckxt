@@ -1458,8 +1458,9 @@ async function standaloneApi(path, opts = {}) {
   const rawWh = m ? decodeURIComponent(m[1]) : (body.whType || 'semi');
   const whType = WH_TYPES.includes(rawWh) ? rawWh : 'semi';
   const slot = ensureLocalSlot(data, whType);
+  const basePath = path.split('?')[0];
 
-  switch (path) {
+  switch (basePath) {
     case '/api/me':
       if (!_user) throw new Error('未登录');
       return { username: _user.username, name: _user.name, role: _user.role };
