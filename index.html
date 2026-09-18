@@ -1182,6 +1182,63 @@ function migrateCellLocally(cell){if(!cell)return null;if(Array.isArray(cell.bat
 /* ===== Data Store ===== */
 const STORAGE_KEY = 'warehouse_v6';
 const STANDALONE_KEY = 'warehouse_standalone';
+// ===== 云端同步配置（和生产系统一样） =====
+const CLOUD_CONFIG = {
+  apiBase: ''   // 空字符串 = 走同源接口（Pages Functions /api/db）
+};
+const cloud = {
+  version: 0,
+  remoteUpdatedAt: 0,
+  ready: false,
+  pending: false,
+  saveTimer: null
+};
+
+// 拉取云端数据
+function pullCloudDB() {
+  return fetch(CLOUD_CONFIG.apiBase + '/api/db', { method: 'GET' })
+    .then(res => res.json())
+    .then(data => {
+      if (data && data.error) throw new Error(data.message || data.error);
+      cloud.version = data.version || 0;
+      cloud.remoteUpdatedAt = data.updatedAt || 0;
+      return data.db ? data.db : null;
+    });
+}
+
+// 推送本地数据到云端
+function pushCloudDB() {
+  if (cloud.saveTimer) { clearTimeout(cloud.saveTimer); cloud.saveTimer = null; }
+  if (!cloud.ready) return Promise.resolve(false);
+  cloud.pending = false;
+  const body = JSON.stringify({ db: loadLocalData(), savedBy: (typeof _user !== 'undefined' && _user) ? _user.username : '' });
+  return fetch(CLOUD_CONFIG.apiBase + '/api/db', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'If-Version': String(cloud.version) },
+    body: body
+  }).then(res => res.json()).then(data => {
+    if (data.error === 'conflict') {
+      cloud.version = data.version || 0;
+      cloud.remoteUpdatedAt = data.updatedAt || 0;
+      if (data.db) {
+        localStorage.setItem(STANDALONE_KEY, JSON.stringify(data.db));
+        const statusEl = document.getElementById('cloudStatus');
+        if (statusEl) statusEl.textContent = '已刷新为云端最新数据';
+        alert('⚠️ 您的本次修改未保存：其他用户刚刚更新了数据，已自动刷新为最新，请重新操作');
+      }
+      return false;
+    }
+    cloud.version = data.version;
+    cloud.remoteUpdatedAt = data.updatedAt;
+    const statusEl = document.getElementById('cloudStatus');
+    if (statusEl) statusEl.textContent = '已同步云端最新数据';
+    return true;
+  }).catch(e => {
+    console.warn('pushCloudDB error', e);
+    return false;
+  });
+}
+
 let currentEditCell = null;
 let currentSelectedBatchIndex = 0;
 let isNewBatchMode = false; // 标识"新增批次入库"模式（避免与已有批次的出库逻辑冲突）
@@ -3344,11 +3401,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 自动探测服务器可用性
   // 启动时从云端拉取数据
-  // 纯本地模式，不连接远程服务器
-  // await pullCloud();
-  // await pullCloud();
-  // await detectServerMode();
-
+  // 启动时从云端拉取数据
+  try {
+    const cloudDB = await pullCloudDB();
+    if (cloudDB) {
+      localStorage.setItem(STANDALONE_KEY, JSON.stringify(cloudDB));
+      const statusEl = document.getElementById('cloudStatus');
+      if (statusEl) statusEl.textContent = '已同步云端最新数据';
+    }
+    cloud.ready = true;
+  } catch(e) {
+    console.warn('Cloud sync init failed, using local data', e);
+  }
   // 探测登录状态
   if (_mode === 'standalone') {
     // Standalone mode: check for saved user session

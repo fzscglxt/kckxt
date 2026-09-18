@@ -7,14 +7,14 @@
  *   OPTIONS /api/db       → CORS 预检
  *
  * KV 存储：
- *   key: "kc_data"
+ *   key: "inventory_data"
  *   value: { version: number, updatedAt: number, db: object, savedBy: string }
  *
  * 在 Cloudflare Pages 项目设置 → Functions → KV namespace bindings 中，
- * 绑定一个 KV 命名空间，变量名设为 FZ_KC_DB。
+ * 绑定一个 KV 命名空间，变量名设为 FZ_INVENTORY_DB。
  */
 
-const KV_KEY = 'kc_data';
+const KV_KEY = 'inventory_data';
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, PUT, OPTIONS',
@@ -54,9 +54,9 @@ async function writeData(kv, data) {
 }
 
 export async function onRequestGet(context) {
-  const kv = context.env.FZ_KC_DB;
+  const kv = context.env.FZ_INVENTORY_DB;
   if (!kv) {
-    return jsonResponse({ error: 'kv_not_bound', message: 'KV 命名空间 FZ_KC_DB 未绑定' }, 500);
+    return jsonResponse({ error: 'kv_not_bound', message: 'KV 命名空间 FZ_INVENTORY_DB 未绑定，请在 Pages 项目设置中配置' }, 500);
   }
   const data = await readData(kv);
   return jsonResponse({
@@ -67,9 +67,9 @@ export async function onRequestGet(context) {
 }
 
 export async function onRequestPut(context) {
-  const kv = context.env.FZ_KC_DB;
+  const kv = context.env.FZ_INVENTORY_DB;
   if (!kv) {
-    return jsonResponse({ error: 'kv_not_bound', message: 'KV 命名空间 FZ_KC_DB 未绑定' }, 500);
+    return jsonResponse({ error: 'kv_not_bound', message: 'KV 命名空间 FZ_INVENTORY_DB 未绑定，请在 Pages 项目设置中配置' }, 500);
   }
 
   const ifVersion = parseInt(context.request.headers.get('If-Version') || '0', 10) || 0;
