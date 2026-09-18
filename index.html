@@ -3277,6 +3277,12 @@ function hideLoginMask() {
   document.querySelector('.page').style.display = '';
   document.getElementById('userBar').style.display = 'flex';
 }
+function updateUserDisplay() {
+  if (_user && _user.username) {
+    const el = document.getElementById('userName');
+    if (el) el.textContent = _user.username;
+  }
+}
 async function doLogin() {
   const username = document.getElementById('loginUser').value.trim();
   const password = document.getElementById('loginPass').value;
