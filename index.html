@@ -392,8 +392,7 @@
     <div class="login-error" id="loginError" data-inspector-id="html:e79a0f13:12"></div>
     <button class="login-btn" id="btnLogin" type="button" data-inspector-id="html:e79a0f13:13" data-scu-ref="e2">登 录</button>
     <div class="login-hint" data-inspector-id="html:e79a0f13:14">默认账号 admin / 123456</div>
-    <div class="login-mode-hint server" id="loginModeHint" data-inspector-id="html:e79a0f13:15">服务器已连接，多用户模式可用</div>
-    <div class="login-migrate" data-inspector-id="html:e79a0f13:16"><a id="linkMigrate" data-inspector-id="html:e79a0f13:17" data-scu-ref="e3">从本机旧数据导入</a></div>
+    <div class="login-mode-hint server" id="loginModeHint" data-inspector-id="html:e79a0f13:15">已同步云端最新数据</div>
   </div>
 </div>
 
@@ -1419,7 +1418,7 @@ function updateLoginModeHint() {
     hint.textContent = '';
     hint.className = 'login-mode-hint standalone';
   } else {
-    hint.textContent = '服务器已连接，多用户模式可用';
+  hint.textContent = '已同步云端最新数据';
     hint.className = 'login-mode-hint server';
   }
 }
