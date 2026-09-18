@@ -3391,7 +3391,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (e.key === 'Enter') document.getElementById('loginPass').focus();
   });
   document.getElementById('btnLogout').addEventListener('click', doLogout);
-  document.getElementById('linkMigrate').addEventListener('click', migrateOldLocalData);
+// document.getElementById('linkMigrate').addEventListener('click', migrateOldLocalData); // 已删除导入旧数据功能
 
   // Tab 切换：半成品仓 / 装配成品仓
   document.querySelectorAll('.panel-tab').forEach(tab => {
