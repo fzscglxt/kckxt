@@ -3408,15 +3408,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 启动时从云端拉取数据
   // 启动时从云端拉取数据
   try {
+    console.log('正在从云端拉取最新数据...');
     const cloudDB = await pullCloudDB();
     if (cloudDB) {
       localStorage.setItem(STANDALONE_KEY, JSON.stringify(cloudDB));
+      console.log('云端数据拉取成功，已更新本地缓存');
       const statusEl = document.getElementById('cloudStatus');
       if (statusEl) statusEl.textContent = '已同步云端最新数据';
+    } else {
+      console.log('云端暂无数据，使用本地数据');
     }
     cloud.ready = true;
   } catch(e) {
-    console.warn('Cloud sync init failed, using local data', e);
+    console.warn('云端连接失败，使用本地缓存数据', e);
+    const statusEl = document.getElementById('cloudStatus');
+    if (statusEl) statusEl.textContent = '本地模式（云端连接失败）';
   }
   // 探测登录状态
   if (_mode === 'standalone') {
