@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -250,7 +250,7 @@
   .qty-stock-hint{font-size:10px;color:var(--orange);margin-left:8px;white-space:nowrap}
 
   /* ===== Import Button ===== */
-  .import-btn{position:absolute;right:20px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;padding:7px 16px;background:linear-gradient(135deg,rgba(0,212,255,.2),rgba(0,140,200,.1));border:1px solid var(--cyan);border-radius:4px;color:var(--cyan-light);font-size:12px;cursor:pointer;letter-spacing:1px;transition:all .2s;font-family:inherit;z-index:5}
+  .import-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:5px 14px;background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.3);border-radius:4px;color:var(--cyan-light);cursor:pointer;font-size:13px;transition:all .2s}nter;gap:6px;padding:7px 16px;background:linear-gradient(135deg,rgba(0,212,255,.2),rgba(0,140,200,.1));border:1px solid var(--cyan);border-radius:4px;color:var(--cyan-light);font-size:12px;cursor:pointer;letter-spacing:1px;transition:all .2s;font-family:inherit;z-index:5}
   .import-btn:hover{background:linear-gradient(135deg,rgba(0,212,255,.35),rgba(0,140,200,.2));box-shadow:0 0 12px rgba(0,212,255,.4)}
   .import-btn::before{content:'⬆';font-size:13px}
   .import-file{display:none}
@@ -362,12 +362,13 @@
       <span>用户:</span>
       <span class="user-name" id="currentUserName">-</span>
       <button class="logout-btn" id="btnLogout" type="button">退出</button>
-    </div>
+  </div>
   </div>
 
   <!-- Mode Banner (shown in standalone mode) -->
-  <div class="mode-banner" id="modeBanner" style="display:none">单机模式 · 数据保存在本机</div>
-
+  <div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:6px 14px;background:#e8f0fe;border-radius:6px;margin-bottom:4px">
+    <span id="cloudStatus" style="font-size:13px;color:#1a73e8">⏳ 连接云端…</span>
+  </div>
   <!-- Stats Bar -->
   <div class="stats-bar">
     <div class="stat-item">
@@ -383,6 +384,8 @@
       <span class="stat-value" id="statOut">0</span>
       <span class="stat-label">今年出库</span>
     </div>
+    <button onclick="manualSave()" style="background:#1a73e8;color:#fff;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;font-size:13px;margin-left:auto">💾 保存</button>
+    <button onclick="localBackup.choose()" style="background:#6b7280;color:#fff;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:13px;margin-left:6px">📁 备份</button>
     <button class="import-btn" id="btnImport" title="从Excel/CSV导入数据">导入数据</button>
   </div>
   <input type="file" class="import-file" id="importFile" accept=".xlsx,.xls,.csv,.txt">
@@ -564,6 +567,172 @@ function loadLocalData() {
 }
 function saveLocalData(data) {
   try { localStorage.setItem(STANDALONE_KEY, JSON.stringify(data)); } catch {}
+  scheduleCloudPush();
+}
+
+/* ===== 云端同步（Cloudflare Pages Functions + KV） ===== */
+let cloudVersion = 0;
+let cloudPushTimer = null;
+
+function setCloudStatusUI(status, msg) {
+  const el = document.getElementById('cloudStatus');
+  if (!el) return;
+  if (status === 'synced') {
+    el.textContent = '☁️ 已同步 ' + new Date().toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'});
+    el.style.background = '#e6f4ea'; el.style.color = '#1e8e3e';
+  } else if (status === 'pending') {
+    el.textContent = '📝 待保存…';
+    el.style.background = '#fef7e0'; el.style.color = '#b06000';
+  } else if (status === 'error') {
+    el.textContent = '⚠️ 云端失败 ' + (msg || '');
+    el.style.background = '#fce8e6'; el.style.color = '#d93025';
+  } else {
+    el.textContent = '⏳ ' + (msg || '同步中…');
+    el.style.background = '#e8f0fe'; el.style.color = '#1a73e8';
+  }
+}
+
+async function pullCloud() {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const resp = await fetch('/api/db', { method: 'GET', signal: controller.signal });
+    clearTimeout(timeout);
+    const data = await resp.json();
+    if (data.db) {
+      try { localStorage.setItem(STANDALONE_KEY, JSON.stringify(data.db)); } catch(e) {}
+      return data.db;
+    }
+    return null;
+  } catch(e) {
+    console.warn('pullCloud error', e);
+    return null;
+  }
+}
+
+async function pushCloud() {
+  try {
+    const data = loadLocalData();
+    const controller2 = new AbortController();
+    const timeout2 = setTimeout(() => controller2.abort(), 5000);
+    const resp = await fetch('/api/db', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'If-Version': String(cloudVersion) },
+      body: JSON.stringify({ db: data, savedBy: (_user && _user.username) || '' }),
+      signal: controller2.signal
+    });
+    clearTimeout(timeout2);
+    const result = await resp.json();
+    if (result.error === 'conflict') {
+      cloudVersion = result.version || 0;
+      if (result.db) {
+        try { localStorage.setItem(STANDALONE_KEY, JSON.stringify(result.db)); } catch(e) {}
+        _cache = null;
+        if (typeof renderAll === 'function') renderAll();
+      }
+      setCloudStatusUI('error', '冲突已刷新');
+      return false;
+    }
+    if (result.error) throw new Error(result.message || 'push failed');
+    cloudVersion = result.version;
+    setCloudStatusUI('synced');
+    return true;
+  } catch(e) {
+    console.warn('pushCloud error', e);
+    setCloudStatusUI('error', e.message || '保存失败');
+    throw e;
+  }
+}
+function markPendingSave() {
+  setCloudStatusUI('pending', '有未保存修改，点"保存"按钮上传');
+}
+
+async function manualSave() {
+  setCloudStatusUI('loading', '正在保存到云端…');
+  try {
+    // 先拉取最新版本号
+    await pullCloud();
+    // 再推送
+    const ok = await pushCloud();
+    if (ok !== false) {
+      // 本地备份
+      if (window.localBackup && localBackup.dirHandle) {
+        await localBackup.save();
+      }
+      setCloudStatusUI('synced', '已保存并备份 ' + new Date().toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'}));
+      alert('保存成功，已上传云端并备份到本地');
+    }
+  } catch(e) {
+    console.error('manualSave error', e);
+    setCloudStatusUI('error', '保存失败');
+    alert('保存失败：' + e.message);
+  }
+}
+
+// 本地自动备份（File System Access API）
+const localBackup = {
+  dirHandle: null,
+  async init() {
+    try {
+      const db = await this._openDB();
+      const tx = db.transaction('handles', 'readonly');
+      const rec = await tx.objectStore('handles').get('kc_backupDir');
+      if (rec && rec.handle) {
+        const allowed = await rec.handle.queryPermission({ mode: 'readwrite' });
+        if (allowed === 'granted') {
+          this.dirHandle = rec.handle;
+        }
+      }
+    } catch(e) { console.warn('localBackup init', e); }
+  },
+  _openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open('kc_local_backup', 1);
+      req.onupgradeneeded = () => req.result.createObjectStore('handles');
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  },
+  async choose() {
+    if (!window.showDirectoryPicker) {
+      alert('当前浏览器不支持本地备份，请用最新版Chrome或Edge');
+      return;
+    }
+    try {
+      const dirHandle = await window.showDirectoryPicker({ id: 'kc_backup', mode: 'readwrite' });
+      this.dirHandle = dirHandle;
+      const db = await this._openDB();
+      const tx = db.transaction('handles', 'readwrite');
+      tx.objectStore('handles').put({ handle: dirHandle, savedAt: new Date().toISOString() }, 'kc_backupDir');
+      await tx.done;
+      await this.save();
+      alert('备份文件夹已选择！建议路径：D:\系统数据\仓库备份。以后每次点保存会自动写入latest.json');
+    } catch(e) {
+      if (e.name !== 'AbortError') alert('选择文件夹失败：' + e.message);
+    }
+  },
+  async save() {
+    if (!this.dirHandle) return;
+    try {
+      const data = loadLocalData();
+      const f = await this.dirHandle.getFileHandle('latest.json', { create: true });
+      const w = await f.createWritable();
+      await w.write(JSON.stringify(data));
+      await w.close();
+    } catch(e) { console.warn('localBackup save', e); }
+  }
+};
+window.localBackup = localBackup;
+
+async function initCloud() {
+  setCloudStatusUI('loading', '连接云端…');
+  await localBackup.init();
+  const remote = await pullCloud();
+  if (remote) {
+    setCloudStatusUI('synced', '已同步云端最新');
+  } else {
+    setCloudStatusUI('synced', '已就绪，点保存上传');
+  }
 }
 function buildDemoData() {
   const now = Date.now();
@@ -629,31 +798,10 @@ function buildDemoData() {
 
 /* ===== Mode detection & indicator ===== */
 async function detectServerMode() {
-  try {
-    const resp = await fetch('/api/me', {
-      method: 'GET',
-      headers: { 'Authorization': 'Bearer invalid' }
-    });
-    // Check for real API server: it returns JSON with 401 status
-    const ct = resp.headers.get('content-type') || '';
-    if (resp.status === 401 && ct.includes('json')) {
-      _mode = 'server';
-    } else if (resp.ok && ct.includes('json')) {
-      _mode = 'server';
-    } else {
-      // Not a real API server (likely old static file server)
-      _mode = 'standalone';
-    }
-  } catch (e) {
-    // Network error - definitely standalone
-    _mode = 'standalone';
-  }
+  _mode = 'standalone';
   updateModeIndicator();
   updateLoginModeHint();
-
-  // If switching to standalone mode, clear any stale server token
-  if (_mode === 'standalone' && _token) {
-    console.log('[Init] Standalone mode: clearing stale server token');
+  if (_token) {
     _token = null;
     sessionStorage.removeItem('wh_token');
   }
@@ -662,23 +810,14 @@ function updateLoginModeHint() {
   const hint = document.getElementById('loginModeHint');
   if (!hint) return;
   if (_mode === 'standalone') {
-    hint.textContent = '当前为单机模式，数据保存在此电脑的浏览器中';
+    hint.textContent = '已同步云端，多用户共享数据';
     hint.className = 'login-mode-hint standalone';
   } else {
     hint.textContent = '服务器已连接，多用户模式可用';
     hint.className = 'login-mode-hint server';
   }
 }
-function updateModeIndicator() {
-  const banner = document.getElementById('modeBanner');
-  if (!banner) return;
-  if (_mode === 'standalone') {
-    banner.textContent = '单机模式 · 数据保存在本机';
-    banner.style.display = 'block';
-  } else {
-    banner.style.display = 'none';
-  }
-}
+function updateModeIndicator() { /* 云端状态由 setCloudStatusUI 控制 */ }
 
 async function api(path, opts = {}) {
   // Standalone mode: handle locally
