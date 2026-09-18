@@ -362,8 +362,6 @@
       <span>用户:</span>
       <span class="user-name" id="currentUserName">-</span>
       <button class="logout-btn" id="btnLogout" type="button">退出</button>
-      <button onclick="manualSave()" style="background:#1a73e8;color:#fff;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;font-size:13px;margin-left:8px">💾 保存</button>
-      <button onclick="localBackup.choose()" style="background:#6b7280;color:#fff;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:13px;margin-left:6px">📁 备份</button>
   </div>
   </div>
 
@@ -386,6 +384,8 @@
       <span class="stat-value" id="statOut">0</span>
       <span class="stat-label">今年出库</span>
     </div>
+    <button onclick="manualSave()" style="background:#1a73e8;color:#fff;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;font-size:13px;margin-left:auto">💾 保存</button>
+    <button onclick="localBackup.choose()" style="background:#6b7280;color:#fff;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:13px;margin-left:6px">📁 备份</button>
     <button class="import-btn" id="btnImport" title="从Excel/CSV导入数据">导入数据</button>
   </div>
   <input type="file" class="import-file" id="importFile" accept=".xlsx,.xls,.csv,.txt">
