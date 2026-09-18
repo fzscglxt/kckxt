@@ -1357,7 +1357,7 @@ function updateLoginModeHint() {
   const hint = document.getElementById('loginModeHint');
   if (!hint) return;
   if (_mode === 'standalone') {
-    hint.textContent = '当前为单机模式，数据保存在此电脑的浏览器中';
+    hint.textContent = '';
     hint.className = 'login-mode-hint standalone';
   } else {
     hint.textContent = '服务器已连接，多用户模式可用';
@@ -1368,7 +1368,7 @@ function updateModeIndicator() {
   const banner = document.getElementById('modeBanner');
   if (!banner) return;
   if (_mode === 'standalone') {
-    banner.textContent = '单机模式 · 数据保存在本机';
+    banner.textContent = '';
     banner.style.display = 'none';
   } else {
     banner.style.display = 'none';
@@ -3290,7 +3290,7 @@ async function doLogin() {
         _mode = 'standalone';
         updateModeIndicator();
         updateLoginModeHint();
-        errEl.textContent = '服务器不可用，已切换单机模式，请使用本地账号登录';
+        errEl.textContent = '服务器不可用，请刷新重试';
       } else {
         errEl.textContent = e.message;
       }
