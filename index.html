@@ -1,6 +1,4 @@
-﻿<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
+﻿<html lang="zh-CN" data-inspector-id="html:e79a0f13:0"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>库位看板</title>
@@ -56,7 +54,11 @@
   /* ===== Left: Warehouse Layout ===== */
   .left-panel{flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:14px 12px;position:relative;min-width:0;display:flex;flex-direction:column;gap:5px;overflow:hidden;min-height:0}
   .left-panel::before{content:'';position:absolute;top:0;left:0;width:3px;height:40%;background:linear-gradient(180deg,var(--cyan),transparent)}
-  .panel-title{position:absolute;top:-12px;left:20px;background:var(--bg);padding:3px 16px;font-size:13px;color:var(--cyan-light);letter-spacing:3px;z-index:2}
+  .panel-title-row{position:absolute;top:-12px;left:20px;z-index:2;display:flex;gap:0}
+  .panel-tabs{display:flex;background:var(--bg);padding:3px 6px;border-radius:14px;border:1px solid var(--border)}
+  .panel-tab{background:transparent;border:none;color:var(--text-dim);font-size:12px;padding:2px 10px;cursor:pointer;border-radius:12px;letter-spacing:1px;transition:all .2s}
+  .panel-tab:hover{color:var(--cyan-light)}
+  .panel-tab.active{background:var(--cyan);color:#06101f;box-shadow:0 0 8px rgba(0,212,255,.4)}
 
   .warehouse-layout{display:flex;gap:4px;width:100%;flex:1;min-height:0;overflow:auto;padding:4px 2px}
   .warehouse-layout::-webkit-scrollbar{width:6px;height:6px}
@@ -80,17 +82,21 @@
   .v-channel-label{writing-mode:vertical-rl;text-orientation:upright;font-size:9px;color:var(--cyan-light);letter-spacing:2px}
 
   /* Section column - each section has 2 sub-columns (e.g., A|B) */
-  .section-col{display:flex;flex-direction:column;gap:0;flex-shrink:0}
+  .section-col{display:flex;flex-direction:column;gap:0;flex-shrink:0;flex:1}
+  .section-col.section-single{flex:0.5;min-width:30px}
   .section-body{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:0;height:100%}
+  .section-col.section-single .section-body{grid-template-columns:1fr}
   .section-body .w-cell:nth-child(odd){border-right:1px solid rgba(26,58,92,.5)}
+  .section-col.section-single .section-body .w-cell{border-right:none}
   .section-body .w-cell{border-top:1px solid var(--border)}
 
   /* Cells - each cell is independent */
-  .w-cell{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;padding:3px 4px 4px;background:var(--bg-empty);border-bottom:1px solid var(--border);border-radius:0;font-size:10px;color:var(--text-dim);font-family:'Consolas',monospace;cursor:pointer;transition:all .12s;user-select:none;position:relative;min-width:42px;gap:2px;overflow:hidden}
+  .w-cell{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;padding:3px 4px 3px;background:var(--bg-empty);border-bottom:1px solid var(--border);border-radius:0;font-size:10px;color:var(--text-dim);font-family:'Consolas',monospace;cursor:pointer;transition:all .12s;user-select:none;position:relative;min-width:42px;gap:1px;overflow:hidden}
   .w-cell:hover{background:rgba(14,165,233,.12);z-index:10}
-  .w-cell .w-code{font-size:10px;font-weight:500;text-align:center;line-height:1.1;padding-top:1px}
-  .w-cell .w-batches{display:flex;flex-direction:column;gap:1px;margin-top:1px}
-  .w-cell .w-batch-bar{height:5px;border-radius:1px;position:relative;overflow:hidden}
+  .w-cell .w-code{font-size:9px;font-weight:500;text-align:center;line-height:1.1;padding-top:1px;opacity:.85}
+  .w-cell .w-product{font-size:10px;color:#fff;text-align:center;line-height:1.15;font-weight:bold;font-family:"Microsoft YaHei",sans-serif;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;min-height:22px;align-content:center;padding:1px 0}
+  .w-cell .w-batches{display:flex;flex-direction:column;gap:1px;margin-top:auto}
+  .w-cell .w-batch-bar{height:4px;border-radius:1px;position:relative;overflow:hidden}
   .w-cell .w-batch-qty{font-size:8px;color:#fff;text-align:center;line-height:1.1;padding:0 1px;background:rgba(0,0,0,.25);border-radius:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   /* 按批次年龄着色 */
   .batch-age-green{background:linear-gradient(180deg,#16a34a,#15803d)}
@@ -107,10 +113,25 @@
   .w-cell.filled-mixed:hover{background:linear-gradient(180deg,rgba(245,158,11,.35),rgba(234,88,12,.45))}
   .w-cell.filled .w-code{color:#fff}
   .w-cell.filled-green::after,.w-cell.filled-orange::after,.w-cell.filled-red::after,.w-cell.filled-mixed::after{content:'';position:absolute;top:3px;right:4px;width:5px;height:5px;border-radius:50%;background:#fff;box-shadow:0 0 3px rgba(255,255,255,.6)}
-  .w-cell .w-batch-count{font-size:8px;color:#fff;text-align:center;line-height:1;opacity:.9}
+  .w-cell .w-batch-count{font-size:8px;color:#cfe9ff;text-align:center;line-height:1.2;opacity:.85;margin-top:1px}
 
   /* Bottom channel */
   .bottom-channel{display:flex;align-items:center;justify-content:center;height:22px;background:rgba(10,22,40,.6);border-top:1px dashed rgba(0,212,255,.2);border-bottom:1px dashed rgba(0,212,255,.2);border-radius:2px;color:var(--text-dim);font-size:10px;letter-spacing:5px;flex-shrink:0}
+
+  /* ===== 原材料仓自定义布局（与现场示意图一致） ===== */
+  .raw-layout{display:flex;flex-direction:column;flex:1;min-height:0;width:100%;gap:4px}
+  .raw-title{flex-shrink:0;text-align:center;font-size:15px;font-weight:bold;letter-spacing:8px;color:var(--cyan-light);padding:2px 0 4px;text-indent:8px}
+  .raw-row{display:flex;gap:3px;min-height:0}
+  .raw-row-top{flex:11}
+  .raw-row-bottom{flex:7}
+  .raw-rack{display:flex;flex-direction:column;min-width:0;flex:21}
+  .raw-rack-d{flex:20}
+  .raw-rack .w-cell{flex:1;min-height:0;min-width:0;border-top:1px solid var(--border);border-right:1px solid rgba(26,58,92,.5)}
+  .raw-rack .w-cell:first-child{border-top:none}
+  .raw-rack .w-cell:last-child{border-bottom:none}
+  .raw-aisle-v{flex:19;min-width:0;background:rgba(10,22,40,.75);border:1px solid var(--cyan-dim);border-radius:2px;display:flex;align-items:center;justify-content:center;color:var(--cyan-light);font-size:13px;letter-spacing:8px;writing-mode:vertical-rl;text-orientation:upright}
+  .raw-aisle-h{flex-shrink:0;height:30px;background:rgba(10,22,40,.75);border:1px solid var(--cyan-dim);border-radius:2px;display:flex;align-items:center;justify-content:center;color:var(--cyan-light);font-size:13px;letter-spacing:12px;text-indent:12px}
+  .raw-equip{flex:61;min-width:0;background:linear-gradient(180deg,rgba(14,165,233,.06),rgba(13,31,60,.5));border:1px solid var(--border);border-radius:2px;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:15px;letter-spacing:10px;text-indent:10px}
 
   .legend{display:flex;gap:14px;margin-top:2px;font-size:10px;color:var(--text-muted);flex-shrink:0}
   .legend-item{display:flex;align-items:center;gap:4px}
@@ -137,6 +158,26 @@
   /* ===== Line Chart ===== */
   .chart-wrap{position:relative;height:160px}
   .chart-wrap svg{width:100%;height:100%}
+  /* FIFO list overrides */
+  .chart-wrap.fifo-wrap{height:auto;min-height:160px;max-height:220px;overflow-y:auto}
+  .chart-wrap.fifo-wrap::-webkit-scrollbar{width:5px}
+  .chart-wrap.fifo-wrap::-webkit-scrollbar-thumb{background:var(--cyan-dim);border-radius:3px}
+  .fifo-table{width:100%;font-size:11px;border-collapse:collapse}
+  .fifo-table th{position:sticky;top:0;background:var(--bg-card);color:var(--cyan-light);font-weight:500;text-align:left;padding:4px 6px;border-bottom:1px solid var(--border);z-index:1}
+  .fifo-table td{padding:4px 6px;border-bottom:1px dashed rgba(26,58,92,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0}
+  .fifo-table .fifo-prod{color:var(--text);max-width:140px}
+  .fifo-table .fifo-batch{font-family:'Consolas',monospace;color:#fff}
+  .fifo-table .fifo-qty{text-align:right;color:#7dd3fc;font-family:'Consolas',monospace;font-weight:bold}
+  .fifo-table th.fifo-qty{text-align:right}
+  .fifo-table .fifo-loc{font-family:'Consolas',monospace;color:#a5c3e0;text-align:center}
+  .fifo-table th.fifo-loc{text-align:center}
+  .fifo-table .fifo-time{color:var(--text-dim);font-size:10px}
+  .fifo-table tr.fifo-green td.fifo-batch{color:#4ade80}
+  .fifo-table tr.fifo-orange td.fifo-batch{color:#fb923c;background:rgba(234,88,12,.08)}
+  .fifo-table tr.fifo-red td.fifo-batch{color:#f87171;background:rgba(220,38,38,.12);font-weight:bold}
+  .fifo-table tr.fifo-orange {background:rgba(251,146,60,.04)}
+  .fifo-table tr.fifo-red {background:rgba(248,113,113,.06)}
+  .fifo-empty{text-align:center;color:var(--text-muted);padding:14px 0;font-size:11px}
 
   /* ===== Donut ===== */
   .donut-section{display:flex;gap:14px;align-items:center}
@@ -223,6 +264,7 @@
   .product-item-code{color:var(--cyan-light);font-family:'Consolas',monospace;font-weight:500;min-width:60px}
   .product-item-name{color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .product-item-cat{font-size:10px;padding:1px 6px;border-radius:2px;background:rgba(0,212,255,.15);color:var(--cyan-light);border:1px solid rgba(0,212,255,.25);flex-shrink:0}
+  .product-item-cat.stock-other{background:rgba(255,160,0,.16);color:#ffc166;border-color:rgba(255,160,0,.45);font-weight:bold}
   .product-item-spec{font-size:10px;color:var(--text-muted);font-family:'Consolas',monospace}
   .product-empty{padding:14px;text-align:center;color:var(--text-dim);font-size:11px}
 
@@ -271,13 +313,17 @@
   .import-preview th{padding:5px 6px;font-size:10px;white-space:nowrap;position:sticky;top:0}
   .import-preview td{padding:3px 6px;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis}
   .import-info{font-size:11px;color:var(--text-muted);margin-bottom:12px;line-height:1.6}
-  .import-info b{color:var(--cyan-light)}
+.import-info b{color:var(--cyan-light)}
+.import-target-banner{margin-bottom:12px;padding:9px 14px;background:linear-gradient(90deg,rgba(0,212,255,.15),rgba(0,212,255,.03));border:1px solid rgba(0,212,255,.4);border-radius:5px;font-size:12px;color:var(--text)}
+.import-target-banner .target-wh-name{color:var(--cyan);font-size:14px;letter-spacing:1px;margin:0 4px}
+.import-target-banner .target-wh-hint{display:block;margin-top:4px;font-size:10px;color:var(--text-dim);opacity:.9}
 
   /* ===== Responsive ===== */
   @media(max-width:1200px){
     .right-panel{width:380px}
-    .w-cell{min-width:36px;font-size:9px;padding:5px 6px}
-    .w-cell .w-code{font-size:9px}
+    .w-cell{min-width:36px;font-size:9px;padding:4px 5px}
+    .w-cell .w-code{font-size:8px}
+    .w-cell .w-product{font-size:9px;min-height:18px}
     .side-zones{width:40px}
     .side-zone{font-size:10px}
   }
@@ -287,8 +333,9 @@
     .left-panel{min-height:400px}
     .right-panel{width:100%;flex-shrink:1}
     .header-title{font-size:20px;letter-spacing:4px}
-    .w-cell{min-width:32px;padding:4px 5px;font-size:8px}
-    .w-cell .w-code{font-size:8px}
+    .w-cell{min-width:32px;padding:3px 4px;font-size:8px}
+    .w-cell .w-code{font-size:7px}
+    .w-cell .w-product{font-size:8px;min-height:16px;-webkit-line-clamp:1}
     .side-zones{width:34px}
     .side-zone{font-size:9px;letter-spacing:1px}
   }
@@ -327,121 +374,716 @@
   .login-mode-hint.server{color:var(--green)}
 </style>
 </head>
-<body>
+<body data-inspector-id="html:e79a0f13:1">
 
 <!-- Login Overlay -->
-<div class="login-overlay" id="loginOverlay">
-  <div class="login-card">
-    <div class="login-title">库位看板</div>
-    <div class="login-subtitle">多用户仓库管理系统</div>
-    <div class="login-field">
-      <label class="login-label">账号</label>
-      <input type="text" class="login-input" id="loginUser" autocomplete="off" placeholder="请输入账号">
+<div class="login-overlay hide" id="loginOverlay" data-inspector-id="html:e79a0f13:2">
+  <div class="login-card" data-inspector-id="html:e79a0f13:3">
+    <div class="login-title" data-inspector-id="html:e79a0f13:4">库位看板</div>
+    <div class="login-subtitle" data-inspector-id="html:e79a0f13:5">多用户仓库管理系统</div>
+    <div class="login-field" data-inspector-id="html:e79a0f13:6">
+      <label class="login-label" data-inspector-id="html:e79a0f13:7">账号</label>
+      <input type="text" class="login-input" id="loginUser" autocomplete="off" placeholder="请输入账号" data-inspector-id="html:e79a0f13:8" data-scu-ref="e0">
     </div>
-    <div class="login-field">
-      <label class="login-label">密码</label>
-      <input type="password" class="login-input" id="loginPass" autocomplete="off" placeholder="请输入密码">
+    <div class="login-field" data-inspector-id="html:e79a0f13:9">
+      <label class="login-label" data-inspector-id="html:e79a0f13:10">密码</label>
+      <input type="password" class="login-input" id="loginPass" autocomplete="off" placeholder="请输入密码" data-inspector-id="html:e79a0f13:11" data-scu-ref="e1">
     </div>
-    <div class="login-error" id="loginError"></div>
-    <button class="login-btn" id="btnLogin" type="button">登 录</button>
-    <div class="login-hint">默认账号 admin / 123456</div>
-    <div class="login-mode-hint" id="loginModeHint">正在检测服务器连接...</div>
-    <div class="login-migrate"><a id="linkMigrate">从本机旧数据导入</a></div>
+    <div class="login-error" id="loginError" data-inspector-id="html:e79a0f13:12"></div>
+    <button class="login-btn" id="btnLogin" type="button" data-inspector-id="html:e79a0f13:13" data-scu-ref="e2">登 录</button>
+    <div class="login-hint" data-inspector-id="html:e79a0f13:14">默认账号 admin / 123456</div>
+    <div class="login-mode-hint server" id="loginModeHint" data-inspector-id="html:e79a0f13:15">服务器已连接，多用户模式可用</div>
+    <div class="login-migrate" data-inspector-id="html:e79a0f13:16"><a id="linkMigrate" data-inspector-id="html:e79a0f13:17" data-scu-ref="e3">从本机旧数据导入</a></div>
   </div>
 </div>
 
-<div class="page">
+<div class="page" data-inspector-id="html:e79a0f13:18">
 
   <!-- Header -->
-  <div class="header">
-    <div class="header-deco"></div>
-    <div class="header-title">库位看板</div>
-    <div class="header-deco r"></div>
-    <div class="header-time" id="headerTime"></div>
-    <div class="user-bar" id="userBar" style="display:none">
-      <span>用户:</span>
-      <span class="user-name" id="currentUserName">-</span>
-      <button class="logout-btn" id="btnLogout" type="button">退出</button>
+  <div class="header" data-inspector-id="html:e79a0f13:19">
+    <div class="header-deco" data-inspector-id="html:e79a0f13:20"></div>
+    <div class="header-title" data-inspector-id="html:e79a0f13:21">库位看板</div>
+    <div class="header-deco r" data-inspector-id="html:e79a0f13:22"></div>
+    <div class="header-time" id="headerTime" data-inspector-id="html:e79a0f13:23">2026-09-18 12:27:10 星期五</div>
+    <div class="user-bar" id="userBar" style="display: flex;" data-inspector-id="html:e79a0f13:24">
+      <span data-inspector-id="html:e79a0f13:25">用户:</span>
+      <span class="user-name" id="currentUserName" data-inspector-id="html:e79a0f13:26">管理员 (admin)</span>
+      <button class="logout-btn" id="btnLogout" type="button" data-inspector-id="html:e79a0f13:27">退出</button>
     </div>
   </div>
 
   <!-- Mode Banner (shown in standalone mode) -->
-  <div class="mode-banner" id="modeBanner" style="display:none">单机模式 · 数据保存在本机</div>
+  <div class="mode-banner" id="modeBanner" style="display:none" data-inspector-id="html:e79a0f13:28">单机模式 · 数据保存在本机</div>
 
   <!-- Stats Bar -->
-  <div class="stats-bar">
-    <div class="stat-item">
-      <span class="stat-label">今年入库</span>
-      <span class="stat-value" id="statIn">0</span>
+  <div class="stats-bar" data-inspector-id="html:e79a0f13:29">
+    <div class="stat-item" data-inspector-id="html:e79a0f13:30">
+      <span class="stat-label" data-inspector-id="html:e79a0f13:31">今年入库</span>
+      <span class="stat-value" id="statIn" data-inspector-id="html:e79a0f13:32">138</span>
     </div>
-    <div class="stat-wave">
-      <div class="wave-bar"></div><div class="wave-bar"></div>
-      <div class="wave-bar"></div><div class="wave-bar"></div>
-      <div class="wave-bar"></div>
+    <div class="stat-wave" data-inspector-id="html:e79a0f13:33">
+      <div class="wave-bar" data-inspector-id="html:e79a0f13:34"></div><div class="wave-bar" data-inspector-id="html:e79a0f13:35"></div>
+      <div class="wave-bar" data-inspector-id="html:e79a0f13:36"></div><div class="wave-bar" data-inspector-id="html:e79a0f13:37"></div>
+      <div class="wave-bar" data-inspector-id="html:e79a0f13:38"></div>
     </div>
-    <div class="stat-item">
-      <span class="stat-value" id="statOut">0</span>
-      <span class="stat-label">今年出库</span>
+    <div class="stat-item" data-inspector-id="html:e79a0f13:39">
+      <span class="stat-value" id="statOut" data-inspector-id="html:e79a0f13:40">64</span>
+      <span class="stat-label" data-inspector-id="html:e79a0f13:41">今年出库</span>
     </div>
-    <button class="import-btn" id="btnImport" title="从Excel/CSV导入数据">导入数据</button>
+    <button class="import-btn" id="btnImport" title="从Excel/CSV导入数据" data-inspector-id="html:e79a0f13:42" data-scu-ref="e4">导入数据</button>
   </div>
-  <input type="file" class="import-file" id="importFile" accept=".xlsx,.xls,.csv,.txt">
+  <input type="file" class="import-file" id="importFile" accept=".xlsx,.xls,.csv,.txt" data-inspector-id="html:e79a0f13:43">
 
   <!-- Main Layout -->
-  <div class="main">
+  <div class="main" data-inspector-id="html:e79a0f13:44">
 
     <!-- Left: Warehouse Layout -->
-    <div class="left-panel">
-      <div class="panel-title">半成品仓库</div>
-      <div class="warehouse-layout" id="warehouseLayout">
-        <!-- populated by JS -->
+    <div class="left-panel" data-inspector-id="html:e79a0f13:45">
+      <div class="panel-title-row" data-inspector-id="html:e79a0f13:46">
+        <div class="panel-tabs" data-inspector-id="html:e79a0f13:47">
+          <button class="panel-tab active" data-wh="semi" type="button" data-inspector-id="html:e79a0f13:48" data-scu-ref="e5">半成品仓库</button>
+          <button class="panel-tab" data-wh="assembly" type="button" data-inspector-id="html:e79a0f13:49" data-scu-ref="e6">装配成品仓</button>
+          <button class="panel-tab" data-wh="selfmade" type="button" data-inspector-id="html:e79a0f13:50" data-scu-ref="e7">自制成品仓</button>
+          <button class="panel-tab" data-wh="raw" type="button" data-inspector-id="html:e79a0f13:51" data-scu-ref="e8">原材料仓</button>
+        </div>
       </div>
-      <div class="bottom-channel">物 流 通 道</div>
-      <div class="legend">
-        <div class="legend-item"><div class="legend-dot empty"></div>空闲</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>一周内</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#ea580c"></div>2周-1月</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#dc2626"></div>1个月以上</div>
-        <div class="legend-item" id="legendStats" style="margin-left:auto;color:var(--cyan-light)">占用: 0 / 0</div>
+      <div class="warehouse-layout" id="warehouseLayout" data-inspector-id="html:e79a0f13:52">
+      <div class="side-zones">
+        <div class="side-zone green">包材放置区</div>
+        <div class="side-zone">周转箱放置区</div>
+      </div>
+    <div class="storage-main">
+        <div class="section-col">
+          <div class="section-body"><div class="w-cell filled filled-green" data-key="A1"><span class="w-code">A1</span><span class="w-product" title="ST2 装饰件-电镀">ST2 装饰件-电镀</span><div class="w-batches"><div class="w-batch-bar batch-age-green"></div><div class="w-batch-qty">576</div></div><div class="w-batch-count">总计 576</div></div><div class="w-cell filled filled-red" data-key="B1"><span class="w-code">B1</span><span class="w-product" title="ST2 装饰件-电镀（哑）">ST2 装饰件-电镀（哑）</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">656</div></div><div class="w-batch-count">总计 656</div></div><div class="w-cell filled filled-green" data-key="A2"><span class="w-code">A2</span><span class="w-product" title="ST2 装饰件-电镀">ST2 装饰件-电镀</span><div class="w-batches"><div class="w-batch-bar batch-age-green"></div><div class="w-batch-qty">576</div></div><div class="w-batch-count">总计 576</div></div><div class="w-cell filled filled-red" data-key="B2"><span class="w-code">B2</span><span class="w-product" title="ST2 装饰件-电镀（哑）">ST2 装饰件-电镀（哑）</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">576</div></div><div class="w-batch-count">总计 576</div></div><div class="w-cell filled filled-green" data-key="A3"><span class="w-code">A3</span><span class="w-product" title="ST2 装饰件-电镀">ST2 装饰件-电镀</span><div class="w-batches"><div class="w-batch-bar batch-age-green"></div><div class="w-batch-qty">576</div></div><div class="w-batch-count">总计 576</div></div><div class="w-cell filled filled-red" data-key="B3"><span class="w-code">B3</span><span class="w-product" title="ST2 装饰件-电镀（亮光）">ST2 装饰件-电镀（亮光）</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">576</div></div><div class="w-batch-count">总计 576</div></div><div class="w-cell filled filled-orange" data-key="A4"><span class="w-code">A4</span><span class="w-product" title="ST2 装饰件-电镀">ST2 装饰件-电镀</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">576</div></div><div class="w-batch-count">总计 576</div></div><div class="w-cell filled filled-red" data-key="B4"><span class="w-code">B4</span><span class="w-product" title="ST2 装饰件-电镀（亮光）">ST2 装饰件-电镀（亮光）</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">576</div></div><div class="w-batch-count">总计 576</div></div><div class="w-cell filled filled-orange" data-key="A5"><span class="w-code">A5</span><span class="w-product" title="ST2 装饰件-电镀">ST2 装饰件-电镀</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">576</div></div><div class="w-batch-count">总计 576</div></div><div class="w-cell filled filled-red" data-key="B5"><span class="w-code">B5</span><span class="w-product" title="ST2 装饰件-电镀（亮光）">ST2 装饰件-电镀（亮光）</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">576</div></div><div class="w-batch-count">总计 576</div></div><div class="w-cell filled filled-orange" data-key="A6"><span class="w-code">A6</span><span class="w-product" title="ST2 装饰件-电镀">ST2 装饰件-电镀</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">576</div></div><div class="w-batch-count">总计 576</div></div><div class="w-cell filled filled-red" data-key="B6"><span class="w-code">B6</span><span class="w-product" title="ST2 装饰件-电镀（亮光）">ST2 装饰件-电镀（亮光）</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">46</div></div><div class="w-batch-count">总计 46</div></div><div class="w-cell filled filled-orange" data-key="A7"><span class="w-code">A7</span><span class="w-product" title="ST2 装饰件-电镀">ST2 装饰件-电镀</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">576</div></div><div class="w-batch-count">总计 576</div></div><div class="w-cell filled filled-orange" data-key="B7"><span class="w-code">B7</span><span class="w-product" title="ST2 装饰件-电镀">ST2 装饰件-电镀</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">576</div></div><div class="w-batch-count">总计 576</div></div><div class="w-cell filled filled-orange" data-key="A8"><span class="w-code">A8</span><span class="w-product" title="ST2 装饰件-电镀">ST2 装饰件-电镀</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">576</div></div><div class="w-batch-count">总计 576</div></div><div class="w-cell filled filled-orange" data-key="B8"><span class="w-code">B8</span><span class="w-product" title="ST2 装饰件-电镀">ST2 装饰件-电镀</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">576</div></div><div class="w-batch-count">总计 576</div></div></div>
+        </div>
+      <div class="v-channel"><div class="v-channel-label">物流通道</div></div>
+        <div class="section-col">
+          <div class="section-body"><div class="w-cell filled filled-green" data-key="C1"><span class="w-code">C1</span><span class="w-product" title="ST2 6H外侧装饰件-电镀">ST2 6H外侧装饰件-电镀</span><div class="w-batches"><div class="w-batch-bar batch-age-green"></div><div class="w-batch-qty">2400</div></div><div class="w-batch-count">总计 2400</div></div><div class="w-cell" data-key="D1"><span class="w-code">D1</span></div><div class="w-cell filled filled-red" data-key="C2"><span class="w-code">C2</span><span class="w-product" title="ST2 6H外侧装饰件-电镀（哑）">ST2 6H外侧装饰件-电镀（哑）</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">1394</div></div><div class="w-batch-count">总计 1394</div></div><div class="w-cell filled filled-red" data-key="D2"><span class="w-code">D2</span><span class="w-product" title="ST2 6H内侧装饰件-电镀（哑）">ST2 6H内侧装饰件-电镀（哑）</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">1234</div></div><div class="w-batch-count">总计 1234</div></div><div class="w-cell filled filled-red" data-key="C3"><span class="w-code">C3</span><span class="w-product" title="ST2 6H外侧装饰件-电镀（亮光）">ST2 6H外侧装饰件-电镀（亮光）</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">894</div></div><div class="w-batch-count">总计 894</div></div><div class="w-cell" data-key="D3"><span class="w-code">D3</span></div><div class="w-cell filled filled-green" data-key="C4"><span class="w-code">C4</span><span class="w-product" title="ST2 6H外侧装饰件-电镀">ST2 6H外侧装饰件-电镀</span><div class="w-batches"><div class="w-batch-bar batch-age-green"></div><div class="w-batch-qty">2400</div></div><div class="w-batch-count">总计 2400</div></div><div class="w-cell filled filled-orange" data-key="D4"><span class="w-code">D4</span><span class="w-product" title="ST2 6H内侧装饰件-电镀（亮光）">ST2 6H内侧装饰件-电镀（亮光）</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">3120</div></div><div class="w-batch-count">总计 3120</div></div><div class="w-cell filled filled-red" data-key="C5"><span class="w-code">C5</span><span class="w-product" title="D13 6H装饰件-电镀">D13 6H装饰件-电镀</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">672</div></div><div class="w-batch-count">总计 672</div></div><div class="w-cell filled filled-red" data-key="D5"><span class="w-code">D5</span><span class="w-product" title="D13 6H装饰件-电镀">D13 6H装饰件-电镀</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">672</div></div><div class="w-batch-count">总计 672</div></div><div class="w-cell filled filled-red" data-key="C6"><span class="w-code">C6</span><span class="w-product" title="D13 6H装饰件-电镀">D13 6H装饰件-电镀</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">672</div></div><div class="w-batch-count">总计 672</div></div><div class="w-cell filled filled-red" data-key="D6"><span class="w-code">D6</span><span class="w-product" title="D13 6H装饰件-电镀">D13 6H装饰件-电镀</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">672</div></div><div class="w-batch-count">总计 672</div></div><div class="w-cell filled filled-red" data-key="C7"><span class="w-code">C7</span><span class="w-product" title="D13 6H装饰件-电镀">D13 6H装饰件-电镀</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">672</div></div><div class="w-batch-count">总计 672</div></div><div class="w-cell filled filled-orange" data-key="D7"><span class="w-code">D7</span><span class="w-product" title="D13 6H装饰件-电镀">D13 6H装饰件-电镀</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">672</div></div><div class="w-batch-count">总计 672</div></div><div class="w-cell filled filled-red" data-key="C8"><span class="w-code">C8</span><span class="w-product" title="D13 6H装饰件-电镀">D13 6H装饰件-电镀</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">672</div></div><div class="w-batch-count">总计 672</div></div><div class="w-cell filled filled-orange" data-key="D8"><span class="w-code">D8</span><span class="w-product" title="D13 6H装饰件-电镀">D13 6H装饰件-电镀</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">672</div></div><div class="w-batch-count">总计 672</div></div></div>
+        </div>
+      <div class="v-channel"><div class="v-channel-label">物流通道</div></div>
+        <div class="section-col">
+          <div class="section-body"><div class="w-cell" data-key="E1"><span class="w-code">E1</span></div><div class="w-cell filled filled-red" data-key="F1"><span class="w-code">F1</span><span class="w-product" title="SC3E 电镀装饰件">SC3E 电镀装饰件</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">624</div></div><div class="w-batch-count">总计 624</div></div><div class="w-cell" data-key="E2"><span class="w-code">E2</span></div><div class="w-cell filled filled-red" data-key="F2"><span class="w-code">F2</span><span class="w-product" title="SC3E 电镀装饰件">SC3E 电镀装饰件</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">624</div></div><div class="w-batch-count">总计 624</div></div><div class="w-cell" data-key="E3"><span class="w-code">E3</span></div><div class="w-cell filled filled-orange" data-key="F3"><span class="w-code">F3</span><span class="w-product" title="SC3E 电镀装饰件">SC3E 电镀装饰件</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">624</div></div><div class="w-batch-count">总计 624</div></div><div class="w-cell" data-key="E4"><span class="w-code">E4</span></div><div class="w-cell filled filled-red" data-key="F4"><span class="w-code">F4</span><span class="w-product" title="SC3E 电镀装饰件">SC3E 电镀装饰件</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">624</div></div><div class="w-batch-count">总计 624</div></div><div class="w-cell" data-key="E5"><span class="w-code">E5</span></div><div class="w-cell filled filled-orange" data-key="F5"><span class="w-code">F5</span><span class="w-product" title="SC3E 电镀装饰件">SC3E 电镀装饰件</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">624</div></div><div class="w-batch-count">总计 624</div></div><div class="w-cell filled filled-red" data-key="E6"><span class="w-code">E6</span><span class="w-product" title="C673开关装饰件">C673开关装饰件</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">108</div></div><div class="w-batch-count">总计 108</div></div><div class="w-cell filled filled-orange" data-key="F6"><span class="w-code">F6</span><span class="w-product" title="SC3E 电镀装饰件">SC3E 电镀装饰件</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">486</div></div><div class="w-batch-count">总计 486</div></div><div class="w-cell" data-key="E7"><span class="w-code">E7</span></div><div class="w-cell" data-key="F7"><span class="w-code">F7</span></div><div class="w-cell" data-key="E8"><span class="w-code">E8</span></div><div class="w-cell filled filled-orange" data-key="F8"><span class="w-code">F8</span><span class="w-product" title="C236电镀装饰件-黑铬">C236电镀装饰件-黑铬</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">173</div></div><div class="w-batch-count">总计 173</div></div></div>
+        </div>
+      <div class="v-channel"><div class="v-channel-label">物流通道</div></div>
+        <div class="section-col">
+          <div class="section-body"><div class="w-cell filled filled-red" data-key="G1"><span class="w-code">G1</span><span class="w-product" title="HXHA PVD装饰件-左">HXHA PVD装饰件-左</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">1050</div></div><div class="w-batch-count">总计 1050</div></div><div class="w-cell filled filled-red" data-key="H1"><span class="w-code">H1</span><span class="w-product" title="HXHA PVD装饰件-右">HXHA PVD装饰件-右</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">1050</div></div><div class="w-batch-count">总计 1050</div></div><div class="w-cell filled filled-red" data-key="G2"><span class="w-code">G2</span><span class="w-product" title="HXHA PVD装饰件-左">HXHA PVD装饰件-左</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">818</div></div><div class="w-batch-count">总计 818</div></div><div class="w-cell filled filled-red" data-key="H2"><span class="w-code">H2</span><span class="w-product" title="HXHA PVD装饰件-右">HXHA PVD装饰件-右</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">757</div></div><div class="w-batch-count">总计 757</div></div><div class="w-cell" data-key="G3"><span class="w-code">G3</span></div><div class="w-cell filled filled-red" data-key="H3"><span class="w-code">H3</span><span class="w-product" title="SK2湍流灰装饰件-右">SK2湍流灰装饰件-右</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">1050</div></div><div class="w-batch-count">总计 1050</div></div><div class="w-cell filled filled-red" data-key="G4"><span class="w-code">G4</span><span class="w-product" title="SK2湍流灰装饰件-左">SK2湍流灰装饰件-左</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">831</div></div><div class="w-batch-count">总计 831</div></div><div class="w-cell filled filled-red" data-key="H4"><span class="w-code">H4</span><span class="w-product" title="SK2湍流灰装饰件-右">SK2湍流灰装饰件-右</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">757</div></div><div class="w-batch-count">总计 757</div></div><div class="w-cell filled filled-orange" data-key="G5"><span class="w-code">G5</span><span class="w-product" title="UKEA 电镀装饰件-左">UKEA 电镀装饰件-左</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">975</div></div><div class="w-batch-count">总计 975</div></div><div class="w-cell filled filled-red" data-key="H5"><span class="w-code">H5</span><span class="w-product" title="SK2哑光钛银装饰件-右">SK2哑光钛银装饰件-右</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">450</div></div><div class="w-batch-count">总计 450</div></div><div class="w-cell filled filled-orange" data-key="G6"><span class="w-code">G6</span><span class="w-product" title="UKEA PVD装饰件-左">UKEA PVD装饰件-左</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">1050</div></div><div class="w-batch-count">总计 1050</div></div><div class="w-cell filled filled-orange" data-key="H6"><span class="w-code">H6</span><span class="w-product" title="UKEA 电镀装饰件-右">UKEA 电镀装饰件-右</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">1050</div></div><div class="w-batch-count">总计 1050</div></div><div class="w-cell filled filled-orange" data-key="G7"><span class="w-code">G7</span><span class="w-product" title="UKEA 电镀装饰件-左">UKEA 电镀装饰件-左</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">1050</div></div><div class="w-batch-count">总计 1050</div></div><div class="w-cell filled filled-orange" data-key="H7"><span class="w-code">H7</span><span class="w-product" title="UKEA PVD装饰件-右">UKEA PVD装饰件-右</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">1050</div></div><div class="w-batch-count">总计 1050</div></div><div class="w-cell filled filled-red" data-key="G8"><span class="w-code">G8</span><span class="w-product" title="SK2哑光钛银装饰件-左">SK2哑光钛银装饰件-左</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">1050</div></div><div class="w-batch-count">总计 1050</div></div><div class="w-cell filled filled-orange" data-key="H8"><span class="w-code">H8</span><span class="w-product" title="UKEA PVD装饰件-右">UKEA PVD装饰件-右</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">675</div></div><div class="w-batch-count">总计 675</div></div></div>
+        </div>
+      <div class="v-channel"><div class="v-channel-label">物流通道</div></div>
+        <div class="section-col">
+          <div class="section-body"><div class="w-cell" data-key="I1"><span class="w-code">I1</span></div><div class="w-cell" data-key="J1"><span class="w-code">J1</span></div><div class="w-cell" data-key="I2"><span class="w-code">I2</span></div><div class="w-cell" data-key="J2"><span class="w-code">J2</span></div><div class="w-cell filled filled-red" data-key="I3"><span class="w-code">I3</span><span class="w-product" title="ST2 左装饰件-喷漆-秋茶棕">ST2 左装饰件-喷漆-秋茶棕</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">1200</div></div><div class="w-batch-count">总计 1200</div></div><div class="w-cell filled filled-orange" data-key="J3"><span class="w-code">J3</span><span class="w-product" title="ST2 右装饰件-喷漆-秋茶棕">ST2 右装饰件-喷漆-秋茶棕</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">1158</div></div><div class="w-batch-count">总计 1158</div></div><div class="w-cell" data-key="I4"><span class="w-code">I4</span></div><div class="w-cell filled filled-red" data-key="J4"><span class="w-code">J4</span><span class="w-product" title="ST2 右装饰件-喷漆-深黑五">ST2 右装饰件-喷漆-深黑五</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">952</div></div><div class="w-batch-count">总计 952</div></div><div class="w-cell filled filled-orange" data-key="I5"><span class="w-code">I5</span><span class="w-product" title="ST2 左装饰件-喷漆-灰陶">ST2 左装饰件-喷漆-灰陶</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">204</div></div><div class="w-batch-count">总计 204</div></div><div class="w-cell filled filled-orange" data-key="J5"><span class="w-code">J5</span><span class="w-product" title="ST2 右装饰件-喷漆-灰陶">ST2 右装饰件-喷漆-灰陶</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">49</div></div><div class="w-batch-count">总计 49</div></div><div class="w-cell filled filled-red" data-key="I6"><span class="w-code">I6</span><span class="w-product" title="ST2 左装饰件-喷漆-钢琴黑">ST2 左装饰件-喷漆-钢琴黑</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">535</div></div><div class="w-batch-count">总计 535</div></div><div class="w-cell filled filled-red" data-key="J6"><span class="w-code">J6</span><span class="w-product" title="ST2 右装饰件-喷漆-钢琴黑">ST2 右装饰件-喷漆-钢琴黑</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">732</div></div><div class="w-batch-count">总计 732</div></div><div class="w-cell" data-key="I7"><span class="w-code">I7</span></div><div class="w-cell" data-key="J7"><span class="w-code">J7</span></div><div class="w-cell filled filled-red" data-key="I8"><span class="w-code">I8</span><span class="w-product" title="ST2 左装饰件-喷漆-乔木橙">ST2 左装饰件-喷漆-乔木橙</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">10</div></div><div class="w-batch-count">总计 10</div></div><div class="w-cell filled filled-red" data-key="J8"><span class="w-code">J8</span><span class="w-product" title="ST2 右装饰件-喷漆-乔木橙">ST2 右装饰件-喷漆-乔木橙</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">145</div></div><div class="w-batch-count">总计 145</div></div></div>
+        </div>
+      <div class="v-channel"><div class="v-channel-label">物流通道</div></div>
+        <div class="section-col">
+          <div class="section-body"><div class="w-cell filled filled-red" data-key="K1"><span class="w-code">K1</span><span class="w-product" title="D13 喷漆开关装饰件-霁雨灰">D13 喷漆开关装饰件-霁雨灰</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">504</div></div><div class="w-batch-count">总计 504</div></div><div class="w-cell filled filled-red" data-key="L1"><span class="w-code">L1</span><span class="w-product" title="D13 喷漆开关装饰件-林木棕">D13 喷漆开关装饰件-林木棕</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">504</div></div><div class="w-batch-count">总计 504</div></div><div class="w-cell filled filled-red" data-key="K2"><span class="w-code">K2</span><span class="w-product" title="D13 喷漆开关装饰件-霁雨灰">D13 喷漆开关装饰件-霁雨灰</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">504</div></div><div class="w-batch-count">总计 504</div></div><div class="w-cell filled filled-orange" data-key="L2"><span class="w-code">L2</span><span class="w-product" title="D13 喷漆开关装饰件-林木棕">D13 喷漆开关装饰件-林木棕</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">504</div></div><div class="w-batch-count">总计 504</div></div><div class="w-cell filled filled-red" data-key="K3"><span class="w-code">K3</span><span class="w-product" title="D13 喷漆开关装饰件-霁雨灰">D13 喷漆开关装饰件-霁雨灰</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">504</div></div><div class="w-batch-count">总计 504</div></div><div class="w-cell" data-key="L3"><span class="w-code">L3</span></div><div class="w-cell filled filled-red" data-key="K4"><span class="w-code">K4</span><span class="w-product" title="D13 喷漆开关装饰件-霁雨灰">D13 喷漆开关装饰件-霁雨灰</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">97</div></div><div class="w-batch-count">总计 97</div></div><div class="w-cell" data-key="L4"><span class="w-code">L4</span></div><div class="w-cell filled filled-red" data-key="K5"><span class="w-code">K5</span><span class="w-product" title="D13 喷漆开关装饰件-霁雾蓝">D13 喷漆开关装饰件-霁雾蓝</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">504</div></div><div class="w-batch-count">总计 504</div></div><div class="w-cell" data-key="L5"><span class="w-code">L5</span></div><div class="w-cell filled filled-red" data-key="K6"><span class="w-code">K6</span><span class="w-product" title="D13 喷漆开关装饰件-霁雾蓝">D13 喷漆开关装饰件-霁雾蓝</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">504</div></div><div class="w-batch-count">总计 504</div></div><div class="w-cell" data-key="L6"><span class="w-code">L6</span></div><div class="w-cell filled filled-red" data-key="K7"><span class="w-code">K7</span><span class="w-product" title="D13 喷漆开关装饰件-霁雾蓝">D13 喷漆开关装饰件-霁雾蓝</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">504</div></div><div class="w-batch-count">总计 504</div></div><div class="w-cell" data-key="L7"><span class="w-code">L7</span></div><div class="w-cell filled filled-red" data-key="K8"><span class="w-code">K8</span><span class="w-product" title="D13 喷漆开关装饰件-霁雾蓝">D13 喷漆开关装饰件-霁雾蓝</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">324</div></div><div class="w-batch-count">总计 324</div></div><div class="w-cell" data-key="L8"><span class="w-code">L8</span></div></div>
+        </div>
+      <div class="v-channel"><div class="v-channel-label">物流通道</div></div>
+        <div class="section-col">
+          <div class="section-body"><div class="w-cell" data-key="M1"><span class="w-code">M1</span></div><div class="w-cell" data-key="N1"><span class="w-code">N1</span></div><div class="w-cell" data-key="M2"><span class="w-code">M2</span></div><div class="w-cell" data-key="N2"><span class="w-code">N2</span></div><div class="w-cell" data-key="M3"><span class="w-code">M3</span></div><div class="w-cell" data-key="N3"><span class="w-code">N3</span></div><div class="w-cell" data-key="M4"><span class="w-code">M4</span></div><div class="w-cell filled filled-orange" data-key="N4"><span class="w-code">N4</span><span class="w-product" title="HXHA喷漆件装饰件-染木红">HXHA喷漆件装饰件-染木红</span><div class="w-batches"><div class="w-batch-bar batch-age-orange"></div><div class="w-batch-qty">438</div></div><div class="w-batch-count">总计 438</div></div><div class="w-cell filled filled-green" data-key="M5"><span class="w-code">M5</span><span class="w-product" title="SC3E 喷漆装饰件 A">SC3E 喷漆装饰件 A</span><div class="w-batches"><div class="w-batch-bar batch-age-green"></div><div class="w-batch-qty">448</div></div><div class="w-batch-count">总计 448</div></div><div class="w-cell filled filled-red" data-key="N5"><span class="w-code">N5</span><span class="w-product" title="HXHA喷漆件装饰件-深黑">HXHA喷漆件装饰件-深黑</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">115</div></div><div class="w-batch-count">总计 115</div></div><div class="w-cell filled filled-green" data-key="M6"><span class="w-code">M6</span><span class="w-product" title="SC3E 喷漆装饰件 A">SC3E 喷漆装饰件 A</span><div class="w-batches"><div class="w-batch-bar batch-age-green"></div><div class="w-batch-qty">448</div></div><div class="w-batch-count">总计 448</div></div><div class="w-cell filled filled-green" data-key="N6"><span class="w-code">N6</span><span class="w-product" title="ST2 6H内侧装饰件-喷漆（赤芒金）">ST2 6H内侧装饰件-喷漆（赤芒金）</span><div class="w-batches"><div class="w-batch-bar batch-age-green"></div><div class="w-batch-qty">519</div></div><div class="w-batch-count">总计 519</div></div><div class="w-cell" data-key="M7"><span class="w-code">M7</span></div><div class="w-cell" data-key="N7"><span class="w-code">N7</span></div><div class="w-cell filled filled-red" data-key="M8"><span class="w-code">M8</span><span class="w-product" title="C236 喷漆装饰件">C236 喷漆装饰件</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">56</div></div><div class="w-batch-count">总计 56</div></div><div class="w-cell filled filled-red" data-key="N8"><span class="w-code">N8</span><span class="w-product" title="C236侧围装饰件-慕夜黑">C236侧围装饰件-慕夜黑</span><div class="w-batches"><div class="w-batch-bar batch-age-red"></div><div class="w-batch-qty">113</div></div><div class="w-batch-count">总计 113</div></div></div>
+        </div>
+      </div></div>
+      <div class="bottom-channel" data-inspector-id="html:e79a0f13:53">物 流 通 道</div>
+      <div class="legend" data-inspector-id="html:e79a0f13:54">
+        <div class="legend-item" data-inspector-id="html:e79a0f13:55"><div class="legend-dot empty" data-inspector-id="html:e79a0f13:56"></div>空闲</div>
+        <div class="legend-item" data-inspector-id="html:e79a0f13:57"><div class="legend-dot" style="background:#16a34a" data-inspector-id="html:e79a0f13:58"></div>一周内</div>
+        <div class="legend-item" data-inspector-id="html:e79a0f13:59"><div class="legend-dot" style="background:#ea580c" data-inspector-id="html:e79a0f13:60"></div>2周-1月</div>
+        <div class="legend-item" data-inspector-id="html:e79a0f13:61"><div class="legend-dot" style="background:#dc2626" data-inspector-id="html:e79a0f13:62"></div>1个月以上</div>
+        <div class="legend-item" id="legendStats" style="margin-left:auto;color:var(--cyan-light)" data-inspector-id="html:e79a0f13:63">占用: 79 / 112</div>
       </div>
     </div>
 
     <!-- Right: Charts & Table -->
-    <div class="right-panel">
+    <div class="right-panel" data-inspector-id="html:e79a0f13:64">
 
-      <!-- Inbound Line Chart -->
-      <div class="right-card">
-        <div class="right-card-title">入库趋势</div>
-        <div class="chart-wrap" id="lineChart"></div>
+      <!-- FIFO 先进先出列表 -->
+      <div class="right-card" data-inspector-id="html:e79a0f13:65">
+        <div class="right-card-title" data-inspector-id="html:e79a0f13:66">先进先出（FIFO）</div>
+        <div class="chart-wrap fifo-wrap" id="lineChart" data-inspector-id="html:e79a0f13:67">
+    <table class="fifo-table">
+      <thead>
+        <tr>
+          <th class="fifo-prod">产品名称</th>
+          <th class="fifo-batch">生产批次</th>
+          <th class="fifo-qty">数量</th>
+          <th class="fifo-loc">库位</th>
+          <th class="fifo-time">入库时间</th>
+        </tr>
+      </thead>
+      <tbody><tr class="fifo-red" title="物料编码：304005｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">HXHA喷漆件装饰件-深黑</td>
+      <td class="fifo-batch">B20260116</td>
+      <td class="fifo-qty">115</td>
+      <td class="fifo-loc">N5</td>
+      <td class="fifo-time">2026-09-12 08:13</td>
+    </tr><tr class="fifo-red" title="物料编码：303001｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">C673开关装饰件</td>
+      <td class="fifo-batch">B20260122</td>
+      <td class="fifo-qty">108</td>
+      <td class="fifo-loc">E6</td>
+      <td class="fifo-time">2026-09-11 13:14</td>
+    </tr><tr class="fifo-red" title="物料编码：304038｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">ST2 左装饰件-喷漆-钢琴黑</td>
+      <td class="fifo-batch">B20260411</td>
+      <td class="fifo-qty">535</td>
+      <td class="fifo-loc">I6</td>
+      <td class="fifo-time">2026-09-11 15:07</td>
+    </tr><tr class="fifo-red" title="物料编码：304039｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">ST2 右装饰件-喷漆-钢琴黑</td>
+      <td class="fifo-batch">B20260411</td>
+      <td class="fifo-qty">732</td>
+      <td class="fifo-loc">J6</td>
+      <td class="fifo-time">2026-09-11 15:10</td>
+    </tr><tr class="fifo-red" title="物料编码：304014｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">SK2湍流灰装饰件-右</td>
+      <td class="fifo-batch">B20260504</td>
+      <td class="fifo-qty">1,050</td>
+      <td class="fifo-loc">H3</td>
+      <td class="fifo-time">2026-09-11 13:37</td>
+    </tr><tr class="fifo-red" title="物料编码：304015｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">SK2湍流灰装饰件-左</td>
+      <td class="fifo-batch">B20260603</td>
+      <td class="fifo-qty">831</td>
+      <td class="fifo-loc">G4</td>
+      <td class="fifo-time">2026-09-11 13:32</td>
+    </tr><tr class="fifo-red" title="物料编码：305002｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">HXHA PVD装饰件-右</td>
+      <td class="fifo-batch">B20260620</td>
+      <td class="fifo-qty">757</td>
+      <td class="fifo-loc">H2</td>
+      <td class="fifo-time">2026-09-11 13:36</td>
+    </tr><tr class="fifo-red" title="物料编码：303018｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">ST2 装饰件-电镀（亮光）</td>
+      <td class="fifo-batch">B20260716</td>
+      <td class="fifo-qty">576</td>
+      <td class="fifo-loc">B3</td>
+      <td class="fifo-time">2026-09-11 12:47</td>
+    </tr><tr class="fifo-red" title="物料编码：304023｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">D13 喷漆开关装饰件-林木棕</td>
+      <td class="fifo-batch">B20260718</td>
+      <td class="fifo-qty">504</td>
+      <td class="fifo-loc">L1</td>
+      <td class="fifo-time">2026-09-11 15:20</td>
+    </tr><tr class="fifo-red" title="物料编码：303019｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">ST2 6H外侧装饰件-电镀（亮光）</td>
+      <td class="fifo-batch">B20260724</td>
+      <td class="fifo-qty">894</td>
+      <td class="fifo-loc">C3</td>
+      <td class="fifo-time">2026-09-11 12:59</td>
+    </tr><tr class="fifo-red" title="物料编码：304044｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">ST2 左装饰件-喷漆-乔木橙</td>
+      <td class="fifo-batch">B20260725</td>
+      <td class="fifo-qty">10</td>
+      <td class="fifo-loc">I8</td>
+      <td class="fifo-time">2026-09-11 15:07</td>
+    </tr><tr class="fifo-red" title="物料编码：304045｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">ST2 右装饰件-喷漆-乔木橙</td>
+      <td class="fifo-batch">B20260725</td>
+      <td class="fifo-qty">145</td>
+      <td class="fifo-loc">J8</td>
+      <td class="fifo-time">2026-09-11 15:08</td>
+    </tr><tr class="fifo-red" title="物料编码：303010｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">D13 6H装饰件-电镀</td>
+      <td class="fifo-batch">B20260729</td>
+      <td class="fifo-qty">672</td>
+      <td class="fifo-loc">C8</td>
+      <td class="fifo-time">2026-09-11 13:02</td>
+    </tr><tr class="fifo-red" title="物料编码：303007｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">SC3E 电镀装饰件</td>
+      <td class="fifo-batch">B20260729</td>
+      <td class="fifo-qty">624</td>
+      <td class="fifo-loc">F2</td>
+      <td class="fifo-time">2026-09-11 13:21</td>
+    </tr><tr class="fifo-red" title="物料编码：304040｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">ST2 左装饰件-喷漆-秋茶棕</td>
+      <td class="fifo-batch">B20260804</td>
+      <td class="fifo-qty">1,200</td>
+      <td class="fifo-loc">I3</td>
+      <td class="fifo-time">2026-09-11 13:57</td>
+    </tr><tr class="fifo-red" title="物料编码：302010｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">C236侧围装饰件-慕夜黑</td>
+      <td class="fifo-batch">B20260811</td>
+      <td class="fifo-qty">113</td>
+      <td class="fifo-loc">N8</td>
+      <td class="fifo-time">2026-09-12 08:11</td>
+    </tr><tr class="fifo-red" title="物料编码：303015｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">ST2 装饰件-电镀（哑）</td>
+      <td class="fifo-batch">B20260812</td>
+      <td class="fifo-qty">656</td>
+      <td class="fifo-loc">B1</td>
+      <td class="fifo-time">2026-09-11 12:46</td>
+    </tr><tr class="fifo-red" title="物料编码：305001｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">HXHA PVD装饰件-左</td>
+      <td class="fifo-batch">B20260812</td>
+      <td class="fifo-qty">1,050</td>
+      <td class="fifo-loc">G1</td>
+      <td class="fifo-time">2026-09-11 13:27</td>
+    </tr><tr class="fifo-red" title="物料编码：303017｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">ST2 6H内侧装饰件-电镀（哑）</td>
+      <td class="fifo-batch">B20260813</td>
+      <td class="fifo-qty">1,234</td>
+      <td class="fifo-loc">D2</td>
+      <td class="fifo-time">2026-09-11 13:05</td>
+    </tr><tr class="fifo-red" title="物料编码：304043｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">ST2 右装饰件-喷漆-深黑五</td>
+      <td class="fifo-batch">B20260813</td>
+      <td class="fifo-qty">952</td>
+      <td class="fifo-loc">J4</td>
+      <td class="fifo-time">2026-09-11 15:13</td>
+    </tr><tr class="fifo-red" title="物料编码：304022｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">D13 喷漆开关装饰件-霁雨灰</td>
+      <td class="fifo-batch">B20260814</td>
+      <td class="fifo-qty">504</td>
+      <td class="fifo-loc">K1</td>
+      <td class="fifo-time">2026-09-11 15:16</td>
+    </tr><tr class="fifo-red" title="物料编码：304021｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">D13 喷漆开关装饰件-霁雾蓝</td>
+      <td class="fifo-batch">B20260814</td>
+      <td class="fifo-qty">504</td>
+      <td class="fifo-loc">K5</td>
+      <td class="fifo-time">2026-09-11 15:18</td>
+    </tr><tr class="fifo-red" title="物料编码：304001｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">C236 喷漆装饰件</td>
+      <td class="fifo-batch">B20260814</td>
+      <td class="fifo-qty">56</td>
+      <td class="fifo-loc">M8</td>
+      <td class="fifo-time">2026-09-11 16:42</td>
+    </tr><tr class="fifo-red" title="物料编码：303016｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">ST2 6H外侧装饰件-电镀（哑）</td>
+      <td class="fifo-batch">B20260815</td>
+      <td class="fifo-qty">1,394</td>
+      <td class="fifo-loc">C2</td>
+      <td class="fifo-time">2026-09-11 12:59</td>
+    </tr><tr class="fifo-red" title="物料编码：304018｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">SK2哑光钛银装饰件-左</td>
+      <td class="fifo-batch">B20260818</td>
+      <td class="fifo-qty">1,050</td>
+      <td class="fifo-loc">G8</td>
+      <td class="fifo-time">2026-09-16 12:52</td>
+    </tr><tr class="fifo-red" title="物料编码：304017｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">SK2哑光钛银装饰件-右</td>
+      <td class="fifo-batch">B20260818</td>
+      <td class="fifo-qty">450</td>
+      <td class="fifo-loc">H5</td>
+      <td class="fifo-time">2026-09-16 12:54</td>
+    </tr><tr class="fifo-orange" title="物料编码：303020｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">ST2 6H内侧装饰件-电镀（亮光）</td>
+      <td class="fifo-batch">B20260820</td>
+      <td class="fifo-qty">3,120</td>
+      <td class="fifo-loc">D4</td>
+      <td class="fifo-time">2026-09-11 13:10</td>
+    </tr><tr class="fifo-orange" title="物料编码：303005｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">C236电镀装饰件-黑铬</td>
+      <td class="fifo-batch">B20260825</td>
+      <td class="fifo-qty">173</td>
+      <td class="fifo-loc">F8</td>
+      <td class="fifo-time">2026-09-11 13:24</td>
+    </tr><tr class="fifo-orange" title="物料编码：303012｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">ST2 装饰件-电镀</td>
+      <td class="fifo-batch">B20260827</td>
+      <td class="fifo-qty">576</td>
+      <td class="fifo-loc">A4</td>
+      <td class="fifo-time">2026-09-11 11:11</td>
+    </tr><tr class="fifo-orange" title="物料编码：303008｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">UKEA 电镀装饰件-右</td>
+      <td class="fifo-batch">B20260827</td>
+      <td class="fifo-qty">1,050</td>
+      <td class="fifo-loc">H6</td>
+      <td class="fifo-time">2026-09-11 13:47</td>
+    </tr><tr class="fifo-orange" title="物料编码：305003｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">UKEA PVD装饰件-右</td>
+      <td class="fifo-batch">B20260901</td>
+      <td class="fifo-qty">675</td>
+      <td class="fifo-loc">H8</td>
+      <td class="fifo-time">2026-09-18 08:21</td>
+    </tr><tr class="fifo-orange" title="物料编码：304046｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">ST2 左装饰件-喷漆-灰陶</td>
+      <td class="fifo-batch">B20260905</td>
+      <td class="fifo-qty">204</td>
+      <td class="fifo-loc">I5</td>
+      <td class="fifo-time">2026-09-11 15:06</td>
+    </tr><tr class="fifo-orange" title="物料编码：304041｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">ST2 右装饰件-喷漆-秋茶棕</td>
+      <td class="fifo-batch">B20260905</td>
+      <td class="fifo-qty">1,158</td>
+      <td class="fifo-loc">J3</td>
+      <td class="fifo-time">2026-09-11 15:15</td>
+    </tr><tr class="fifo-orange" title="物料编码：305004｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">UKEA PVD装饰件-左</td>
+      <td class="fifo-batch">B20260907</td>
+      <td class="fifo-qty">1,050</td>
+      <td class="fifo-loc">G6</td>
+      <td class="fifo-time">2026-09-12 18:10</td>
+    </tr><tr class="fifo-orange" title="物料编码：304004｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">HXHA喷漆件装饰件-染木红</td>
+      <td class="fifo-batch">B20260908</td>
+      <td class="fifo-qty">438</td>
+      <td class="fifo-loc">N4</td>
+      <td class="fifo-time">2026-09-12 08:13</td>
+    </tr><tr class="fifo-orange" title="物料编码：303009｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">UKEA 电镀装饰件-左</td>
+      <td class="fifo-batch">B20260908</td>
+      <td class="fifo-qty">975</td>
+      <td class="fifo-loc">G5</td>
+      <td class="fifo-time">2026-09-17 10:27</td>
+    </tr><tr class="fifo-orange" title="物料编码：304047｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">ST2 右装饰件-喷漆-灰陶</td>
+      <td class="fifo-batch">B20260911</td>
+      <td class="fifo-qty">49</td>
+      <td class="fifo-loc">J5</td>
+      <td class="fifo-time">2026-09-11 15:11</td>
+    </tr><tr class="fifo-green" title="物料编码：304062｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">ST2 6H内侧装饰件-喷漆（赤芒金）</td>
+      <td class="fifo-batch">B20260912</td>
+      <td class="fifo-qty">519</td>
+      <td class="fifo-loc">N6</td>
+      <td class="fifo-time">2026-09-15 10:47</td>
+    </tr><tr class="fifo-green" title="物料编码：303013｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">ST2 6H外侧装饰件-电镀</td>
+      <td class="fifo-batch">B20260913</td>
+      <td class="fifo-qty">2,400</td>
+      <td class="fifo-loc">C1</td>
+      <td class="fifo-time">2026-09-15 09:48</td>
+    </tr><tr class="fifo-green" title="物料编码：304006｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">SC3E 喷漆装饰件 A</td>
+      <td class="fifo-batch">B20260915</td>
+      <td class="fifo-qty">448</td>
+      <td class="fifo-loc">M6</td>
+      <td class="fifo-time">2026-09-18 08:33</td>
+    </tr></tbody>
+    </table>
+  </div>
       </div>
 
       <!-- Outbound Donut -->
-      <div class="right-card">
-        <div class="right-card-title">出库统计</div>
-        <div class="donut-section">
-          <svg viewBox="0 0 200 120" width="200" height="120" id="donutChart"></svg>
-          <div class="donut-legend">
-            <div class="donut-legend-title">库位状态</div>
-            <div class="donut-item"><div class="donut-color" style="background:var(--cyan)"></div>已占用<span class="donut-value"><b id="statUsed">0</b></span></div>
-            <div class="donut-item"><div class="donut-color" style="background:var(--orange)"></div>入库记录<span class="donut-value"><b id="statInbound">0</b></span></div>
-            <div class="donut-item"><div class="donut-color" style="background:rgba(34,197,94,.6)"></div>出库记录<span class="donut-value"><b id="statOutbound">0</b></span></div>
+      <div class="right-card" data-inspector-id="html:e79a0f13:68">
+        <div class="right-card-title" data-inspector-id="html:e79a0f13:69">出库统计</div>
+        <div class="donut-section" data-inspector-id="html:e79a0f13:70">
+          <svg viewBox="0 0 200 120" width="200" height="120" id="donutChart" data-inspector-id="html:e79a0f13:71">
+    <path d="M90,15 A45,45 0 0 1 134.14146123900684,68.74822265864658 L119.42764082600456,65.83214843909772 A30,30 0 0 0 90,30 Z" fill="#00d4ff"></path><path d="M134.14146123900684,68.74822265864658 A45,45 0 0 1 45.438715231220165,53.73167488433231 L60.29247682081345,55.82111658955487 A30,30 0 0 0 119.42764082600456,65.83214843909772 Z" fill="#f59e0b"></path><path d="M45.438715231220165,53.73167488433231 A45,45 0 0 1 89.99999999999999,15 L90,30 A30,30 0 0 0 60.29247682081345,55.82111658955487 Z" fill="rgba(34,197,94,.7)"></path>
+    <text x="90" y="58" text-anchor="middle" fill="#22d3ee" font-size="14" font-weight="bold">79</text>
+    <text x="90" y="72" text-anchor="middle" fill="#5a7a9a" font-size="8">已占用</text>
+  </svg>
+          <div class="donut-legend" data-inspector-id="html:e79a0f13:72">
+            <div class="donut-legend-title" data-inspector-id="html:e79a0f13:73">库位状态</div>
+            <div class="donut-item" data-inspector-id="html:e79a0f13:74"><div class="donut-color" style="background:var(--cyan)" data-inspector-id="html:e79a0f13:75"></div>已占用<span class="donut-value" data-inspector-id="html:e79a0f13:76"><b id="statUsed" data-inspector-id="html:e79a0f13:77">79</b></span></div>
+            <div class="donut-item" data-inspector-id="html:e79a0f13:78"><div class="donut-color" style="background:var(--orange)" data-inspector-id="html:e79a0f13:79"></div>入库记录<span class="donut-value" data-inspector-id="html:e79a0f13:80"><b id="statInbound" data-inspector-id="html:e79a0f13:81">138</b></span></div>
+            <div class="donut-item" data-inspector-id="html:e79a0f13:82"><div class="donut-color" style="background:rgba(34,197,94,.6)" data-inspector-id="html:e79a0f13:83"></div>出库记录<span class="donut-value" data-inspector-id="html:e79a0f13:84"><b id="statOutbound" data-inspector-id="html:e79a0f13:85">64</b></span></div>
           </div>
         </div>
       </div>
 
       <!-- Outbound Table -->
-      <div class="right-card" style="flex:1">
-        <div class="right-card-title">
-          <span>出入库记录</span>
-          <button class="export-btn" id="btnExportCsv" title="导出为CSV文件">导出CSV</button>
-          <button class="export-btn export-btn-excel" id="btnExportExcel" title="导出为Excel文件">导出Excel</button>
+      <div class="right-card" style="flex:1" data-inspector-id="html:e79a0f13:86">
+        <div class="right-card-title" data-inspector-id="html:e79a0f13:87">
+          <span data-inspector-id="html:e79a0f13:88">出入库记录</span>
+          <button class="export-btn" id="btnExportCsv" title="导出为CSV文件" data-inspector-id="html:e79a0f13:89" data-scu-ref="e9">导出CSV</button>
+          <button class="export-btn export-btn-excel" id="btnExportExcel" title="导出为Excel文件" data-inspector-id="html:e79a0f13:90" data-scu-ref="e10">导出Excel</button>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>类型</th><th>库位号</th><th>物料编码</th><th>批次号</th><th>产品名称</th><th>数量</th><th>状态</th><th>时间</th></tr>
+        <div class="table-wrap" data-inspector-id="html:e79a0f13:91">
+          <table data-inspector-id="html:e79a0f13:92">
+            <thead data-inspector-id="html:e79a0f13:93">
+              <tr data-inspector-id="html:e79a0f13:94"><th data-inspector-id="html:e79a0f13:95">类型</th><th data-inspector-id="html:e79a0f13:96">库位号</th><th data-inspector-id="html:e79a0f13:97">物料编码</th><th data-inspector-id="html:e79a0f13:98">批次号</th><th data-inspector-id="html:e79a0f13:99">产品名称</th><th data-inspector-id="html:e79a0f13:100">数量</th><th data-inspector-id="html:e79a0f13:101">结存数量</th><th data-inspector-id="html:e79a0f13:102">状态</th><th data-inspector-id="html:e79a0f13:103">时间</th></tr>
             </thead>
-            <tbody id="recordTable"></tbody>
+            <tbody id="recordTable" data-inspector-id="html:e79a0f13:104"><tr>
+      <td style="color:var(--green)">出库</td>
+      <td>L3</td>
+      <td>304023</td>
+      <td>B20260815</td>
+      <td>D13 喷漆开关装饰件-林木棕</td>
+      <td style="color:var(--cyan-light);font-weight:500">325</td>
+      <td style="color:var(--orange);font-weight:500">0</td>
+      <td><span class="status-badge status-sent">已出库</span></td>
+      <td>9/18 08:34</td>
+    </tr><tr>
+      <td style="color:var(--green)">出库</td>
+      <td>E8</td>
+      <td>303010</td>
+      <td>B20260828</td>
+      <td>D13 6H装饰件-电镀</td>
+      <td style="color:var(--cyan-light);font-weight:500">321</td>
+      <td style="color:var(--orange);font-weight:500">0</td>
+      <td><span class="status-badge status-sent">已出库</span></td>
+      <td>9/18 08:34</td>
+    </tr><tr>
+      <td style="color:var(--green)">出库</td>
+      <td>G5</td>
+      <td>303009</td>
+      <td>B20260908</td>
+      <td>UKEA 电镀装饰件-左</td>
+      <td style="color:var(--cyan-light);font-weight:500">75</td>
+      <td style="color:var(--orange);font-weight:500">975</td>
+      <td><span class="status-badge status-sent">已出库</span></td>
+      <td>9/18 08:33</td>
+    </tr><tr>
+      <td style="color:var(--orange)">入库</td>
+      <td>M5</td>
+      <td>304006</td>
+      <td>B20260915</td>
+      <td>SC3E 喷漆装饰件 A</td>
+      <td style="color:var(--cyan-light);font-weight:500">448</td>
+      <td style="color:var(--orange);font-weight:500">448</td>
+      <td><span class="status-badge status-sent">已入库</span></td>
+      <td>9/18 08:33</td>
+    </tr><tr>
+      <td style="color:var(--orange)">入库</td>
+      <td>M6</td>
+      <td>304006</td>
+      <td>B20260915</td>
+      <td>SC3E 喷漆装饰件 A</td>
+      <td style="color:var(--cyan-light);font-weight:500">448</td>
+      <td style="color:var(--orange);font-weight:500">448</td>
+      <td><span class="status-badge status-sent">已入库</span></td>
+      <td>9/18 08:33</td>
+    </tr><tr>
+      <td style="color:var(--green)">出库</td>
+      <td>M6</td>
+      <td>304006</td>
+      <td>B20260915</td>
+      <td>SC3E 喷漆装饰件 A</td>
+      <td style="color:var(--cyan-light);font-weight:500">1440</td>
+      <td style="color:var(--orange);font-weight:500">0</td>
+      <td><span class="status-badge status-sent">已出库</span></td>
+      <td>9/18 08:33</td>
+    </tr><tr>
+      <td style="color:var(--orange)">入库</td>
+      <td>H8</td>
+      <td>305003</td>
+      <td>B20260901</td>
+      <td>UKEA PVD装饰件-右</td>
+      <td style="color:var(--cyan-light);font-weight:500">675</td>
+      <td style="color:var(--orange);font-weight:500">675</td>
+      <td><span class="status-badge status-sent">已入库</span></td>
+      <td>9/18 08:21</td>
+    </tr><tr>
+      <td style="color:var(--green)">出库</td>
+      <td>H8</td>
+      <td>303008</td>
+      <td>B20260901</td>
+      <td>UKEA 电镀装饰件-右</td>
+      <td style="color:var(--cyan-light);font-weight:500">675</td>
+      <td style="color:var(--orange);font-weight:500">0</td>
+      <td><span class="status-badge status-sent">已出库</span></td>
+      <td>9/18 08:21</td>
+    </tr><tr>
+      <td style="color:var(--orange)">入库</td>
+      <td>H8</td>
+      <td>303008</td>
+      <td>B20260901</td>
+      <td>UKEA 电镀装饰件-右</td>
+      <td style="color:var(--cyan-light);font-weight:500">675</td>
+      <td style="color:var(--orange);font-weight:500">675</td>
+      <td><span class="status-badge status-sent">已入库</span></td>
+      <td>9/18 08:20</td>
+    </tr><tr>
+      <td style="color:var(--orange)">入库</td>
+      <td>A3</td>
+      <td>303012</td>
+      <td>B20260913</td>
+      <td>ST2 装饰件-电镀</td>
+      <td style="color:var(--cyan-light);font-weight:500">576</td>
+      <td style="color:var(--orange);font-weight:500">576</td>
+      <td><span class="status-badge status-sent">已入库</span></td>
+      <td>9/18 08:19</td>
+    </tr><tr>
+      <td style="color:var(--orange)">入库</td>
+      <td>D8</td>
+      <td>303010</td>
+      <td>B20260828</td>
+      <td>D13 6H装饰件-电镀</td>
+      <td style="color:var(--cyan-light);font-weight:500">672</td>
+      <td style="color:var(--orange);font-weight:500">672</td>
+      <td><span class="status-badge status-sent">已入库</span></td>
+      <td>9/17 13:44</td>
+    </tr><tr>
+      <td style="color:var(--orange)">入库</td>
+      <td>D7</td>
+      <td>303010</td>
+      <td>B20260822</td>
+      <td>D13 6H装饰件-电镀</td>
+      <td style="color:var(--cyan-light);font-weight:500">672</td>
+      <td style="color:var(--orange);font-weight:500">672</td>
+      <td><span class="status-badge status-sent">已入库</span></td>
+      <td>9/17 13:44</td>
+    </tr><tr>
+      <td style="color:var(--green)">出库</td>
+      <td>D8</td>
+      <td>692408</td>
+      <td>B20260828</td>
+      <td>-</td>
+      <td style="color:var(--cyan-light);font-weight:500">672</td>
+      <td style="color:var(--orange);font-weight:500">0</td>
+      <td><span class="status-badge status-sent">已出库</span></td>
+      <td>9/17 13:36</td>
+    </tr><tr>
+      <td style="color:var(--orange)">入库</td>
+      <td>D8</td>
+      <td>692408</td>
+      <td>B20260828</td>
+      <td>-</td>
+      <td style="color:var(--cyan-light);font-weight:500">672</td>
+      <td style="color:var(--orange);font-weight:500">672</td>
+      <td><span class="status-badge status-sent">已入库</span></td>
+      <td>9/17 13:36</td>
+    </tr><tr>
+      <td style="color:var(--green)">出库</td>
+      <td>D7</td>
+      <td>303010</td>
+      <td>B20260828</td>
+      <td>D13 6H装饰件-电镀</td>
+      <td style="color:var(--cyan-light);font-weight:500">1</td>
+      <td style="color:var(--orange);font-weight:500">0</td>
+      <td><span class="status-badge status-sent">已出库</span></td>
+      <td>9/17 13:28</td>
+    </tr><tr>
+      <td style="color:var(--green)">出库</td>
+      <td>D8</td>
+      <td>303010</td>
+      <td>B20260828</td>
+      <td>D13 6H装饰件-电镀</td>
+      <td style="color:var(--cyan-light);font-weight:500">1</td>
+      <td style="color:var(--orange);font-weight:500">0</td>
+      <td><span class="status-badge status-sent">已出库</span></td>
+      <td>9/17 13:28</td>
+    </tr><tr>
+      <td style="color:var(--green)">出库</td>
+      <td>H8</td>
+      <td>303008</td>
+      <td>B20260903</td>
+      <td>UKEA 电镀装饰件-右</td>
+      <td style="color:var(--cyan-light);font-weight:500">1050</td>
+      <td style="color:var(--orange);font-weight:500">0</td>
+      <td><span class="status-badge status-sent">已出库</span></td>
+      <td>9/17 13:24</td>
+    </tr><tr>
+      <td style="color:var(--green)">出库</td>
+      <td>A3</td>
+      <td>303012</td>
+      <td>B20260827</td>
+      <td>ST2 装饰件-电镀</td>
+      <td style="color:var(--cyan-light);font-weight:500">576</td>
+      <td style="color:var(--orange);font-weight:500">0</td>
+      <td><span class="status-badge status-sent">已出库</span></td>
+      <td>9/17 13:23</td>
+    </tr><tr>
+      <td style="color:var(--green)">出库</td>
+      <td>E5</td>
+      <td>306001</td>
+      <td>B20260907</td>
+      <td>UKEA INS装饰件</td>
+      <td style="color:var(--cyan-light);font-weight:500">40</td>
+      <td style="color:var(--orange);font-weight:500">0</td>
+      <td><span class="status-badge status-sent">已出库</span></td>
+      <td>9/17 13:23</td>
+    </tr><tr>
+      <td style="color:var(--green)">出库</td>
+      <td>E2</td>
+      <td>306001</td>
+      <td>B20260908</td>
+      <td>UKEA INS装饰件</td>
+      <td style="color:var(--cyan-light);font-weight:500">120</td>
+      <td style="color:var(--orange);font-weight:500">0</td>
+      <td><span class="status-badge status-sent">已出库</span></td>
+      <td>9/17 13:23</td>
+    </tr><tr>
+      <td style="color:var(--orange)">入库</td>
+      <td>H8</td>
+      <td>303008</td>
+      <td>B20260903</td>
+      <td>UKEA 电镀装饰件-右</td>
+      <td style="color:var(--cyan-light);font-weight:500">1050</td>
+      <td style="color:var(--orange);font-weight:500">1050</td>
+      <td><span class="status-badge status-sent">已入库</span></td>
+      <td>9/17 10:28</td>
+    </tr><tr>
+      <td style="color:var(--green)">出库</td>
+      <td>H8</td>
+      <td>303008</td>
+      <td>B20260826</td>
+      <td>UKEA 电镀装饰件-右</td>
+      <td style="color:var(--cyan-light);font-weight:500">375</td>
+      <td style="color:var(--orange);font-weight:500">0</td>
+      <td><span class="status-badge status-sent">已出库</span></td>
+      <td>9/17 10:28</td>
+    </tr><tr>
+      <td style="color:var(--orange)">入库</td>
+      <td>G7</td>
+      <td>303009</td>
+      <td>B20260908</td>
+      <td>UKEA 电镀装饰件-左</td>
+      <td style="color:var(--cyan-light);font-weight:500">1050</td>
+      <td style="color:var(--orange);font-weight:500">1050</td>
+      <td><span class="status-badge status-sent">已入库</span></td>
+      <td>9/17 10:27</td>
+    </tr><tr>
+      <td style="color:var(--orange)">入库</td>
+      <td>G5</td>
+      <td>303009</td>
+      <td>B20260908</td>
+      <td>UKEA 电镀装饰件-左</td>
+      <td style="color:var(--cyan-light);font-weight:500">1050</td>
+      <td style="color:var(--orange);font-weight:500">1050</td>
+      <td><span class="status-badge status-sent">已入库</span></td>
+      <td>9/17 10:27</td>
+    </tr><tr>
+      <td style="color:var(--green)">出库</td>
+      <td>G7</td>
+      <td>304018</td>
+      <td>B20260818</td>
+      <td>SK2哑光钛银装饰件-左</td>
+      <td style="color:var(--cyan-light);font-weight:500">450</td>
+      <td style="color:var(--orange);font-weight:500">0</td>
+      <td><span class="status-badge status-sent">已出库</span></td>
+      <td>9/17 10:15</td>
+    </tr><tr>
+      <td style="color:var(--orange)">入库</td>
+      <td>H8</td>
+      <td>303008</td>
+      <td>B20260826</td>
+      <td>UKEA 电镀装饰件-右</td>
+      <td style="color:var(--cyan-light);font-weight:500">375</td>
+      <td style="color:var(--orange);font-weight:500">375</td>
+      <td><span class="status-badge status-sent">已入库</span></td>
+      <td>9/17 09:10</td>
+    </tr><tr>
+      <td style="color:var(--green)">出库</td>
+      <td>H8</td>
+      <td>304017</td>
+      <td>B20260818</td>
+      <td>SK2哑光钛银装饰件-右</td>
+      <td style="color:var(--cyan-light);font-weight:500">1050</td>
+      <td style="color:var(--orange);font-weight:500">0</td>
+      <td><span class="status-badge status-sent">已出库</span></td>
+      <td>9/17 09:08</td>
+    </tr><tr>
+      <td style="color:var(--orange)">入库</td>
+      <td>C4</td>
+      <td>303013</td>
+      <td>B20260916</td>
+      <td>ST2 6H外侧装饰件-电镀</td>
+      <td style="color:var(--cyan-light);font-weight:500">2400</td>
+      <td style="color:var(--orange);font-weight:500">2400</td>
+      <td><span class="status-badge status-sent">已入库</span></td>
+      <td>9/17 08:58</td>
+    </tr><tr>
+      <td style="color:var(--orange)">入库</td>
+      <td>A2</td>
+      <td>303012</td>
+      <td>B20260916</td>
+      <td>ST2 装饰件-电镀</td>
+      <td style="color:var(--cyan-light);font-weight:500">576</td>
+      <td style="color:var(--orange);font-weight:500">576</td>
+      <td><span class="status-badge status-sent">已入库</span></td>
+      <td>9/17 08:47</td>
+    </tr><tr>
+      <td style="color:var(--green)">出库</td>
+      <td>A2</td>
+      <td>303012</td>
+      <td>B20260828</td>
+      <td>ST2 装饰件-电镀</td>
+      <td style="color:var(--cyan-light);font-weight:500">576</td>
+      <td style="color:var(--orange);font-weight:500">0</td>
+      <td><span class="status-badge status-sent">已出库</span></td>
+      <td>9/17 08:27</td>
+    </tr></tbody>
           </table>
         </div>
       </div>
@@ -451,71 +1093,71 @@
 </div>
 
 <!-- Edit Modal -->
-<div class="modal-overlay" id="editModal">
-  <div class="modal" style="max-height:90vh;overflow-y:auto">
-    <div class="modal-title">编辑库位信息</div>
-    <div class="modal-field">
-      <label class="modal-label">库位号</label>
-      <input type="text" class="modal-input" id="inputLocation" disabled>
+<div class="modal-overlay" id="editModal" data-inspector-id="html:e79a0f13:105">
+  <div class="modal" style="max-height:90vh;overflow-y:auto" data-inspector-id="html:e79a0f13:106">
+    <div class="modal-title" data-inspector-id="html:e79a0f13:107">编辑库位信息</div>
+    <div class="modal-field" data-inspector-id="html:e79a0f13:108">
+      <label class="modal-label" data-inspector-id="html:e79a0f13:109">库位号</label>
+      <input type="text" class="modal-input" id="inputLocation" disabled="" data-inspector-id="html:e79a0f13:110" data-scu-ref="e11">
     </div>
     <!-- 已有批次列表 -->
-    <div class="modal-field" id="existingBatchesWrap" style="display:none">
-      <label class="modal-label">已有批次 <span class="modal-hint">（点击选择进行出库或追加数量，FIFO按最早批次出库）</span></label>
-      <div id="existingBatchesList" class="batch-list"></div>
-      <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
-        <button class="modal-btn modal-btn-outline" id="btnAddBatch" type="button" style="padding:5px 12px;font-size:12px">+ 新增批次入库</button>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);cursor:pointer">
-          <input type="checkbox" id="chkAppendQty"> 对选中批次追加数量
+    <div class="modal-field" id="existingBatchesWrap" style="display:none" data-inspector-id="html:e79a0f13:111">
+      <label class="modal-label" data-inspector-id="html:e79a0f13:112">已有批次 <span class="modal-hint" data-inspector-id="html:e79a0f13:113">（点击选择进行出库或追加数量，FIFO按最早批次出库）</span></label>
+      <div id="existingBatchesList" class="batch-list" data-inspector-id="html:e79a0f13:114"></div>
+      <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap" data-inspector-id="html:e79a0f13:115">
+        <button class="modal-btn modal-btn-outline" id="btnAddBatch" type="button" style="padding:5px 12px;font-size:12px" data-inspector-id="html:e79a0f13:116">+ 新增批次入库</button>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);cursor:pointer" data-inspector-id="html:e79a0f13:117">
+          <input type="checkbox" id="chkAppendQty" data-inspector-id="html:e79a0f13:118"> 对选中批次追加数量
         </label>
       </div>
     </div>
-    <div class="modal-field">
-      <label class="modal-label">选择商品 <span class="modal-hint">（从商品库搜索选择，自动填充）</span></label>
-      <div class="product-picker" id="productPicker">
-        <input type="text" class="modal-input" id="productSearch" placeholder="输入商品编码 / 名称 / 规格型号 / 分类 搜索..." autocomplete="off">
-        <div class="product-dropdown" id="productDropdown"></div>
+    <div class="modal-field" data-inspector-id="html:e79a0f13:119">
+      <label class="modal-label" data-inspector-id="html:e79a0f13:120">选择商品 <span class="modal-hint" data-inspector-id="html:e79a0f13:121">（从商品库搜索选择，自动填充）</span></label>
+      <div class="product-picker" id="productPicker" data-inspector-id="html:e79a0f13:122">
+        <input type="text" class="modal-input" id="productSearch" placeholder="输入商品编码 / 名称 / 规格型号 / 分类 搜索..." autocomplete="off" data-inspector-id="html:e79a0f13:123" data-scu-ref="e12">
+        <div class="product-dropdown" id="productDropdown" data-inspector-id="html:e79a0f13:124"></div>
       </div>
     </div>
-    <div class="modal-field">
-      <label class="modal-label">物料编码</label>
-      <input type="text" class="modal-input" id="inputCode" placeholder="选择商品后自动填充，或手动输入">
+    <div class="modal-field" data-inspector-id="html:e79a0f13:125">
+      <label class="modal-label" data-inspector-id="html:e79a0f13:126">物料编码</label>
+      <input type="text" class="modal-input" id="inputCode" placeholder="选择商品后自动填充，或手动输入" data-inspector-id="html:e79a0f13:127" data-scu-ref="e13">
     </div>
-    <div class="modal-field">
-      <label class="modal-label">批次号 <span class="modal-hint">（选择日期自动生成批次）</span></label>
-      <div class="batch-date-wrap">
-        <input type="date" class="modal-input" id="inputBatchDate">
-        <input type="text" class="modal-input batch-display" id="inputBatch" placeholder="选择日期..." readonly>
+    <div class="modal-field" data-inspector-id="html:e79a0f13:128">
+      <label class="modal-label" data-inspector-id="html:e79a0f13:129">批次号 <span class="modal-hint" data-inspector-id="html:e79a0f13:130">（选择日期自动生成批次）</span></label>
+      <div class="batch-date-wrap" data-inspector-id="html:e79a0f13:131">
+        <input type="date" class="modal-input" id="inputBatchDate" data-inspector-id="html:e79a0f13:132" data-scu-ref="e14">
+        <input type="text" class="modal-input batch-display" id="inputBatch" placeholder="选择日期..." readonly="" data-inspector-id="html:e79a0f13:133" data-scu-ref="e15">
       </div>
     </div>
-    <div class="modal-field" id="qtyField">
-      <label class="modal-label">数量 <span class="modal-hint" id="qtyHint">（入库：填写入库数量；出库：在上方批次列表填写出库数量）</span></label>
-      <div class="qty-input-wrap">
-        <button class="qty-btn qty-minus" id="qtyMinus" type="button">−</button>
-        <input type="number" class="modal-input qty-input" id="inputQty" value="1" min="1" step="1">
-        <button class="qty-btn qty-plus" id="qtyPlus" type="button">+</button>
+    <div class="modal-field" id="qtyField" data-inspector-id="html:e79a0f13:134">
+      <label class="modal-label" data-inspector-id="html:e79a0f13:135">数量 <span class="modal-hint" id="qtyHint" data-inspector-id="html:e79a0f13:136">（入库：填写入库数量；出库：在上方批次列表填写出库数量）</span></label>
+      <div class="qty-input-wrap" data-inspector-id="html:e79a0f13:137">
+        <button class="qty-btn qty-minus" id="qtyMinus" type="button" data-inspector-id="html:e79a0f13:138" data-scu-ref="e16">−</button>
+        <input type="number" class="modal-input qty-input" id="inputQty" value="1" min="1" step="1" data-inspector-id="html:e79a0f13:139" data-scu-ref="e17">
+        <button class="qty-btn qty-plus" id="qtyPlus" type="button" data-inspector-id="html:e79a0f13:140" data-scu-ref="e18">+</button>
       </div>
     </div>
-    <div class="modal-field" id="outQtyField" style="display:none">
-      <label class="modal-label">出库数量 <span class="modal-hint" id="outQtyHint">（选中批次后显示其库存，可填写部分出库）</span></label>
-      <div class="qty-input-wrap">
-        <input type="number" class="modal-input qty-input" id="inputOutQty" value="1" min="1" step="1">
-        <span class="qty-stock-hint" id="qtyStockHint"></span>
+    <div class="modal-field" id="outQtyField" style="display:none" data-inspector-id="html:e79a0f13:141">
+      <label class="modal-label" data-inspector-id="html:e79a0f13:142">出库数量 <span class="modal-hint" id="outQtyHint" data-inspector-id="html:e79a0f13:143">（选中批次后显示其库存，可填写部分出库）</span></label>
+      <div class="qty-input-wrap" data-inspector-id="html:e79a0f13:144">
+        <input type="number" class="modal-input qty-input" id="inputOutQty" value="1" min="1" step="1" data-inspector-id="html:e79a0f13:145">
+        <span class="qty-stock-hint" id="qtyStockHint" data-inspector-id="html:e79a0f13:146"></span>
       </div>
     </div>
-    <div class="modal-actions">
-      <button class="modal-btn modal-btn-secondary" id="btnCancel">取消</button>
-      <button class="modal-btn modal-btn-primary" id="btnSave">入库</button>
+    <div class="modal-actions" data-inspector-id="html:e79a0f13:147">
+      <button class="modal-btn modal-btn-secondary" id="btnCancel" data-inspector-id="html:e79a0f13:148" data-scu-ref="e19">取消</button>
+      <button class="modal-btn modal-btn-primary" id="btnSave" data-inspector-id="html:e79a0f13:149" data-scu-ref="e20">入库</button>
     </div>
-    <button class="modal-btn modal-btn-danger" id="btnClear">出库（清除此库位）</button>
+    <button class="modal-btn modal-btn-danger" id="btnClear" data-inspector-id="html:e79a0f13:150" data-scu-ref="e21">出库（清除此库位）</button>
   </div>
 </div>
 
 <!-- Tooltip -->
-<div class="tooltip" id="cellTooltip"></div>
+<div class="tooltip" id="cellTooltip" data-inspector-id="html:e79a0f13:151" style="left: 210px; top: 584px;"><div class="tooltip-row"><span class="tooltip-label">库位号</span><span class="tooltip-value">C6</span></div><div class="tooltip-row"><span class="tooltip-label">总数量</span><span class="tooltip-value" style="color:var(--orange)">672</span></div><div style="border-top:1px solid rgba(26,58,92,.6);margin:4px 0"></div><div class="tooltip-row"><span class="tooltip-label">批次1</span><span class="tooltip-value" style="color:var(--red);font-weight:bold">● B20260801</span></div><div class="tooltip-row"><span class="tooltip-label">物料编码</span><span class="tooltip-value">303010</span></div><div class="tooltip-row"><span class="tooltip-label">产品</span><span class="tooltip-value">D13 6H装饰件-电镀</span></div><div class="tooltip-row"><span class="tooltip-label">数量</span><span class="tooltip-value">672</span></div><div class="tooltip-row"><span class="tooltip-label">批次日期</span><span class="tooltip-value">2026-08-01</span></div><div class="tooltip-row"><span class="tooltip-label">入库时间</span><span class="tooltip-value">2026-09-11</span></div><div class="tooltip-row"><span class="tooltip-label">批次天数</span><span class="tooltip-value" style="color:var(--red)">48 天</span></div></div>
 
 <!-- Import Modal -->
-<div class="modal-overlay import-modal" id="importModal">
-  <div class="modal" id="importModalContent"></div>
+<div class="modal-overlay import-modal" id="importModal" data-inspector-id="html:e79a0f13:152">
+  <div class="modal" id="importModalContent" data-inspector-id="html:e79a0f13:153"></div>
 </div>
 
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -537,6 +1179,36 @@ let currentEditCell = null;
 let currentSelectedBatchIndex = 0;
 let isNewBatchMode = false; // 标识"新增批次入库"模式（避免与已有批次的出库逻辑冲突）
 let _cache = null;
+// 三仓存货缓存：商品搜索时跨仓筛选所有存货零件 { semi: cells, assembly: cells, selfmade: cells }
+const _whCellsCache = {};
+let _whCellsPromise = null;
+async function ensureAllWhCells() {
+  // 单机模式：同步从 localStorage 读取三槽，始终最新
+  if (_mode === 'standalone') {
+    try {
+      const all = loadLocalData();
+      WH_TYPES.forEach(t => { _whCellsCache[t] = all[t].cells; });
+    } catch {}
+    return;
+  }
+  // 服务器模式：缺哪个仓补拉哪个
+  const missing = WH_TYPES.filter(t => !_whCellsCache[t]);
+  if (!missing.length) return;
+  if (_whCellsPromise) return _whCellsPromise;
+  _whCellsPromise = (async () => {
+    await Promise.all(missing.map(async t => {
+      try {
+        const d = await api('/api/data', { method: 'GET' }, t);
+        _whCellsCache[t] = d.cells || {};
+      } catch (e) { console.warn('[WhCells] 拉取仓库数据失败', t, e && e.message); }
+    }));
+    _whCellsPromise = null;
+  })();
+  return _whCellsPromise;
+}
+let _currentSet = 'semi'; // 'semi' 半成品仓 | 'assembly' 装配成品仓 | 'selfmade' 自制成品仓
+const WH_TYPES = ['semi', 'assembly', 'selfmade', 'raw'];
+const WH_NAMES = { semi: '半成品仓库', assembly: '装配成品仓', selfmade: '自制成品仓（一楼）', raw: '原材料仓' };
 let _token = sessionStorage.getItem('wh_token') || null;
 let _user = null;
 let _mode = 'server'; // 'server' | 'standalone'
@@ -549,6 +1221,12 @@ const LOCAL_ACCOUNTS = {
 };
 
 /* ===== Standalone data persistence (localStorage) ===== */
+function ensureLocalSlot(data, whType) {
+  if (!data[whType]) data[whType] = { version: 1, cells: {}, records: [], updatedAt: Date.now() };
+  if (!data[whType].cells) data[whType].cells = {};
+  if (!data[whType].records) data[whType].records = [];
+  return data[whType];
+}
 function loadLocalData() {
   let data;
   try {
@@ -556,13 +1234,25 @@ function loadLocalData() {
     if (raw) data = JSON.parse(raw);
   } catch {}
   if (!data) {
-    data = buildDemoData();
+    data = { semi: buildDemoData(), assembly: { version: 1, cells: {}, records: [], updatedAt: Date.now() } };
     try { localStorage.setItem(STANDALONE_KEY, JSON.stringify(data)); } catch {}
   }
-  Object.keys(data.cells).forEach(k => data.cells[k]=migrateCellLocally(data.cells[k]));
+  // 旧格式兼容升级
+  if (data.cells !== undefined || data.records !== undefined) {
+    console.log('[standalone] 检测到旧格式，迁移至 semi');
+    data = {
+      semi: { version: 1, cells: data.cells || {}, records: data.records || [], updatedAt: data.updatedAt },
+      assembly: { version: 1, cells: {}, records: [], updatedAt: Date.now() }
+    };
+  }
+  WH_TYPES.forEach(t => {
+    ensureLocalSlot(data, t);
+    Object.keys(data[t].cells).forEach(k => data[t].cells[k] = migrateCellLocally(data[t].cells[k]));
+  });
   return data;
 }
 function saveLocalData(data) {
+  WH_TYPES.forEach(t => { if (data[t]) data[t].updatedAt = Date.now(); });
   try { localStorage.setItem(STANDALONE_KEY, JSON.stringify(data)); } catch {}
 }
 function buildDemoData() {
@@ -680,15 +1370,23 @@ function updateModeIndicator() {
   }
 }
 
-async function api(path, opts = {}) {
+async function api(path, opts = {}, whTypeOverride) {
   // Standalone mode: handle locally
   if (_mode === 'standalone') {
+    if (whTypeOverride && WH_TYPES.includes(whTypeOverride) && !/[?&]whType=/.test(path)) {
+      const sep = path.includes('?') ? '&' : '?';
+      return standaloneApi(path + sep + 'whType=' + encodeURIComponent(whTypeOverride), opts);
+    }
     return standaloneApi(path, opts);
   }
   const headers = { 'Content-Type': 'application/json' };
-  if (_token) headers['Authorization'] = 'Bearer ' + _token;
+  if (_token) headers.Authorization = 'Bearer ' + _token;
+  // Inject whType: GET via query param, POST via body or query
+  const wt = (whTypeOverride && WH_TYPES.includes(whTypeOverride)) ? whTypeOverride : _currentSet;
+  const sep = path.includes('?') ? '&' : '?';
+  const url = path + sep + 'whType=' + encodeURIComponent(wt);
   try {
-    const resp = await fetch(path, { ...opts, headers });
+    const resp = await fetch(url, { ...opts, headers });
     if (resp.status === 401) { handleUnauthorized(); throw new Error('未登录或会话已过期'); }
     const data = await resp.json();
     if (!resp.ok) throw new Error(data.error || '请求失败');
@@ -725,6 +1423,12 @@ async function standaloneApi(path, opts = {}) {
   const now = Date.now();
   const operatorName = _user ? _user.username : 'local';
 
+  // 解析 whType: GET 从 path query param 取, POST 从 body 取, 默认 semi
+  const m = path.match(/[?&]whType=([^&]+)/i);
+  const rawWh = m ? decodeURIComponent(m[1]) : (body.whType || 'semi');
+  const whType = WH_TYPES.includes(rawWh) ? rawWh : 'semi';
+  const slot = ensureLocalSlot(data, whType);
+
   switch (path) {
     case '/api/me':
       if (!_user) throw new Error('未登录');
@@ -737,7 +1441,7 @@ async function standaloneApi(path, opts = {}) {
       return { ok: true };
 
     case '/api/data':
-      return { cells: data.cells, records: data.records };
+      return { cells: slot.cells, records: slot.records, whType };
 
     case '/api/inbound': {
       const { location, code, batch, product, quantity, batchIndex } = body;
@@ -745,8 +1449,8 @@ async function standaloneApi(path, opts = {}) {
       if (!batch) throw new Error('批次号不能为空');
       const q = Math.max(1, parseInt(quantity) || 1);
 
-      if (!data.cells[location]) data.cells[location] = { location, batches: [] };
-      const cell = data.cells[location];
+      if (!slot.cells[location]) slot.cells[location] = { location, batches: [] };
+      const cell = slot.cells[location];
       const isNewCell = !cellHasBatch(cell);
       let mode = 'new_batch';
 
@@ -773,9 +1477,9 @@ async function standaloneApi(path, opts = {}) {
 
       const type = isNewCell ? '入库' : (mode === 'new_batch' ? '二次入库' : '更新');
       const status = isNewCell ? '已入库' : (mode === 'new_batch' ? '已入库' : '已更新');
-      data.records.unshift({
+      slot.records.unshift({
         type, location, code, batch, product: product || '', quantity: q,
-        status, time: now, operator: operatorName
+        status, time: now, operator: operatorName, whType
       });
       saveLocalData(data);
       return { cell: JSON.parse(JSON.stringify(cell)), isNewCell, mode };
@@ -784,7 +1488,7 @@ async function standaloneApi(path, opts = {}) {
     case '/api/outbound': {
       const { location, quantity, batchIndex } = body;
       if (!location) throw new Error('参数缺失：location 必填');
-      const cell = data.cells[location];
+      const cell = slot.cells[location];
       if (!cell || !cellHasBatch(cell)) throw new Error('库位为空，无法出库');
       sortBatchesByTime(cell);
 
@@ -800,10 +1504,10 @@ async function standaloneApi(path, opts = {}) {
       if (isNaN(out) || out < 1) out = cur;
       if (out > cur) out = cur;
 
-      data.records.unshift({
+      slot.records.unshift({
         type: '出库', location, code: b.code, batch: b.batch, product: b.product,
         quantity: out, status: '已出库',
-        time: now, operator: operatorName
+        time: now, operator: operatorName, whType
       });
 
       b.quantity = cur - out;
@@ -811,7 +1515,7 @@ async function standaloneApi(path, opts = {}) {
         cell.batches.splice(targetIdx, 1);
       }
       const cleared = cellBatches(cell).length === 0;
-      if (cleared) delete data.cells[location];
+      if (cleared) delete slot.cells[location];
       saveLocalData(data);
       return {
         cleared,
@@ -827,14 +1531,19 @@ async function standaloneApi(path, opts = {}) {
     case '/api/import': {
       const { rows, mode } = body;
       if (!Array.isArray(rows)) throw new Error('rows 必须是数组');
-      if (mode === 'replace') { data.cells = {}; data.records = []; }
+      let sections = whSections;
+      if (whType === 'assembly') sections = whAssemblySections;
+      else if (whType === 'selfmade') sections = whSelfmadeSections;
+      else if (whType === 'raw') sections = whRawSections;
+      if (mode === 'replace') { slot.cells = {}; slot.records = []; }
       const allKeys = [];
-      whSections.forEach(sec => {
+      sections.forEach(sec => {
         for (let i = 1; i <= sec.count; i++) {
-          allKeys.push(`${sec.p1}${i}`, `${sec.p2}${i}`);
+          allKeys.push(`${sec.p1}${i}`);
+          if (!sec.single) allKeys.push(`${sec.p2}${i}`);
         }
       });
-      const usedKeys = new Set(Object.keys(data.cells).filter(k => cellHasBatch(data.cells[k])));
+      const usedKeys = new Set(Object.keys(slot.cells).filter(k => cellHasBatch(slot.cells[k])));
       let emptyIdx = 0;
       const nextEmptyKey = () => {
         while (emptyIdx < allKeys.length) {
@@ -855,8 +1564,8 @@ async function standaloneApi(path, opts = {}) {
           cellKey = nextEmptyKey();
           if (!cellKey) { skipped++; return; }
         }
-        if (!data.cells[cellKey]) data.cells[cellKey] = { location: cellKey, batches: [] };
-        const cell = data.cells[cellKey];
+        if (!slot.cells[cellKey]) slot.cells[cellKey] = { location: cellKey, batches: [] };
+        const cell = slot.cells[cellKey];
         const isNewCell = !cellHasBatch(cell);
         usedKeys.add(cellKey);
 
@@ -874,9 +1583,9 @@ async function standaloneApi(path, opts = {}) {
         }
         sortBatchesByTime(cell);
         if (isNewCell) {
-          data.records.unshift({
+          slot.records.unshift({
             type: '入库', location: cellKey, code, batch: batch || '-', product: product || '-',
-            quantity, status: '已导入', time: now, operator: operatorName
+            quantity, status: '已导入', time: now, operator: operatorName, whType
           });
         }
         imported++;
@@ -886,11 +1595,15 @@ async function standaloneApi(path, opts = {}) {
     }
 
     case '/api/reset': {
-      const demo = buildDemoData();
-      data.cells = demo.cells;
-      data.records = demo.records;
+      if (whType === 'semi') {
+        const demo = buildDemoData();
+        slot.cells = demo.cells;
+        slot.records = demo.records;
+      } else {
+        slot.cells = {}; slot.records = [];
+      }
       saveLocalData(data);
-      return { ok: true };
+      return { ok: true, whType };
     }
 
     default:
@@ -902,6 +1615,9 @@ async function loadData() {
   if (_cache) return _cache;
   _cache = await api('/api/data');
   Object.keys(_cache.cells).forEach(k => _cache.cells[k]=migrateCellLocally(_cache.cells[k]));
+  _whCellsCache[_currentSet] = _cache.cells;
+  // 后台预取另外两个仓的存货（用于商品搜索跨仓筛选），不阻塞渲染
+  ensureAllWhCells().catch(()=>{});
   return _cache;
 }
 function invalidateCache() { _cache = null; }
@@ -927,79 +1643,134 @@ const whSections = [
   { name: '', p1: 'M', p2: 'N', count: 8 },
 ];
 
-function cellKeyForSection(sec, i) { return `${sec.p1}${i}-${sec.p2}${i}`; }
-function cellKeysForPair(sec, i) { return [`${sec.p1}${i}`, `${sec.p2}${i}`]; }
+const whAssemblySections = [
+  { name: '', p1: 'A', p2: 'B', count: 6 },
+  { name: '', p1: 'C', p2: 'D', count: 6 },
+  { name: '', p1: 'E', p2: 'F', count: 6 },
+  { name: '', p1: 'G', p2: 'H', count: 6 },
+  { name: '', p1: 'I', p2: 'J', count: 9 },
+  { name: '', p1: 'K', count: 9, single: true }, // 单列
+];
+
+const whSelfmadeSections = [
+  { name: '', p1: 'A', p2: 'B', count: 8 },
+  { name: '', p1: 'C', p2: 'D', count: 8 },
+  { name: '', p1: 'E', p2: 'F', count: 8, count2: 7 },
+  { name: '', p1: 'G', p2: 'H', count: 8 },
+  { name: '', p1: 'I', p2: 'J', count: 8 },
+  { name: '', p1: 'K', p2: 'L', count: 8 },
+];
+
+// 原材料仓：上部 原-A/原-B/原-C 各5个位，下部 原D 4个位；界面由 renderRawWarehouse 自定义绘制
+const whRawSections = [
+  { name: '', p1: '原-A', count: 5, single: true },
+  { name: '', p1: '原-B', count: 5, single: true },
+  { name: '', p1: '原-C', count: 5, single: true },
+  { name: '', p1: '原D', count: 4, single: true },
+];
+
+function currentSections() {
+  if (_currentSet === 'assembly') return whAssemblySections;
+  if (_currentSet === 'selfmade') return whSelfmadeSections;
+  if (_currentSet === 'raw') return whRawSections;
+  return whSections;
+}
+function currentWhName() {
+  return WH_NAMES[_currentSet] || '半成品仓库';
+}
+
+function cellKeyForSection(sec, i) { return `${sec.p1}${i}${sec.single ? '' : '-' + sec.p2 + i}`; }
+function cellKeysForPair(sec, i) {
+  if (sec.single) return [`${sec.p1}${i}`];
+  if (sec.count2 != null && i > sec.count2) return [`${sec.p1}${i}`];
+  return [`${sec.p1}${i}`, `${sec.p2}${i}`];
+}
+function totalCellsOfSections(sections) {
+  let n = 0;
+  sections.forEach(sec => {
+    if (sec.single) { n += sec.count; }
+    else { n += sec.count + (sec.count2 != null ? sec.count2 : sec.count); }
+  });
+  return n;
+}
 
 /* ===== Product Database (内置商品库) ===== */
 const productDB = [
-  { code: '303001', name: 'C673开关装饰件', spec: '691220', type: '实物', category: '电镀件' },
+  // ===== 半成品仓（注塑/电镀/喷漆/未分类等） =====
+  { code: '201035', name: 'ST2 左装饰件-喷漆素材', spec: '', type: '实物', category: '注塑件' },
+  { code: '201036', name: 'ST2 右装饰件-喷漆素材', spec: '', type: '实物', category: '注塑件' },
+  { code: '301001', name: 'SCREW 3X10螺钉', spec: '166189', type: '实物', category: '金属件' },
   { code: '302001', name: 'C673侧围装饰件-慕夜黑', spec: '691222', type: '实物', category: '注塑件' },
   { code: '302002', name: 'C673侧围装饰件-热浪橙', spec: '691236', type: '实物', category: '注塑件' },
   { code: '302003', name: 'C673侧围装饰件-厘米色', spec: '691593', type: '实物', category: '注塑件' },
-  { code: '303002', name: 'C673 EU 开关装饰件-3价', spec: '691804', type: '实物', category: '电镀件' },
   { code: '302004', name: 'C673侧围装饰件-量子绿', spec: '691827', type: '实物', category: '注塑件' },
-  { code: '303003', name: 'C385开关装饰件-黑铬', spec: '691811', type: '实物', category: '电镀件' },
-  { code: '303004', name: 'C236 电镀装饰件', spec: '691458', type: '实物', category: '电镀件' },
-  { code: '304001', name: 'C236 喷漆装饰件', spec: '691460', type: '实物', category: '喷漆件' },
   { code: '302005', name: 'C236 侧围装饰件-淡云灰', spec: '691461', type: '实物', category: '注塑件' },
   { code: '302006', name: 'C236 侧围装饰件-薄雾绿', spec: '691574', type: '实物', category: '注塑件' },
   { code: '302007', name: 'C236 侧围装饰件-赤缇红', spec: '691576', type: '实物', category: '注塑件' },
   { code: '302008', name: 'C236 侧围装饰件-流沙黄', spec: '691578', type: '实物', category: '注塑件' },
   { code: '302009', name: 'C236 侧围装饰件-烟灰色', spec: '691779', type: '实物', category: '注塑件' },
-  { code: '303005', name: 'C236电镀装饰件-黑铬', spec: '691877', type: '实物', category: '电镀件' },
   { code: '302010', name: 'C236侧围装饰件-慕夜黑', spec: '691878', type: '实物', category: '注塑件' },
-  { code: '304002', name: 'C236喷漆装饰件-哑光银', spec: '691875', type: '实物', category: '喷漆件' },
   { code: '302012', name: 'C385侧围装饰件-慕夜黑', spec: '691584', type: '实物', category: '注塑件' },
-  { code: '305001', name: 'HXHA PVD装饰件-左', spec: '691212', type: '实物', category: 'PVD件' },
-  { code: '305002', name: 'HXHA PVD装饰件-右', spec: '691214', type: '实物', category: 'PVD件' },
+  { code: '302083', name: 'D13 6H装饰件-电镀素材', spec: '', type: '实物', category: '注塑件' },
+  { code: '302084', name: 'D13 6H装饰件-PVD素材', spec: '', type: '实物', category: '注塑件' },
+  { code: '302090', name: 'ST2 装饰件-电镀素材', spec: '', type: '实物', category: '注塑件' },
+  { code: '302091', name: 'ST2 6H外侧装饰件-电镀素材', spec: '', type: '实物', category: '注塑件' },
+  { code: '302092', name: 'ST2 6H内侧装饰件-电镀素材', spec: '', type: '实物', category: '注塑件' },
+  { code: '302094', name: 'ST2 装饰件-喷漆素材', spec: '', type: '实物', category: '未分类' },
+  { code: '302095', name: 'ST2 6H外侧装饰件-喷漆素材', spec: '', type: '实物', category: '未分类' },
+  { code: '302096', name: 'ST2 6H内侧装饰件-喷漆素材', spec: '', type: '实物', category: '未分类' },
+  { code: '303001', name: 'C673开关装饰件', spec: '691220', type: '实物', category: '电镀件' },
+  { code: '303002', name: 'C673 EU 开关装饰件-3价', spec: '691804', type: '实物', category: '电镀件' },
+  { code: '303003', name: 'C385开关装饰件-黑铬', spec: '691811', type: '实物', category: '电镀件' },
+  { code: '303004', name: 'C236 电镀装饰件', spec: '691458', type: '实物', category: '电镀件' },
+  { code: '303005', name: 'C236电镀装饰件-黑铬', spec: '691877', type: '实物', category: '电镀件' },
+  { code: '303007', name: 'SC3E 电镀装饰件', spec: '691610', type: '实物', category: '电镀件' },
+  { code: '303008', name: 'UKEA 电镀装饰件-右', spec: '691829', type: '实物', category: '电镀件' },
+  { code: '303009', name: 'UKEA 电镀装饰件-左', spec: '691831', type: '实物', category: '电镀件' },
+  { code: '303010', name: 'D13 6H装饰件-电镀', spec: '', type: '实物', category: '电镀件' },
+  { code: '303012', name: 'ST2 装饰件-电镀', spec: '', type: '实物', category: '电镀件' },
+  { code: '303013', name: 'ST2 6H外侧装饰件-电镀', spec: '', type: '实物', category: '电镀件' },
+  { code: '303014', name: 'ST2 6H内侧装饰件-电镀', spec: '', type: '实物', category: '电镀件' },
+  { code: '303015', name: 'ST2 装饰件-电镀（哑）', spec: '', type: '实物', category: '未分类' },
+  { code: '303016', name: 'ST2 6H外侧装饰件-电镀（哑）', spec: '', type: '实物', category: '未分类' },
+  { code: '303017', name: 'ST2 6H内侧装饰件-电镀（哑）', spec: '', type: '实物', category: '未分类' },
+  { code: '303018', name: 'ST2 装饰件-电镀（亮光）', spec: '', type: '实物', category: '未分类' },
+  { code: '303019', name: 'ST2 6H外侧装饰件-电镀（亮光）', spec: '', type: '实物', category: '未分类' },
+  { code: '303020', name: 'ST2 6H内侧装饰件-电镀（亮光）', spec: '', type: '实物', category: '未分类' },
+  { code: '303021', name: 'ST2 装饰件-电镀（黑铬）', spec: '', type: '实物', category: '未分类' },
+  { code: '303022', name: 'ST2 6H外侧装饰件-电镀（黑铬）', spec: '', type: '实物', category: '未分类' },
+  { code: '303023', name: 'ST2 6H内侧装饰件-电镀（黑铬）', spec: '', type: '实物', category: '未分类' },
+  { code: '304001', name: 'C236 喷漆装饰件', spec: '691460', type: '实物', category: '喷漆件' },
+  { code: '304002', name: 'C236喷漆装饰件-哑光银', spec: '691875', type: '实物', category: '喷漆件' },
   { code: '304004', name: 'HXHA喷漆件装饰件-染木红', spec: '691243', type: '实物', category: '喷漆件' },
   { code: '304005', name: 'HXHA喷漆件装饰件-深黑', spec: '691250', type: '实物', category: '喷漆件' },
-  { code: '305003', name: 'UKEA PVD装饰件-右', spec: '691721', type: '实物', category: 'PVD件' },
-  { code: '305004', name: 'UKEA PVD装饰件-左', spec: '691723', type: '实物', category: 'PVD件' },
-  { code: '306001', name: 'UKEA INS装饰件', spec: '691725', type: '实物', category: '电镀件' },
   { code: '304006', name: 'SC3E 喷漆装饰件 A', spec: '691604', type: '实物', category: '喷漆件' },
   { code: '304007', name: 'SC3E 喷漆装饰件B-中文', spec: '691606', type: '实物', category: '喷漆件' },
   { code: '304008', name: 'SC3E 喷漆装饰件C', spec: '691608', type: '实物', category: '喷漆件' },
-  { code: '303007', name: 'SC3E 电镀装饰件', spec: '691610', type: '实物', category: '电镀件' },
-  { code: '301001', name: 'SCREW 3X10螺钉', spec: '166189', type: '实物', category: '金属件' },
   { code: '304009', name: 'SC3E 喷漆装饰件B-英文', spec: '691607', type: '实物', category: '喷漆件' },
   { code: '304010', name: 'SA5H 喷漆装饰件 A', spec: '691775', type: '实物', category: '喷漆件' },
   { code: '304011', name: 'SA5H 喷漆装饰件B', spec: '691776', type: '实物', category: '喷漆件' },
   { code: '304012', name: 'SA5H 喷漆装饰件C', spec: '691777', type: '实物', category: '喷漆件' },
-  { code: '305005', name: 'EKEAA 夜影黑PVD装饰件-左', spec: '691800', type: '实物', category: 'PVD件' },
-  { code: '305006', name: 'EKEAA 夜影黑PVD装饰件-右', spec: '691799', type: '实物', category: 'PVD件' },
   { code: '304013', name: 'EKEAA 喷漆件-哑光云迹灰', spec: '691801', type: '实物', category: '喷漆件' },
   { code: '304014', name: 'SK2湍流灰装饰件-右', spec: '691885', type: '实物', category: '喷漆件' },
   { code: '304015', name: 'SK2湍流灰装饰件-左', spec: '691886', type: '实物', category: '喷漆件' },
   { code: '304016', name: 'SK2暮色蓝装饰件', spec: '691888', type: '实物', category: '喷漆件' },
   { code: '304017', name: 'SK2哑光钛银装饰件-右', spec: '691890', type: '实物', category: '喷漆件' },
   { code: '304018', name: 'SK2哑光钛银装饰件-左', spec: '691891', type: '实物', category: '喷漆件' },
-  { code: '303008', name: 'UKEA 电镀装饰件-右', spec: '691829', type: '实物', category: '电镀件' },
-  { code: '303009', name: 'UKEA 电镀装饰件-左', spec: '691831', type: '实物', category: '电镀件' },
   { code: '304019', name: 'UKEA 喷漆装饰件-右', spec: '', type: '实物', category: '喷漆件' },
   { code: '304020', name: 'UKEA 喷漆装饰件-左', spec: '', type: '实物', category: '喷漆件' },
   { code: '304021', name: 'D13 喷漆开关装饰件-霁雾蓝', spec: '', type: '实物', category: '喷漆件' },
   { code: '304022', name: 'D13 喷漆开关装饰件-霁雨灰', spec: '', type: '实物', category: '喷漆件' },
   { code: '304023', name: 'D13 喷漆开关装饰件-林木棕', spec: '', type: '实物', category: '喷漆件' },
-  { code: '302083', name: 'D13 6H装饰件-电镀素材', spec: '', type: '实物', category: '注塑件' },
-  { code: '303010', name: 'D13 6H装饰件-电镀', spec: '', type: '实物', category: '电镀件' },
-  { code: '305007', name: 'D13 6H装饰件-PVD', spec: '', type: '实物', category: 'PVD件' },
   { code: '304024', name: 'EKEAA喷漆装饰件-左', spec: '', type: '实物', category: '喷漆件' },
   { code: '304025', name: 'EKEAA喷漆装饰件-右', spec: '', type: '实物', category: '喷漆件' },
-  { code: '302084', name: 'D13 6H装饰件-PVD素材', spec: '', type: '实物', category: '注塑件' },
+  { code: '304026', name: 'ST2 左装饰件-喷漆-芳堂红', spec: '', type: '实物', category: '喷漆件' },
+  { code: '304027', name: 'ST2 右装饰件-喷漆-芳堂红', spec: '', type: '实物', category: '喷漆件' },
   { code: '304028', name: 'UG喷漆件装饰件-绫灰银', spec: '', type: '实物', category: '喷漆件' },
   { code: '304029', name: 'ST2 左装饰件-喷漆-汝窑米', spec: '', type: '实物', category: '喷漆件' },
   { code: '304030', name: 'ST2 右装饰件-喷漆-汝窑米', spec: '', type: '实物', category: '喷漆件' },
   { code: '304031', name: 'ST2 左装饰件-喷漆-层峦棕', spec: '', type: '实物', category: '喷漆件' },
   { code: '304032', name: 'ST2 右装饰件-喷漆-层峦棕', spec: '', type: '实物', category: '喷漆件' },
-  { code: '303012', name: 'ST2 装饰件-电镀', spec: '', type: '实物', category: '电镀件' },
-  { code: '302090', name: 'ST2 装饰件-电镀素材', spec: '', type: '实物', category: '注塑件' },
-  { code: '304026', name: 'ST2 左装饰件-喷漆-芳堂红', spec: '', type: '实物', category: '喷漆件' },
-  { code: '304027', name: 'ST2 右装饰件-喷漆-芳堂红', spec: '', type: '实物', category: '喷漆件' },
-  { code: '303013', name: 'ST2 6H外侧装饰件-电镀', spec: '', type: '实物', category: '电镀件' },
-  { code: '302091', name: 'ST2 6H外侧装饰件-电镀素材', spec: '', type: '实物', category: '注塑件' },
-  { code: '303014', name: 'ST2 6H内侧装饰件-电镀', spec: '', type: '实物', category: '电镀件' },
-  { code: '302092', name: 'ST2 6H内侧装饰件-电镀素材', spec: '', type: '实物', category: '注塑件' },
   { code: '304033', name: 'UG喷漆件装饰件-浅云银', spec: '', type: '实物', category: '喷漆件' },
   { code: '304034', name: 'ST2 左装饰件-喷漆-赤夕橙', spec: '', type: '实物', category: '喷漆件' },
   { code: '304035', name: 'ST2 右装饰件-喷漆-赤夕橙', spec: '', type: '实物', category: '喷漆件' },
@@ -1010,17 +1781,195 @@ const productDB = [
   { code: '304041', name: 'ST2 右装饰件-喷漆-秋茶棕', spec: '', type: '实物', category: '喷漆件' },
   { code: '304042', name: 'ST2 左装饰件-喷漆-深黑五', spec: '', type: '实物', category: '喷漆件' },
   { code: '304043', name: 'ST2 右装饰件-喷漆-深黑五', spec: '', type: '实物', category: '喷漆件' },
-  { code: '303015', name: 'ST2 装饰件-电镀（哑）', spec: '', type: '实物', category: '未分类' },
-  { code: '303016', name: 'ST2 6H外侧装饰件-电镀（哑）', spec: '', type: '实物', category: '未分类' },
-  { code: '303017', name: 'ST2 6H内侧装饰件-电镀（哑）', spec: '', type: '实物', category: '未分类' },
-  { code: '303018', name: 'ST2 装饰件-电镀（亮光）', spec: '', type: '实物', category: '未分类' },
-  { code: '303019', name: 'ST2 6H外侧装饰件-电镀（亮光）', spec: '', type: '实物', category: '未分类' },
-  { code: '303020', name: 'ST2 6H内侧装饰件-电镀（亮光）', spec: '', type: '实物', category: '未分类' },
   { code: '304044', name: 'ST2 左装饰件-喷漆-乔木橙', spec: '', type: '实物', category: '未分类' },
   { code: '304045', name: 'ST2 右装饰件-喷漆-乔木橙', spec: '', type: '实物', category: '未分类' },
   { code: '304046', name: 'ST2 左装饰件-喷漆-灰陶', spec: '', type: '实物', category: '未分类' },
   { code: '304047', name: 'ST2 右装饰件-喷漆-灰陶', spec: '', type: '实物', category: '未分类' },
-];
+  { code: '304048', name: 'ST2 左装饰件-喷漆-雾灰银', spec: '', type: '实物', category: '未分类' },
+  { code: '304049', name: 'ST2 右装饰件-喷漆-雾灰银', spec: '', type: '实物', category: '未分类' },
+  { code: '304050', name: 'ST2 左装饰件-喷漆-戟灰', spec: '', type: '实物', category: '未分类' },
+  { code: '304051', name: 'ST2 右装饰件-喷漆-戟灰', spec: '', type: '实物', category: '未分类' },
+  { code: '304052', name: 'ST2 左装饰件-喷漆-缎棕', spec: '', type: '实物', category: '未分类' },
+  { code: '304053', name: 'ST2 右装饰件-喷漆-缎棕', spec: '', type: '实物', category: '未分类' },
+  { code: '304054', name: 'ST2 左装饰件-喷漆-暗夜黑2', spec: '', type: '实物', category: '未分类' },
+  { code: '304055', name: 'ST2 右装饰件-喷漆-暗夜黑2', spec: '', type: '实物', category: '未分类' },
+  { code: '304056', name: 'ST2 左装饰件-喷漆-沙丘米', spec: '', type: '实物', category: '未分类' },
+  { code: '304057', name: 'ST2 右装饰件-喷漆-沙丘米', spec: '', type: '实物', category: '未分类' },
+  { code: '304058', name: 'ST2 左装饰件-喷漆-玄境蓝', spec: '', type: '实物', category: '未分类' },
+  { code: '304059', name: 'ST2 右装饰件-喷漆-玄境蓝', spec: '', type: '实物', category: '未分类' },
+  { code: '304060', name: 'ST2 装饰件-喷漆（赤芒金）', spec: '', type: '实物', category: '喷漆件' },
+  { code: '304061', name: 'ST2 6H外侧装饰件-喷漆（赤芒金）', spec: '', type: '实物', category: '喷漆件' },
+  { code: '304062', name: 'ST2 6H内侧装饰件-喷漆（赤芒金）', spec: '', type: '实物', category: '喷漆件' },
+  { code: '304063', name: 'ST2 装饰件-喷漆（素夕银）', spec: '', type: '实物', category: '未分类' },
+  { code: '304064', name: 'ST2 6H外侧装饰件-喷漆（素夕银）', spec: '', type: '实物', category: '未分类' },
+  { code: '304065', name: 'ST2 6H内侧装饰件-喷漆（素夕银）', spec: '', type: '实物', category: '未分类' },
+  { code: '304067', name: 'ST2 左装饰件-肤感喷漆-沙丘米', spec: '', type: '实物', category: '未分类' },
+  { code: '304068', name: 'ST2 右装饰件-肤感喷漆-沙丘米', spec: '', type: '实物', category: '未分类' },
+  { code: '304069', name: 'ST2 左装饰件-肤感喷漆-赤夕橙', spec: '', type: '实物', category: '未分类' },
+  { code: '304070', name: 'ST2 右装饰件-肤感喷漆-赤夕橙', spec: '', type: '实物', category: '未分类' },
+  { code: '304071', name: 'ST2 左装饰件-喷漆-润米', spec: '', type: '实物', category: '未分类' },
+  { code: '304072', name: 'ST2 右装饰件-喷漆-润米', spec: '', type: '实物', category: '未分类' },
+  { code: '304073', name: 'ST2 左装饰件-喷漆-绾棕', spec: '', type: '实物', category: '未分类' },
+  { code: '304074', name: 'ST2 右装饰件-喷漆-绾棕', spec: '', type: '实物', category: '未分类' },
+  { code: '305001', name: 'HXHA PVD装饰件-左', spec: '691212', type: '实物', category: 'PVD件' },
+  { code: '305002', name: 'HXHA PVD装饰件-右', spec: '691214', type: '实物', category: 'PVD件' },
+  { code: '305003', name: 'UKEA PVD装饰件-右', spec: '691721', type: '实物', category: 'PVD件' },
+  { code: '305004', name: 'UKEA PVD装饰件-左', spec: '691723', type: '实物', category: 'PVD件' },
+  { code: '305005', name: 'EKEAA 夜影黑PVD装饰件-左', spec: '691800', type: '实物', category: 'PVD件' },
+  { code: '305006', name: 'EKEAA 夜影黑PVD装饰件-右', spec: '691799', type: '实物', category: 'PVD件' },
+  { code: '305007', name: 'D13 6H装饰件-PVD', spec: '', type: '实物', category: 'PVD件' },
+  { code: '306001', name: 'UKEA INS装饰件', spec: '691725', type: '实物', category: '电镀件' },
+  { code: '403057', name: 'ST2-SR装饰件总成-深黑五', spec: '', type: '实物', category: '未分类' },
+  { code: '403058', name: 'ST2-HS装饰件总成-汝窑米', spec: '', type: '实物', category: '未分类' },
+  { code: '403059', name: 'ST2-HS装饰件总成-秋茶棕', spec: '', type: '实物', category: '未分类' },
+  { code: '403060', name: 'ST2-HS装饰件总成-层峦棕', spec: '', type: '实物', category: '未分类' },
+  { code: '403064', name: 'ST2-SR装饰件总成-乔木橙', spec: '', type: '实物', category: '未分类' },
+  { code: '403065', name: 'ST2-SR装饰件总成-灰陶', spec: '', type: '实物', category: '未分类' },
+  { code: '403066', name: 'ST2-HQ装饰件总成-雾灰银', spec: '', type: '实物', category: '未分类' },
+  { code: '403067', name: 'ST2-HQ装饰件总成-戟灰', spec: '', type: '实物', category: '未分类' },
+  { code: '403068', name: 'ST2-HQ装饰件总成-缎棕', spec: '', type: '实物', category: '未分类' },
+  { code: '403069', name: 'ST2-HQ装饰件总成-暗夜黑2（黑铬)', spec: '', type: '实物', category: '未分类' },
+  { code: '403071', name: 'ST2-QB装饰件总成-赤夕橙', spec: '', type: '实物', category: '未分类' },
+  { code: '403072', name: 'ST2-QB装饰件总成-沙丘米', spec: '', type: '实物', category: '未分类' },
+  { code: '403073', name: 'ST2-QB装饰件总成-玄境蓝', spec: '', type: '实物', category: '未分类' },
+  { code: '403075', name: 'ST2-QB装饰件总成-赤夕橙（肤感）', spec: '', type: '实物', category: '未分类' },
+  { code: '403076', name: 'ST2-QB装饰件总成-沙丘米（肤感）', spec: '', type: '实物', category: '未分类' },
+  { code: '403077', name: 'ST2-MC装饰件总成-润米', spec: '', type: '实物', category: '未分类' },
+  { code: '403078', name: 'ST2-MC装饰件总成-绾棕', spec: '', type: '实物', category: '未分类' },
+  { code: '403079', name: 'ST2-MC装饰件总成-赤夕橙', spec: '', type: '实物', category: '未分类' },
+
+  // ===== 装配成品仓（装配成品 + 装配总成件） =====
+  { code: '40300001', name: 'C236 喷漆装饰件总成-哑光银', spec: '', type: '实物', category: '装配成品' },
+  { code: '403001', name: 'C673装饰件总成-慕夜黑', spec: '691219', type: '实物', category: '装配成品' },
+  { code: '403002', name: 'C673装饰件总成-热浪橙', spec: '691234', type: '实物', category: '装配成品' },
+  { code: '403003', name: 'C673装饰件总成-厘米色', spec: '691592', type: '实物', category: '装配成品' },
+  { code: '403004', name: 'C673 EU 装饰件总成-黑', spec: '691803', type: '实物', category: '装配成品' },
+  { code: '403005', name: 'C673 EU 装饰件总成-橙', spec: '691805', type: '实物', category: '装配成品' },
+  { code: '403006', name: 'C673装饰件总成-量子绿', spec: '691826', type: '实物', category: '装配成品' },
+  { code: '403007', name: 'C673装饰件总成-黑铬', spec: '691817', type: '实物', category: '装配成品' },
+  { code: '403008', name: 'C236 装饰件总成-淡云灰', spec: '691478', type: '实物', category: '装配成品' },
+  { code: '403009', name: 'C236 装饰件总成-薄雾绿', spec: '691573', type: '实物', category: '装配成品' },
+  { code: '403010', name: 'C236 装饰件总成-赤缇红', spec: '691575', type: '实物', category: '装配成品' },
+  { code: '403011', name: 'C236 装饰件总成-流沙黄', spec: '691577', type: '实物', category: '装配成品' },
+  { code: '403012', name: 'C236 装饰件总成-烟灰色', spec: '691778', type: '实物', category: '装配成品' },
+  { code: '403013', name: 'C236装饰件总成-黑铬', spec: '691876', type: '实物', category: '装配成品' },
+  { code: '403014', name: 'C236装饰件总成-哑光银', spec: '691874', type: '实物', category: '装配成品' },
+  { code: '403015', name: 'C385装饰件总成-慕夜黑', spec: '691582', type: '实物', category: '装配成品' },
+  { code: '403016', name: 'C385装饰件总成-慕夜黑-黑铬', spec: '691810', type: '实物', category: '装配成品' },
+  { code: '403018', name: 'HXHA装饰件总成-染木红', spec: '691211', type: '实物', category: '装配成品' },
+  { code: '403019', name: 'HXHA装饰件总成-深黑', spec: '691218', type: '实物', category: '装配成品' },
+  { code: '403020', name: 'UKEA装饰件总成', spec: '691720', type: '实物', category: '装配成品' },
+  { code: '403021', name: 'SC3E 电镀喷漆装饰件总成-中文', spec: '691603', type: '实物', category: '装配成品' },
+  { code: '403022', name: 'SC3E 电镀喷漆装饰件总成-英文', spec: '691694', type: '实物', category: '装配成品' },
+  { code: '403023', name: 'SA5H 电镀喷漆装饰件总成', spec: '691774', type: '实物', category: '装配成品' },
+  { code: '403024', name: 'EKEAA装饰件总成', spec: '691798', type: '实物', category: '装配成品' },
+  { code: '403025', name: 'SK2装饰件总成-染木红', spec: '691884', type: '实物', category: '装配成品' },
+  { code: '403026', name: 'SK2装饰件总成-湍流灰', spec: '691887', type: '实物', category: '装配成品' },
+  { code: '403028', name: 'UKEA装饰件总成-电镀', spec: '691828', type: '实物', category: '装配成品' },
+  { code: '403029', name: 'UKEA 喷漆装饰件总成', spec: '692092', type: '实物', category: '装配成品' },
+  { code: '403035', name: 'D13 电镀装饰件总成-霁雾蓝', spec: '', type: '实物', category: '装配成品' },
+  { code: '403036', name: 'D13 电镀装饰件总成-霁雨灰', spec: '', type: '实物', category: '装配成品' },
+  { code: '403037', name: 'D13 PVD装饰件总成-林木棕', spec: '', type: '实物', category: '装配成品' },
+  { code: '403038', name: 'D13 电镀装饰件总成-林木棕', spec: '', type: '实物', category: '装配成品' },
+  { code: '403042', name: 'ST2 装饰件总成-芳堂红', spec: '', type: '实物', category: '装配总成件' },
+  { code: '403046', name: 'UG装饰件总成-绫灰银', spec: '', type: '实物', category: '装配成品' },
+  { code: '403047', name: 'ST2 装饰件总成-汝窑米', spec: '', type: '实物', category: '装配总成件' },
+  { code: '403048', name: 'ST2 装饰件总成-层峦棕', spec: '', type: '实物', category: '装配总成件' },
+  { code: '403049', name: 'UG装饰件总成-浅云银', spec: '', type: '实物', category: '装配成品' },
+  { code: '403050', name: 'ST2 装饰件总成-赤夕橙', spec: '', type: '实物', category: '装配总成件' },
+  { code: '403051', name: 'T26 装饰件总成', spec: '', type: '实物', category: '装配成品' },
+  { code: '403052', name: 'ST2 装饰件总成-钢琴黑', spec: '', type: '实物', category: '装配总成件' },
+  { code: '403056', name: 'ST2 装饰件总成-秋茶棕', spec: '', type: '实物', category: '装配总成件' },
+
+  // ===== 自制成品仓 =====
+  { code: '201001', name: 'SC3E 喷漆装饰件A-素材-备模', spec: '', type: '实物', category: '自制成品' },
+  { code: '201003', name: 'SC3E 喷漆装饰件B-素材-备模', spec: '', type: '实物', category: '自制成品' },
+  { code: '201020', name: 'D13 喷漆开关装饰件-素材', spec: '', type: '实物', category: '自制成品' },
+  { code: '201040', name: 'LH-装饰亮条-L-素材', spec: '', type: '实物', category: '自制成品' },
+  { code: '201041', name: 'LH-装饰亮条-R-素材', spec: '', type: '实物', category: '自制成品' },
+  { code: '201042', name: 'FL扬声器灯-165-铭牌-素材', spec: '', type: '实物', category: '自制成品' },
+  { code: '201043', name: 'FR扬声器灯-166-铭牌-素材', spec: '', type: '实物', category: '自制成品' },
+  { code: '201044', name: 'RL扬声器灯-167-铭牌-素材', spec: '', type: '实物', category: '自制成品' },
+  { code: '201067', name: '新X11反光碗L-素材', spec: '', type: '实物', category: '自制成品' },
+  { code: '201068', name: '新X11反光碗R-素材', spec: '', type: '实物', category: '自制成品' },
+  { code: '401004', name: 'F2XU_左导流片_CTR', spec: '862395', type: '实物', category: '自制成品' },
+  { code: '401005', name: 'F2XU_右导流片_CTR', spec: '862381', type: '实物', category: '自制成品' },
+  { code: '401006', name: 'F2XU_主叶片_CTR', spec: '862384', type: '实物', category: '自制成品' },
+  { code: '401011', name: 'F2XU_拨钮_CTR', spec: '862360', type: '实物', category: '自制成品' },
+  { code: '401017', name: 'F2XU_主叶片1_OL', spec: '862382', type: '实物', category: '自制成品' },
+  { code: '401018', name: 'F2XU_主叶片3_OL', spec: '862387', type: '实物', category: '自制成品' },
+  { code: '401019', name: 'F2XU_主叶片1_OR', spec: '862383', type: '实物', category: '自制成品' },
+  { code: '401020', name: 'F2XU_主叶片3_OR', spec: '862388', type: '实物', category: '自制成品' },
+  { code: '401021', name: 'F2XU_主叶片2_OL', spec: '862385', type: '实物', category: '自制成品' },
+  { code: '401022', name: 'F2XU_主叶片2_OR', spec: '862386', type: '实物', category: '自制成品' },
+  { code: '401023', name: 'F2XU_拨钮_OL', spec: '862361', type: '实物', category: '自制成品' },
+  { code: '401024', name: 'F2XU_拨钮_OR', spec: '862362', type: '实物', category: '自制成品' },
+  { code: '401025', name: '673D中面框素材', spec: '', type: '实物', category: '自制成品' },
+  { code: '401026', name: '673D左喷漆面板素材', spec: '', type: '实物', category: '自制成品' },
+  { code: '401027', name: 'WPC 垫子', spec: '1586318', type: '实物', category: '自制成品' },
+  { code: '401028', name: 'WPC 支架', spec: '1586319', type: '实物', category: '自制成品' },
+  { code: '401033', name: 'XC90_后左壳体_RL-新', spec: '718452（新）', type: '实物', category: '自制成品' },
+  { code: '401034', name: 'XC90_后右壳体_RR-新', spec: '718456（新）', type: '实物', category: '自制成品' },
+  { code: '401055', name: 'G28杯托电镀饰环-素材', spec: '', type: '实物', category: '自制成品' },
+  { code: '401056', name: 'G18后中扶手 杯托电镀件-素材', spec: '', type: '实物', category: '自制成品' },
+  { code: '401057', name: '673D中面框素材-新', spec: '', type: '实物', category: '自制成品' },
+  { code: '402002', name: 'Z177-877双色传动轴', spec: '706140', type: '实物', category: '自制成品' },
+  { code: '402003', name: 'Z177-后注塑传动轴', spec: '706180', type: '实物', category: '自制成品' },
+  { code: '402007', name: 'D2UC2 传动轴_O', spec: '716268', type: '实物', category: '自制成品' },
+  { code: '402008', name: 'KX_侧左主叶片连杆', spec: '718059', type: '实物', category: '自制成品' },
+  { code: '402009', name: 'KX_中主叶片连杆_CL', spec: '718071', type: '实物', category: '自制成品' },
+  { code: '402010', name: 'KX_中主叶片连杆_CR', spec: '718072', type: '实物', category: '自制成品' },
+  { code: '402011', name: 'KX_侧右主叶片连杆_OR', spec: '718052', type: '实物', category: '自制成品' },
+  { code: '402012', name: 'AU401_拨钮阻尼底座_IP', spec: '719695', type: '实物', category: '自制成品' },
+  { code: '402013', name: 'AU401_拨钮阻尼底座_R', spec: '719700', type: '实物', category: '自制成品' },
+  { code: '402014', name: 'MMA_双色传动轴', spec: '719836', type: '实物', category: '自制成品' },
+  { code: '402015', name: 'KM_侧左主叶片连杆', spec: '861147', type: '实物', category: '自制成品' },
+  { code: '402016', name: 'KM_侧右主叶片连杆_OR', spec: '861150', type: '实物', category: '自制成品' },
+  { code: '402017', name: 'KM_中主叶片连杆_CL', spec: '861148', type: '实物', category: '自制成品' },
+  { code: '402018', name: 'KM_中主叶片连杆_CR', spec: '861149', type: '实物', category: '自制成品' },
+  { code: '403040', name: 'V206侧底座_894组件-新', spec: '', type: '实物', category: '自制成品' },
+  { code: '403041', name: 'V206后底座_894组件-新', spec: '', type: '实物', category: '自制成品' },
+
+  // ===== 原材料仓（塑料粒子/硅胶） =====
+  { code: '101001', name: 'PC C2700', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101002', name: 'PC+ABS.Bayblend T65 XF', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101003', name: 'R85FS UV4 1002 Charcoal Solid', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101004', name: 'PBT E221 B12378L-FRD', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101005', name: 'POM F20-03.LOF.N.KEP', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101006', name: 'PM.MB-S315 BK', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101007', name: 'PBT-GF30.Arnite TV4261BK.DSM', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101008', name: 'PA6-GF50.BG10.600R.NJJL', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101009', name: 'POM.Duracon M90LV.BK.POLY', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101010', name: 'PP-T20.API-2012 T4.KP5649BK.KINGFA', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101011', name: 'PP-T20.API-2208 HF.KINGFA', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101012', name: 'PC+ABS.Bayblend T85XF.BK(901510).Covestro', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101013', name: 'ABS.AG23AT', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101014', name: 'PA6-GF15.RB122 F15.black TX7.Polykemi', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101015', name: 'PA6-GF30.RB122 F30.black TX7.Polykemi', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101016', name: 'PA6-GF50.RB122 F50.black TX7.Polykemi', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101017', name: 'POM Hostaform C9021 XAP2.BK.Celanese', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101018', name: 'PC+ABS-688WLV', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101019', name: 'Beypond PC2407 GY560', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101020', name: 'PC+ABS W2244', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101021', name: 'PC+ABS W2270', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101022', name: 'ABS Trinseo Magnum 3325 MT', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101023', name: 'TPE Kraiburg TC8GPZ', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101024', name: 'PC+ABS Polykimi R85HI (Recycle)', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101025', name: 'PC+ABS GF30 HAC5030G', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101026', name: 'PC+ABS CB1230 CB67971.01.02.093', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101027', name: 'CA1580 BK08010', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101028', name: 'PC+ABS 704', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101029', name: 'PC+ABS CB3110C N01512A', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101030', name: 'PC+ABS 65FS BLACK', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101031', name: 'PP-TD20 HP220L BK', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101032', name: 'PC 2407_550115', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101033', name: 'PA6 B3G10H', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101034', name: 'PC+ABS MAC-601', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '101035', name: 'PP-TD20-001', spec: '', type: '实物', category: '塑料粒子' },
+  { code: '102001', name: 'LR 3070/60A', spec: '', type: '实物', category: '硅胶' },
+  { code: '102002', name: 'LR 3070/60B', spec: '', type: '实物', category: '硅胶' },
+  { code: '102003', name: 'PM.JS292764.white.ColorSaint', spec: '', type: '实物', category: '硅胶' }
+];;
 
 /* ===== Render Warehouse ===== */
 function buildCellHtml(key, cell, label) {
@@ -1034,6 +1983,9 @@ function buildCellHtml(key, cell, label) {
   }
   let inner = `<span class="w-code">${label}</span>`;
   if (hasBatch) {
+    // 产品名优先显示：FIFO 第一批次（最老批次）的产品名，CSS 两行截断
+    const firstProd = (batches[0].product || '').toString();
+    inner += `<span class="w-product" title="${firstProd}">${firstProd}</span>`;
     inner += '<div class="w-batches">';
     batches.forEach(b => {
       const level = batchAgeLevel(b.batch, b.createdAt);
@@ -1045,48 +1997,79 @@ function buildCellHtml(key, cell, label) {
   }
   return `<div class="${classes}" data-key="${key}">${inner}</div>`;
 }
+/* ===== 仓库切换 ===== */
+function switchWarehouse(whType) {
+  if (_currentSet === whType) return;
+  _currentSet = whType;
+  invalidateCache();
+  loadData().then(() => {
+    renderAll();
+    // 更新 tab 高亮
+    document.querySelectorAll('.panel-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.wh === whType);
+    });
+  }).catch(e => {
+    alert('加载 ' + WH_NAMES[whType] + ' 数据失败：' + e.message);
+  });
+}
+
 function renderWarehouse() {
   if (!_cache) return;
   const { cells } = _cache;
   const container = document.getElementById('warehouseLayout');
   if (!container) return;
 
-  const totalCells = whSections.reduce((s, sec) => s + sec.count * 2, 0);
+  const sections = currentSections();
+  const totalCells = totalCellsOfSections(sections);
   let filledCount = 0;
-
-  const leftZones = `
-    <div class="side-zones">
-      <div class="side-zone green">包材放置区</div>
-      <div class="side-zone">周转箱放置区</div>
-    </div>
-  `;
-
-  let mainHtml = '<div class="storage-main">';
-  whSections.forEach((sec, idx) => {
-    if (idx > 0) {
-      mainHtml += '<div class="v-channel"><div class="v-channel-label">物流通道</div></div>';
-    }
-    const cellsHtml = [];
+  sections.forEach(sec => {
     for (let i = 1; i <= sec.count; i++) {
-      const [k1, k2] = cellKeysForPair(sec, i);
-      const c1 = cells[k1];
-      const c2 = cells[k2];
-      const f1 = cellBatches(c1).length > 0;
-      const f2 = cellBatches(c2).length > 0;
-      if (f1) filledCount++;
-      if (f2) filledCount++;
-      cellsHtml.push(buildCellHtml(k1, c1, sec.p1 + i));
-      cellsHtml.push(buildCellHtml(k2, c2, sec.p2 + i));
+      cellKeysForPair(sec, i).forEach(k => {
+        if (cellBatches(cells[k]).length > 0) filledCount++;
+      });
     }
-    mainHtml += `
-      <div class="section-col">
-        <div class="section-body">${cellsHtml.join('')}</div>
-      </div>
-    `;
   });
-  mainHtml += '</div>';
 
-  container.innerHTML = leftZones + mainHtml;
+  // 原材料仓：示意图自带横向过道，隐藏外部物流通栏
+  const bottomChannel = document.querySelector('.bottom-channel');
+  if (bottomChannel) bottomChannel.style.display = _currentSet === 'raw' ? 'none' : '';
+
+  let layoutHtml;
+  if (_currentSet === 'raw') {
+    layoutHtml = renderRawWarehouse(cells);
+  } else {
+    // 仅半成品仓显示左侧功能区
+    const leftZones = _currentSet === 'semi' ? `
+      <div class="side-zones">
+        <div class="side-zone green">包材放置区</div>
+        <div class="side-zone">周转箱放置区</div>
+      </div>
+    ` : '';
+
+    let mainHtml = '<div class="storage-main">';
+    sections.forEach((sec, idx) => {
+      if (idx > 0) {
+        mainHtml += '<div class="v-channel"><div class="v-channel-label">物流通道</div></div>';
+      }
+      const cellsHtml = [];
+      for (let i = 1; i <= sec.count; i++) {
+        const keys = cellKeysForPair(sec, i);
+        keys.forEach(k => {
+          // 双列 section 时取对应列字母；单列时直接用 sec.p1
+          cellsHtml.push(buildCellHtml(k, cells[k], k));
+        });
+      }
+      mainHtml += `
+        <div class="section-col${sec.single ? ' section-single' : ''}">
+          <div class="section-body">${cellsHtml.join('')}</div>
+        </div>
+      `;
+    });
+    mainHtml += '</div>';
+    layoutHtml = leftZones + mainHtml;
+  }
+
+  container.innerHTML = layoutHtml;
 
   container.querySelectorAll('.w-cell').forEach(cell => {
     cell.addEventListener('click', onCellClick);
@@ -1096,7 +2079,38 @@ function renderWarehouse() {
   });
 
   document.getElementById('legendStats').textContent = `占用: ${filledCount} / ${totalCells}`;
-  updateStats();
+}
+
+/* 原材料仓：单列货架 HTML（prefix+行号 即库位键，如 原-A1 / 原D1） */
+function rawRackHtml(prefix, count, cells, extraClass) {
+  const items = [];
+  for (let i = 1; i <= count; i++) {
+    const k = prefix + i;
+    items.push(buildCellHtml(k, cells[k], k));
+  }
+  return `<div class="raw-rack${extraClass ? ' ' + extraClass : ''}">${items.join('')}</div>`;
+}
+
+/* 原材料仓布局：上部 原-A/B/C 三列+两条竖过道，中部横过道，下部设备区+过道+原D列 */
+function renderRawWarehouse(cells) {
+  return `
+    <div class="raw-layout">
+      <div class="raw-title">原材料仓</div>
+      <div class="raw-row raw-row-top">
+        ${rawRackHtml('原-A', 5, cells)}
+        <div class="raw-aisle-v">过道</div>
+        ${rawRackHtml('原-B', 5, cells)}
+        <div class="raw-aisle-v">过道</div>
+        ${rawRackHtml('原-C', 5, cells)}
+      </div>
+      <div class="raw-aisle-h">过道</div>
+      <div class="raw-row raw-row-bottom">
+        <div class="raw-equip">设备区</div>
+        <div class="raw-aisle-v">过道</div>
+        ${rawRackHtml('原D', 4, cells, 'raw-rack-d')}
+      </div>
+    </div>
+  `;
 }
 
 /* ===== Cell Events ===== */
@@ -1162,12 +2176,12 @@ function generateBatchFromDate(dateStr) {
 }
 function getProductName(code) {
   if (!code) return '';
-  const p = productDB.find(x => x.code === code);
+  const p = getProductList().find(x => x.code === code);
   return p ? p.name : '';
 }
 function getProductCodeByName(name) {
   if (!name) return '';
-  const p = productDB.find(x => x.name === name);
+  const p = getProductList().find(x => x.name === name);
   return p ? p.code : '';
 }
 function renderBatchList(cell) {
@@ -1258,7 +2272,7 @@ function openEditModal(loc) {
     const firstBatch = batches[0] || {};
     document.getElementById('inputCode').value = firstBatch.code || '';
     const search = document.getElementById('productSearch');
-    const p = productDB.find(x => x.code === firstBatch.code);
+    const p = getProductList().find(x => x.code === firstBatch.code);
     search.value = p ? p.name : (firstBatch.product || '');
     const batchEl = document.getElementById('inputBatch');
     const dateEl = document.getElementById('inputBatchDate');
@@ -1303,18 +2317,107 @@ function closeEditModal() {
 }
 
 /* ===== Product Picker Logic ===== */
+// 存货零件所在仓标签（三仓在库存货都可在任意 Tab 搜索到）
+const STOCK_TAG = { semi: '在库·半成品仓', assembly: '在库·装配仓', selfmade: '在库·自制仓', raw: '在库·原材料仓' };
+const WH_SHORT = { semi: '半成品仓', assembly: '装配仓', selfmade: '自制仓', raw: '原材料仓' };
+
+// 商品列表 = 内置商品库 + 三个仓库所有在库存货中的商品（按编码去重，存货零件优先排在前面）
+function getProductList() {
+  const map = new Map();
+  productDB.forEach(p => map.set(p.code, { ...p, _stockWhs: new Set() }));
+
+  const mergeCells = (cells, wh) => {
+    if (!cells) return;
+    Object.values(cells).forEach(cell => {
+      cellBatches(cell).forEach(b => {
+        const code = (b.code || '').toString();
+        if (!code) return;
+        let ex = map.get(code);
+        if (!ex) {
+          ex = { code, name: b.product || code, spec: '', category: STOCK_TAG[wh], _stockWhs: new Set() };
+          map.set(code, ex);
+        }
+        ex._stockWhs.add(wh);
+        // 目录件名称缺失时用在库名称补全
+        if ((!ex.name || ex.name === code) && b.product) ex.name = b.product;
+      });
+    });
+  };
+
+  if (_mode === 'standalone') {
+    // 单机模式：每次同步读取 localStorage 三槽，保证最新
+    try {
+      const all = loadLocalData();
+      WH_TYPES.forEach(t => mergeCells(all[t].cells, t));
+    } catch {}
+  } else {
+    // 服务器模式：用预取缓存 + 当前仓 _cache 兜底
+    WH_TYPES.forEach(t => mergeCells(_whCellsCache[t], t));
+    if (_cache && _cache.cells) mergeCells(_cache.cells, _currentSet);
+  }
+
+  const builtIn = new Set(productDB.map(p => p.code));
+  const all = Array.from(map.values());
+  all.sort((a, b) => {
+    // 1) 有存货的零件排最前；2) 内置目录优先于未知编码；3) 按编码排序
+    const aStock = (a._stockWhs && a._stockWhs.size) ? 0 : 1;
+    const bStock = (b._stockWhs && b._stockWhs.size) ? 0 : 1;
+    if (aStock !== bStock) return aStock - bStock;
+    const aIn = builtIn.has(a.code) ? 0 : 1;
+    const bIn = builtIn.has(b.code) ? 0 : 1;
+    if (aIn !== bIn) return aIn - bIn;
+    return a.code.localeCompare(b.code);
+  });
+  return all;
+}
+
+function productWhType(p) {
+  // 按 category 归属目录所属仓（三仓目录天然无重叠）
+  const cat = (p.category || '').toString();
+  if (cat === '装配成品' || cat === '装配总成件') return 'assembly';
+  if (cat === '自制成品') return 'selfmade';
+  if (cat === '原材料' || cat === '塑料粒子' || cat === '硅胶') return 'raw';
+  if (cat.indexOf('在库·') === 0) return 'ANY'; // 仅在库存货中出现的零件，任意仓可见
+  return 'semi';
+}
+
 function filterProducts(query) {
+  const raw = getProductList();
+  const current = WH_TYPES.includes(_currentSet) ? _currentSet : 'semi';
+  const list = raw.filter(p => {
+    // 规则：三个仓库的所有存货零件始终可筛选；无存货的目录零件按当前 Tab 仓过滤
+    if (p._stockWhs && p._stockWhs.size) return true;
+    const wt = productWhType(p);
+    if (wt === 'ANY') return true;
+    return wt === current;
+  });
+  // 关键字模糊匹配（编码/名称/规格/分类，兼容漏打空格）
   const q = query.trim().toLowerCase();
-  if (!q) return productDB.slice(0, 50);
-  return productDB.filter(p =>
-    p.code.toLowerCase().includes(q) ||
-    p.name.toLowerCase().includes(q) ||
-    (p.spec||'').toLowerCase().includes(q) ||
-    p.category.toLowerCase().includes(q)
-  ).slice(0, 50);
+  if (!q) return list.slice(0, 50);
+  const qNoSpace = q.replace(/\s+/g, '');
+  const norm = s => (s || '').toString().toLowerCase();
+  const normNS = s => norm(s).replace(/\s+/g, '');
+  return list.filter(p => {
+    const c = norm(p.code), n = norm(p.name), sp = norm(p.spec), ct = norm(p.category);
+    const cNS = normNS(p.code), nNS = normNS(p.name), spNS = normNS(p.spec), ctNS = normNS(p.category);
+    return (
+      c.includes(q) || n.includes(q) || sp.includes(q) || ct.includes(q) ||
+      (qNoSpace && (cNS.includes(qNoSpace) || nNS.includes(qNoSpace) || spNS.includes(qNoSpace) || ctNS.includes(qNoSpace)))
+    );
+  }).slice(0, 50);
 }
 
 function renderProductDropdown(query) {
+  // 服务器模式下三仓存货未拉齐时，后台补拉后重渲染下拉
+  if (_mode !== 'standalone' && WH_TYPES.some(t => !_whCellsCache[t])) {
+    ensureAllWhCells().then(() => {
+      const dd2 = document.getElementById('productDropdown');
+      if (dd2 && dd2.classList.contains('show')) {
+        const curQ = document.getElementById('productSearch') ? document.getElementById('productSearch').value : query;
+        renderProductDropdown(curQ);
+      }
+    }).catch(()=>{});
+  }
   const list = filterProducts(query);
   const dd = document.getElementById('productDropdown');
   if (!list.length) {
@@ -1322,22 +2425,32 @@ function renderProductDropdown(query) {
     dd.classList.add('show');
     return;
   }
-  dd.innerHTML = list.map(p => `
+  const current = WH_TYPES.includes(_currentSet) ? _currentSet : 'semi';
+  dd.innerHTML = list.map(p => {
+    const whs = (p._stockWhs && p._stockWhs.size) ? Array.from(p._stockWhs) : [];
+    // 标签：目录分类；若该零件只有其他仓有存货，追加"存货·XX仓"提示
+    let tags = `<span class="product-item-cat">${p.category}</span>`;
+    if (whs.length && !whs.includes(current)) {
+      const otherNames = whs.map(w => WH_SHORT[w]).join('/');
+      tags = `<span class="product-item-cat">${p.category}</span><span class="product-item-cat stock-other">存货·${otherNames}</span>`;
+    }
+    return `
     <div class="product-item" data-code="${p.code}">
       <div class="product-item-head">
         <span class="product-item-code">${p.code}</span>
         <span class="product-item-name" title="${p.name}">${p.name}</span>
-        <span class="product-item-cat">${p.category}</span>
+        ${tags}
       </div>
       ${p.spec ? `<div class="product-item-spec">规格型号：${p.spec}</div>` : ''}
     </div>
-  `).join('');
+  `;
+  }).join('');
   dd.classList.add('show');
   dd.querySelectorAll('.product-item').forEach(item => {
     item.addEventListener('mousedown', e => {
       e.preventDefault();
       const code = item.dataset.code;
-      const p = productDB.find(x => x.code === code);
+      const p = getProductList().find(x => x.code === code);
       if (p) selectProduct(p);
     });
   });
@@ -1516,7 +2629,7 @@ function doOutbound() {
 function updateStats() {
   if (!_cache) return;
   const data = _cache;
-  const totalCells = whSections.reduce((s,sec)=>s+sec.count*2,0);
+  const totalCells = totalCellsOfSections(currentSections());
   const usedCells = Object.values(data.cells).filter(cellHasBatch).length;
   const inboundCount = data.records.filter(r=>r.type==='入库'||r.type==='更新').length;
   const outboundCount = data.records.filter(r=>r.type==='出库').length;
@@ -1530,70 +2643,81 @@ function updateStats() {
 
   renderDonut(usedCells, inboundCount, outboundCount);
   renderLineChart(data.records);
+  // 先用全量记录计算每条的结存数量，再截取最近30条展示
+  attachRunningBalances(data.records);
   renderTable(data.records.slice(0, 30));
 }
 
 /* ===== Line Chart ===== */
-function renderLineChart(records) {
-  const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-  const counts = new Array(12).fill(0);
-
-  records.forEach(r => {
-    const d = new Date(r.time);
-    counts[d.getMonth()]++;
-  });
-
-  const max = Math.max(...counts, 5);
-  const w = 480, h = 150, padL = 35, padR = 10, padT = 10, padB = 25;
-  const cw = w - padL - padR, ch = h - padT - padB;
-  const step = cw / 11;
-
-  let points = [];
-  let areaPoints = [];
-  counts.forEach((v, i) => {
-    const x = padL + i * step;
-    const y = padT + ch - (v / max) * ch;
-    points.push([x, y]);
-    if (i === 0) areaPoints.push([x, padT + ch]);
-    areaPoints.push([x, y]);
-    if (i === counts.length - 1) areaPoints.push([x, padT + ch]);
-  });
-
-  const pathD = points.map((p,i)=>`${i===0?'M':'L'}${p[0]},${p[1]}`).join(' ');
-  const areaD = areaPoints.map((p,i)=>`${i===0?'M':'L'}${p[0]},${p[1]}`).join(' ')+' Z';
-
-  // Grid lines
-  let gridLines = '';
-  for (let i = 0; i <= 4; i++) {
-    const y = padT + (ch/4)*i;
-    const val = Math.round(max - (max/4)*i);
-    gridLines += `<line x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}" stroke="rgba(26,58,92,.5)" stroke-width="1"/>`;
-    gridLines += `<text x="${padL-5}" y="${y+3}" fill="#5a7a9a" font-size="9" text-anchor="end">${val}</text>`;
+/* ===== FIFO 先进先出列表 ===== */
+function renderLineChart(_records) {
+  // 从当前仓库所有 cells 的所有批次收集
+  const allBatches = [];
+  if (_cache && _cache.cells) {
+    Object.values(_cache.cells).forEach(cell => {
+      cellBatches(cell).forEach(b => {
+        allBatches.push({
+          location: cell.location,
+          code: b.code || '',
+          batch: b.batch,
+          product: b.product || '-',
+          quantity: b.quantity,
+          createdAt: b.createdAt,
+          batchTs: batchDateFromBatchNo(b.batch, b.createdAt)
+        });
+      });
+    });
   }
 
-  // X labels
-  let xLabels = '';
-  months.forEach((m,i)=>{
-    xLabels += `<text x="${padL+i*step}" y="${h-8}" fill="#5a7a9a" font-size="9" text-anchor="middle">${m}</text>`;
+  const container = document.getElementById('lineChart');
+  if (!allBatches.length) {
+    container.innerHTML = '<div class="fifo-empty">暂无批次数据</div>';
+    return;
+  }
+
+  // 按物料编码分组（同物料 = 同 code；若 code 空则用产品名兜底），每组取批次最早的一条（FIFO 头）
+  const groupKey = b => (b.code && b.code !== '-') ? `CODE:${b.code}` : `PROD:${b.product}`;
+  const fifoHeads = new Map(); // key → {最早批次记录}
+  allBatches.forEach(b => {
+    const k = groupKey(b);
+    const cur = fifoHeads.get(k);
+    if (!cur || b.batchTs < cur.batchTs) fifoHeads.set(k, b);
   });
 
-  // Dots
-  let dots = points.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="#22d3ee" stroke="#0d1f3c" stroke-width="1"/>`).join('');
+  // 所有 FIFO 头按批次时间从老到新排序
+  const rows = Array.from(fifoHeads.values()).sort((a, b) => a.batchTs - b.batchTs);
 
-  document.getElementById('lineChart').innerHTML = `
-    <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#00d4ff" stop-opacity="0.4"/>
-          <stop offset="100%" stop-color="#00d4ff" stop-opacity="0"/>
-        </linearGradient>
-      </defs>
-      ${gridLines}
-      <path d="${areaD}" fill="url(#areaGrad)"/>
-      <path d="${pathD}" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linejoin="round"/>
-      ${dots}
-      ${xLabels}
-    </svg>
+  const p = x => String(x).padStart(2, '0');
+  const fmtDate = ts => {
+    const d = new Date(ts);
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  };
+
+  let rowsHtml = '';
+  rows.forEach(b => {
+    const level = batchAgeLevel(b.batch, b.createdAt);
+    rowsHtml += `<tr class="fifo-${level}" title="物料编码：${b.code||'-'}｜批次库存总量仅统计该批次">
+      <td class="fifo-prod">${b.product}</td>
+      <td class="fifo-batch">${b.batch || '-'}</td>
+      <td class="fifo-qty">${b.quantity.toLocaleString()}</td>
+      <td class="fifo-loc">${b.location}</td>
+      <td class="fifo-time">${fmtDate(b.createdAt)}</td>
+    </tr>`;
+  });
+
+  container.innerHTML = `
+    <table class="fifo-table">
+      <thead>
+        <tr>
+          <th class="fifo-prod">产品名称</th>
+          <th class="fifo-batch">生产批次</th>
+          <th class="fifo-qty">数量</th>
+          <th class="fifo-loc">库位</th>
+          <th class="fifo-time">入库时间</th>
+        </tr>
+      </thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
   `;
 }
 
@@ -1629,18 +2753,36 @@ function renderDonut(used, inbound, outbound) {
 }
 
 /* ===== Record Table ===== */
+// 按 库位号 计算每笔交易后的结存数量（该库位所有批次总数）
+// records 为时间倒序，内部按时间正序回放累加，结果回填到每条记录的 _balance
+function attachRunningBalances(records) {
+  if (!records || !records.length) return records;
+  const asc = records.slice().sort((a, b) => (a.time || 0) - (b.time || 0));
+  const balance = {};
+  asc.forEach(r => {
+    const loc = r.location || '';
+    const qty = Math.abs(parseInt(r.quantity) || 0);
+    if (r.type === '出库') balance[loc] = (balance[loc] || 0) - qty;
+    else balance[loc] = (balance[loc] || 0) + qty;
+    r._balance = balance[loc];
+  });
+  return records;
+}
+
 function renderTable(records) {
   if (!records.length) {
     document.getElementById('recordTable').innerHTML =
-      '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-dim)">暂无出入库记录，点击左侧库位进行入库操作</td></tr>';
+      '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text-dim)">暂无出入库记录，点击左侧库位进行入库操作</td></tr>';
     return;
   }
+  // 结存数量已在 updateStats 中基于全量记录计算（_balance 字段），此处直接读取
   const types = { '入库': 'style="color:var(--orange)"', '出库': 'style="color:var(--green)"', '更新': 'style="color:var(--cyan-light)"' };
   const statusClass = (s) => s === '已入库' || s === '已出库' || s === '已更新' || s === '已导入' ? 'status-sent' : 'status-pending';
   const html = records.map(r => {
     const d = new Date(r.time);
     const ts = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
     const qty = r.quantity || 1;
+    const bal = r._balance != null ? r._balance : 0;
     return `<tr>
       <td ${types[r.type]||''}>${r.type}</td>
       <td>${r.location}</td>
@@ -1648,6 +2790,7 @@ function renderTable(records) {
       <td>${r.batch||'-'}</td>
       <td>${r.product||'-'}</td>
       <td style="color:var(--cyan-light);font-weight:500">${qty}</td>
+      <td style="color:var(--orange);font-weight:500">${bal}</td>
       <td><span class="status-badge ${statusClass(r.status)}">${r.status||'-'}</span></td>
       <td>${ts}</td>
     </tr>`;
@@ -1666,6 +2809,7 @@ function buildExportRows() {
   if (!_cache) return null;
   const { records } = _cache;
   if (!records || !records.length) return null;
+  attachRunningBalances(records);
   // 按时间倒序导出（与显示一致，records 已是 unshift 倒序）
   return records.map(r => ({
     type: r.type || '',
@@ -1674,6 +2818,7 @@ function buildExportRows() {
     batch: r.batch || '',
     product: r.product || '',
     quantity: r.quantity || 1,
+    balance: r._balance != null ? r._balance : 0,
     status: r.status || '',
     time: formatRecordTime(r.time)
   }));
@@ -1699,10 +2844,10 @@ function downloadBlob(blob, filename) {
 function exportRecordsCsv() {
   const rows = buildExportRows();
   if (!rows) { alert('暂无出入库记录可导出'); return; }
-  const headers = ['类型', '库位号', '物料编码', '批次号', '产品名称', '数量', '状态', '时间'];
+  const headers = ['类型', '库位号', '物料编码', '批次号', '产品名称', '数量', '结存数量', '状态', '时间'];
   const lines = [headers.map(escapeCsvCell).join(',')];
   rows.forEach(r => {
-    lines.push([r.type, r.location, r.code, r.batch, r.product, r.quantity, r.status, r.time].map(escapeCsvCell).join(','));
+    lines.push([r.type, r.location, r.code, r.batch, r.product, r.quantity, r.balance, r.status, r.time].map(escapeCsvCell).join(','));
   });
   // BOM 确保 Excel 正确识别 UTF-8
   const content = '\uFEFF' + lines.join('\r\n');
@@ -1721,12 +2866,12 @@ function exportRecordsExcel() {
     if (confirm('Excel导出库未加载，是否改为导出CSV格式？')) exportRecordsCsv();
     return;
   }
-  const headers = ['类型', '库位号', '物料编码', '批次号', '产品名称', '数量', '状态', '时间'];
-  const aoa = [headers, ...rows.map(r => [r.type, r.location, r.code, r.batch, r.product, r.quantity, r.status, r.time])];
+  const headers = ['类型', '库位号', '物料编码', '批次号', '产品名称', '数量', '结存数量', '状态', '时间'];
+  const aoa = [headers, ...rows.map(r => [r.type, r.location, r.code, r.batch, r.product, r.quantity, r.balance, r.status, r.time])];
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   // 列宽优化
   ws['!cols'] = [
-    { wch: 8 }, { wch: 10 }, { wch: 14 }, { wch: 14 }, { wch: 30 }, { wch: 8 }, { wch: 10 }, { wch: 20 }
+    { wch: 8 }, { wch: 10 }, { wch: 14 }, { wch: 14 }, { wch: 30 }, { wch: 8 }, { wch: 10 }, { wch: 10 }, { wch: 20 }
   ];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, '出入库记录');
@@ -1845,6 +2990,10 @@ function showImportModal() {
 
   document.getElementById('importModalContent').innerHTML = `
     <div class="modal-title">导入数据 · 字段映射</div>
+    <div class="import-target-banner">
+      📦 导入目标仓库：<b class="target-wh-name">${currentWhName()}</b>
+      <span class="target-wh-hint">（当前 Tab 决定导入仓；如需导入其他仓库请先关闭此弹窗、切换 Tab 后重新点"导入数据"）</span>
+    </div>
     <div class="import-info">
       检测到 <b>${headers.length}</b> 列、<b>${rows.length}</b> 行数据。<br>
       请确认字段对应关系（库位号留空则自动分配空库位）：
@@ -1895,13 +3044,12 @@ function closeImportModal() {
   pendingImportData = null;
 }
 
-/* Collect all valid cell keys in grid order: A1,B1,A2,B2,...,N8 */
+/* Collect all valid cell keys in grid order */
 function getAllCellKeys() {
   const keys = [];
-  whSections.forEach(sec => {
+  currentSections().forEach(sec => {
     for (let i = 1; i <= sec.count; i++) {
-      keys.push(`${sec.p1}${i}`);
-      keys.push(`${sec.p2}${i}`);
+      cellKeysForPair(sec, i).forEach(k => keys.push(k));
     }
   });
   return keys;
@@ -2092,7 +3240,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btnLogout').addEventListener('click', doLogout);
   document.getElementById('linkMigrate').addEventListener('click', migrateOldLocalData);
 
+  // Tab 切换：半成品仓 / 装配成品仓
+  document.querySelectorAll('.panel-tab').forEach(tab => {
+    tab.addEventListener('click', () => switchWarehouse(tab.dataset.wh));
+  });
+
   // 自动探测服务器可用性
+  // 启动时从云端拉取数据
+  await pullCloud();
   await detectServerMode();
 
   // 探测登录状态
@@ -2104,6 +3259,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (localAccount) {
         hideLoginMask();
         updateUserDisplay();
+        // URL ?reset=<whType> 支持：清空指定仓库
+        const resetTarget = new URLSearchParams(window.location.search).get('reset');
+        if (resetTarget && WH_TYPES.includes(resetTarget)) {
+          const data = loadLocalData();
+          if (resetTarget === 'semi') {
+            const demo = buildDemoData();
+            data.semi = { ...demo, updatedAt: Date.now() };
+          } else {
+            data[resetTarget] = { version: 2, cells: {}, records: [], updatedAt: Date.now() };
+          }
+          saveLocalData(data);
+          // 移除 URL 参数避免刷新重复执行
+          const u = new URL(window.location.href);
+          u.searchParams.delete('reset');
+          window.history.replaceState({}, '', u);
+        }
         _cache = { ...loadLocalData() };
         renderAll();
       } else {
@@ -2121,6 +3292,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         sessionStorage.setItem('wh_user', JSON.stringify(_user));
         hideLoginMask();
         updateUserDisplay();
+        // URL ?reset=<whType> 支持：调用 /api/reset 清空指定仓库
+        const resetTarget = new URLSearchParams(window.location.search).get('reset');
+        if (resetTarget && WH_TYPES.includes(resetTarget)) {
+          try {
+            await api('/api/reset?whType=' + resetTarget, { method: 'POST' });
+          } catch (e) {
+            alert('清空 ' + (WH_NAMES[resetTarget] || resetTarget) + ' 失败（需要管理员权限）：' + e.message);
+          }
+          const u = new URL(window.location.href);
+          u.searchParams.delete('reset');
+          window.history.replaceState({}, '', u);
+        }
         await loadData();
         renderAll();
       } catch (e) {
@@ -2234,7 +3417,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (first) {
             e.preventDefault();
             const code = first.dataset.code;
-            const p = productDB.find(x => x.code === code);
+            const p = getProductList().find(x => x.code === code);
             if (p) selectProduct(p);
             return;
           }
@@ -2247,5 +3430,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   console.log('库位看板初始化完成');
 });
 </script>
-</body>
-</html>
+
+
+</body></html>
