@@ -1370,11 +1370,11 @@ function updateModeIndicator() {
   const banner = document.getElementById('modeBanner');
   if (!banner) return;
   if (_mode === 'standalone') {
-    banner.textContent = '';
-    banner.style.display = 'none';
+    banner.textContent = '已同步云端最新数据';
+    banner.style.display = '';
   } else {
-    banner.style.display = 'none';
-  }
+    banner.textContent = '已同步云端最新数据';
+    banner.style.display = '';
 }
 
 let cloudVersion = 0;
