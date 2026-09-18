@@ -1419,6 +1419,69 @@ async function pushCloud() {
     throw e;
   }
 }
+
+// 本地自动备份
+const localBackup = {
+    dirHandle: null,
+    async init() {
+        try {
+            const db = await this._openDB();
+            const tx = db.transaction('handles', 'readonly');
+            const rec = await tx.objectStore('handles').get('backupDir');
+            if (rec && rec.handle) {
+                const allowed = await rec.handle.queryPermission({ mode: 'readwrite' });
+                if (allowed === 'granted') {
+                    this.dirHandle = rec.handle;
+                    console.log('[localBackup] 已恢复备份文件夹授权');
+                }
+            }
+        } catch (e) { console.warn('[localBackup] init', e); }
+    },
+    _openDB() {
+        return new Promise((resolve, reject) => {
+            const req = indexedDB.open('kc_local_backup', 1);
+            req.onupgradeneeded = () => req.result.createObjectStore('handles');
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+    },
+    async choose() {
+        if (!window.showDirectoryPicker) {
+            alert('当前浏览器不支持本地自动备份，请使用最新版 Chrome 或 Edge。');
+            return false;
+        }
+        try {
+            const dirHandle = await window.showDirectoryPicker({ id: 'kc_local_backup', mode: 'readwrite' });
+            this.dirHandle = dirHandle;
+            const db = await this._openDB();
+            const tx = db.transaction('handles', 'readwrite');
+            tx.objectStore('handles').put({ handle: dirHandle, savedAt: new Date().toISOString() }, 'backupDir');
+            await tx.done;
+            this.save();
+            alert('本地备份文件夹已选择，以后每次保存将自动备份到该文件夹');
+            return true;
+        } catch (e) {
+            if (e.name !== 'AbortError') alert('选择文件夹失败：' + e.message);
+            return false;
+        }
+    },
+    async save() {
+        if (!this.dirHandle) return;
+        try {
+            const now = new Date();
+            const data = JSON.stringify(loadLocalData());
+            // 覆盖写 latest.json
+            const f1 = await this.dirHandle.getFileHandle('latest.json', { create: true });
+            const w1 = await f1.createWritable();
+            await w1.write(data);
+            await w1.close();
+            console.log('[localBackup] 已写入 latest.json');
+        } catch (e) {
+            console.warn('[localBackup] save', e);
+        }
+    }
+};
+window.localBackup = localBackup;
 async function api(path, opts = {}, whTypeOverride) {
   // 总是本地处理
   let result;
@@ -1431,6 +1494,7 @@ async function api(path, opts = {}, whTypeOverride) {
   // 修改数据后自动推送云端
   if (path !== '/api/data' && path !== '/api/me' && path !== '/api/login' && path !== '/api/logout') {
     try { await pushCloud();
+      if (window.localBackup && localBackup.dirHandle) localBackup.save();
       // 自动备份下载
       const data = loadLocalData();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -3375,6 +3439,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     btn.textContent = '保存中...';
     try {
       await pushCloud();
+      if (window.localBackup && localBackup.dirHandle) localBackup.save();
       // 自动备份下载
       const data = loadLocalData();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -3400,6 +3465,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 备份到本地
   document.getElementById('btnBackupLocal').addEventListener('click', () => {
+  localBackup.choose();
+  return;
     const data = loadLocalData();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
