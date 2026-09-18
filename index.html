@@ -430,7 +430,7 @@
       <span class="stat-value" id="statOut" data-inspector-id="html:e79a0f13:40">64</span>
       <span class="stat-label" data-inspector-id="html:e79a0f13:41">今年出库</span>
     </div>
-    <button class="import-btn" id="btnImport" title="从Excel/CSV导入数据" data-inspector-id="html:e79a0f13:42" data-scu-ref="e4">导入数据</button>
+    <button class="import-btn" id="btnSaveCloud" style="background:#0ea5e9;margin-right:8px;" title="保存并同步到云端">保存</button><button class="import-btn" id="btnBackupLocal" style="background:#10b981;margin-right:8px;" title="备份数据到本地">备份</button><span id="syncStatus" style="margin-right:8px;color:#22c55e;font-size:13px;display:none;">已同步</span><button class="import-btn" id="btnImport" title="从Excel/CSV导入数据" data-inspector-id="html:e79a0f13:42" data-scu-ref="e4">导入数据</button>
   </div>
   <input type="file" class="import-file" id="importFile" accept=".xlsx,.xls,.csv,.txt" data-inspector-id="html:e79a0f13:43">
 
@@ -1364,7 +1364,7 @@ function updateModeIndicator() {
   if (!banner) return;
   if (_mode === 'standalone') {
     banner.textContent = '单机模式 · 数据保存在本机';
-    banner.style.display = 'block';
+    banner.style.display = 'none';
   } else {
     banner.style.display = 'none';
   }
@@ -3355,6 +3355,41 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btnCancel').addEventListener('click', closeEditModal);
   document.getElementById('btnImport').addEventListener('click', onImportClick);
   document.getElementById('importFile').addEventListener('change', onFileSelected);
+
+  // 保存到云端
+  document.getElementById('btnSaveCloud').addEventListener('click', async () => {
+    const statusEl = document.getElementById('syncStatus');
+    const btn = document.getElementById('btnSaveCloud');
+    btn.disabled = true;
+    btn.textContent = '保存中...';
+    try {
+      await pushCloud();
+      statusEl.style.display = 'inline-block';
+      setTimeout(() => statusEl.style.display = 'none', 3000);
+      btn.textContent = '保存成功';
+      setTimeout(() => btn.textContent = '保存', 2000);
+    } catch(e) {
+      btn.textContent = '保存失败';
+      setTimeout(() => btn.textContent = '保存', 2000);
+      alert('保存失败：' + e.message);
+    }
+    btn.disabled = false;
+  });
+
+  // 备份到本地
+  document.getElementById('btnBackupLocal').addEventListener('click', () => {
+    const data = loadLocalData();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const now = new Date();
+    const ts = now.getFullYear() + '' + String(now.getMonth()+1).padStart(2,'0') + '' + String(now.getDate()).padStart(2,'0') + '_' + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0');
+    a.href = url;
+    a.download = '库存备份_' + ts + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    alert('备份文件已下载，请保存到D盘系统数据仓库备份文件夹');
+  });
   document.getElementById('btnExportCsv').addEventListener('click', exportRecordsCsv);
   document.getElementById('btnExportExcel').addEventListener('click', exportRecordsExcel);
 
