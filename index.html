@@ -3390,8 +3390,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           u.searchParams.delete('reset');
           window.history.replaceState({}, '', u);
         }
-        _cache = { ...loadLocalData() };
-        renderAll();
+        loadData().then(() => { renderAll(); }).catch(()=>{});
+
       } else {
         showLoginMask();
       }
