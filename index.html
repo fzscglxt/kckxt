@@ -366,6 +366,33 @@
   .user-name{color:var(--cyan-light);letter-spacing:1px}
   .logout-btn{background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:3px 10px;border-radius:3px;cursor:pointer;font-family:inherit;font-size:11px;transition:all .2s}
   .logout-btn:hover{border-color:var(--red);color:var(--red)}
+  /* ===== 多用户管理（对齐生产系统） ===== */
+  .user-bar{gap:8px}
+  .kc-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#00d4ff,#0891b2);color:#04101f;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;flex:0 0 auto}
+  .kc-user-meta{display:flex;flex-direction:column;line-height:1.25;align-items:flex-start}
+  .kc-user-meta .user-name{font-size:12px}
+  .kc-user-role{font-size:10px;color:var(--text-muted);letter-spacing:.5px}
+  .kc-icon-btn{background:rgba(0,212,255,.08);border:1px solid var(--border);color:var(--cyan-light);width:28px;height:28px;border-radius:4px;cursor:pointer;font-size:13px;line-height:1;display:none;align-items:center;justify-content:center;transition:all .2s;font-family:inherit;padding:0}
+  .kc-icon-btn:hover{border-color:var(--cyan);box-shadow:0 0 8px rgba(0,212,255,.4)}
+  #btnLogout{display:inline-flex}
+  #btnLogout:hover{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.1)}
+  body.role-admin #btnUsers{display:inline-flex}
+  .kc-user-modal{width:760px!important;max-width:94vw}
+  .kc-perm-banner{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.5);color:#fbbf24;border-radius:4px;padding:8px 12px;font-size:12px;line-height:1.6;margin:4px 0 12px}
+  .kc-user-table{width:100%;border-collapse:collapse;font-size:12px;color:var(--text)}
+  .kc-user-table th{background:rgba(0,212,255,.1);color:var(--cyan-light);font-weight:500;padding:8px 10px;text-align:left;border-bottom:1px solid var(--cyan);white-space:nowrap}
+  .kc-user-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+  .kc-user-table tbody tr:hover td{background:rgba(0,212,255,.05)}
+  .kc-role-badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:500;white-space:nowrap}
+  .kc-role-badge.admin{background:rgba(239,68,68,.18);color:#fca5a5;border:1px solid rgba(239,68,68,.4)}
+  .kc-role-badge.editor{background:rgba(34,197,94,.16);color:#86efac;border:1px solid rgba(34,197,94,.4)}
+  .kc-role-badge.viewer{background:rgba(59,130,246,.18);color:#93c5fd;border:1px solid rgba(59,130,246,.4)}
+  .kc-op-btn{background:transparent;border:1px solid var(--border);color:var(--cyan-light);padding:3px 8px;border-radius:3px;cursor:pointer;font-size:11px;margin:0 4px 2px 0;font-family:inherit;white-space:nowrap}
+  .kc-op-btn:hover{border-color:var(--cyan)}
+  .kc-op-btn.danger{color:#fca5a5;border-color:rgba(239,68,68,.5)}
+  .kc-op-btn.danger:hover{background:rgba(239,68,68,.15)}
+  select.modal-input{background:#0a1930;color:var(--cyan-light);font-family:inherit}
+  body.role-viewer #btnImport,body.role-viewer #btnSaveCloud{display:none!important}
 
   /* Mode Banner */
   .mode-banner{background:linear-gradient(90deg,rgba(245,158,11,.15),rgba(245,158,11,.05));border:1px solid rgba(245,158,11,.5);border-radius:4px;padding:6px 14px;text-align:center;font-size:12px;color:var(--orange);letter-spacing:2px;margin-bottom:4px;flex-shrink:0}
@@ -404,10 +431,14 @@
     <div class="header-title" data-inspector-id="html:e79a0f13:21">库位看板</div>
     <div class="header-deco r" data-inspector-id="html:e79a0f13:22"></div>
     <div class="header-time" id="headerTime" data-inspector-id="html:e79a0f13:23">2026-09-18 12:27:10 星期五</div>
-    <div class="user-bar" id="userBar" style="display: flex;" data-inspector-id="html:e79a0f13:24">
-      <span data-inspector-id="html:e79a0f13:25">用户:</span>
-      <span class="user-name" id="currentUserName" data-inspector-id="html:e79a0f13:26">管理员 (admin)</span>
-      <button class="logout-btn" id="btnLogout" type="button" data-inspector-id="html:e79a0f13:27">退出</button>
+    <div class="user-bar" id="userBar" style="display: flex;">
+      <span class="kc-avatar" id="kcAvatar">管</span>
+      <span class="kc-user-meta">
+        <span class="user-name" id="currentUserName">管理员</span>
+        <span class="kc-user-role" id="currentUserRole">系统管理员</span>
+      </span>
+      <button class="kc-icon-btn" id="btnUsers" type="button" title="用户管理">&#128101;</button>
+      <button class="kc-icon-btn" id="btnLogout" type="button" title="退出登录">&#9211;</button>
     </div>
   </div>
 
@@ -1164,6 +1195,54 @@
 <!-- Import Modal -->
 <div class="modal-overlay import-modal" id="importModal" data-inspector-id="html:e79a0f13:152">
   <div class="modal" id="importModalContent" data-inspector-id="html:e79a0f13:153"></div>
+</div>
+
+<!-- 用户管理 Modal -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal kc-user-modal" style="max-height:90vh;overflow-y:auto">
+    <div class="modal-title">用户管理</div>
+    <div class="kc-perm-banner">权限说明：<b>管理员</b>可管理所有数据和用户；<b>编辑员</b>可录入、修改数据；<b>查看员</b>仅可查看，不能入库、出库、导入或保存到云端。新增/修改用户后会自动同步到云端，其他设备用该账号即可登录。</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:6px 0 10px">
+      <span style="color:var(--cyan-light);font-size:14px;letter-spacing:1px">用户列表</span>
+      <button class="modal-btn modal-btn-primary" id="btnAddUser" type="button" style="padding:6px 14px;font-size:12px">&#10133; 新增用户</button>
+    </div>
+    <table class="kc-user-table" id="userTableWrap"></table>
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="modal-btn modal-btn-secondary" id="btnCloseUsers" type="button">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 用户表单 Modal -->
+<div class="modal-overlay" id="userFormModal">
+  <div class="modal" style="width:420px;max-width:94vw">
+    <div class="modal-title" id="userFormTitle">新增用户</div>
+    <input type="hidden" id="uf-id">
+    <div class="modal-field">
+      <label class="modal-label">用户名 <span class="modal-hint">（登录账号）</span></label>
+      <input type="text" class="modal-input" id="uf-username" autocomplete="off" placeholder="请输入登录用户名">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">姓名</label>
+      <input type="text" class="modal-input" id="uf-name" autocomplete="off" placeholder="请输入姓名">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">角色</label>
+      <select class="modal-input" id="uf-role">
+        <option value="admin">管理员（全部权限 + 用户管理）</option>
+        <option value="editor" selected>编辑员（录入 / 修改数据）</option>
+        <option value="viewer">查看员（仅查看）</option>
+      </select>
+    </div>
+    <div class="modal-field" id="uf-pw-group">
+      <label class="modal-label">初始密码 <span class="modal-hint">（至少 6 位）</span></label>
+      <input type="text" class="modal-input" id="uf-password" autocomplete="new-password" placeholder="至少 6 位">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-secondary" id="uf-cancel" type="button">取消</button>
+      <button class="modal-btn modal-btn-primary" id="uf-save" type="button">保存</button>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -2500,6 +2579,7 @@ function updateModalQtyFields() {
   }
 }
 function openEditModal(loc) {
+  if (typeof isReadOnly === 'function' && isReadOnly()) return;
   currentEditCell = loc;
   currentSelectedBatchIndex = 0;
   isNewBatchMode = false; // 每次打开弹窗重置新增批次模式
@@ -3368,9 +3448,10 @@ function hideLoginMask() {
   document.getElementById('userBar').style.display = 'flex';
 }
 function updateUserDisplay() {
+  if (typeof kcApplyUserUI === 'function') { kcApplyUserUI(); return; }
   if (_user && _user.username) {
-    const el = document.getElementById('userName');
-    if (el) el.textContent = _user.username;
+    const el = document.getElementById('currentUserName');
+    if (el) el.textContent = _user.name || _user.username;
   }
 }
 async function doLogin() {
@@ -3386,12 +3467,28 @@ async function doLogin() {
 
   try {
     if (_mode === 'standalone') {
-      // Standalone mode: check local accounts
-      const localUser = LOCAL_ACCOUNTS[username];
-      if (!localUser || localUser.password !== password) {
+      // Standalone mode: check cloud-synced managed users, fallback to built-in local accounts
+      let dbUser = null;
+      try { dbUser = kcEnsureUsers().find(u => u.username === username); } catch (e) { dbUser = null; }
+      const localFallback = !dbUser ? LOCAL_ACCOUNTS[username] : null;
+      if (dbUser) {
+        if (dbUser.password !== password) {
+          throw new Error('账号或密码错误');
+        }
+        _user = { id: dbUser.id, username: username, name: dbUser.name, role: dbUser.role || 'editor' };
+        try {
+          const _d = loadLocalData();
+          const _t = (_d.users || []).find(x => x.username === username);
+          if (_t) { _t.lastLogin = Date.now(); saveLocalData(_d); }
+        } catch (e) {}
+      } else if (localFallback) {
+        if (localFallback.password !== password) {
+          throw new Error('账号或密码错误');
+        }
+        _user = { username: username, name: localFallback.name, role: localFallback.role === 'admin' ? 'admin' : 'editor' };
+      } else {
         throw new Error('账号或密码错误');
       }
-      _user = { username, name: localUser.name, role: localUser.role };
       sessionStorage.setItem('wh_user', JSON.stringify(_user));
       // Clear any stale server token when logging in via standalone mode
       if (_token) { _token = null; sessionStorage.removeItem('wh_token'); }
@@ -3399,6 +3496,7 @@ async function doLogin() {
       updateUserDisplay();
       invalidateCache();
       loadData().then(() => { renderAll(); }).catch(()=>{});
+      if (dbUser) { pushCloud().catch(()=>{}); }
 
     } else {
       // Server mode: try API first
@@ -3444,6 +3542,139 @@ async function doLogout() {
   try { await api('/api/logout', { method: 'POST' }); } catch {}
   handleUnauthorized();
 }
+
+/* ===== 多用户管理（对齐生产系统，users 随云端 db 整体同步） ===== */
+const KC_ROLE_TEXT = { admin: '系统管理员', editor: '数据编辑员', viewer: '数据查看员', user: '操作员' };
+const KC_ROLE_SHORT = { admin: '管理员', editor: '编辑员', viewer: '查看员', user: '操作员' };
+function kcEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function kcFmtDate(d) { const p = n => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); }
+function kcFmtDateTime(v) { if (!v) return ''; const d = new Date(v); if (isNaN(d.getTime())) return ''; const p = n => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
+function kcDefaultUsers() {
+  const today = kcFmtDate(new Date());
+  return [
+    { id: 'u1', username: 'admin', password: '123456', name: '管理员', role: 'admin', createdAt: today, lastLogin: null },
+    { id: 'u2', username: 'operator', password: '123456', name: '操作员', role: 'editor', createdAt: today, lastLogin: null }
+  ];
+}
+function kcEnsureUsers() {
+  const data = loadLocalData();
+  if (!Array.isArray(data.users) || !data.users.length) {
+    data.users = kcDefaultUsers();
+    saveLocalData(data);
+    return data.users;
+  }
+  let changed = false;
+  data.users.forEach(u => {
+    if (!u.id) { u.id = 'u_' + Date.now() + Math.floor(Math.random() * 1000); changed = true; }
+    if (!u.role) { u.role = 'editor'; changed = true; }
+    if (!u.createdAt) { u.createdAt = kcFmtDate(new Date()); changed = true; }
+  });
+  if (changed) saveLocalData(data);
+  return data.users;
+}
+function isReadOnly() { return !!(_user && _user.role === 'viewer'); }
+function kcApplyUserUI() {
+  if (!_user) return;
+  const nameEl = document.getElementById('currentUserName');
+  const roleEl = document.getElementById('currentUserRole');
+  const avEl = document.getElementById('kcAvatar');
+  const dispName = _user.name || _user.username || '';
+  if (nameEl) nameEl.textContent = dispName;
+  if (roleEl) roleEl.textContent = KC_ROLE_TEXT[_user.role] || _user.role || '';
+  if (avEl) avEl.textContent = (dispName || '?').charAt(0);
+  document.body.classList.remove('role-admin', 'role-editor', 'role-viewer');
+  const r = _user.role === 'admin' ? 'admin' : (_user.role === 'viewer' ? 'viewer' : 'editor');
+  document.body.classList.add('role-' + r);
+}
+function kcOpenUsers() { renderKcUserTable(); document.getElementById('userModal').classList.add('active'); }
+function kcCloseUsers() { document.getElementById('userModal').classList.remove('active'); }
+function renderKcUserTable() {
+  const users = kcEnsureUsers();
+  const rows = users.map(u => {
+    const ops = u.id === 'u1'
+      ? '<span style="color:var(--text-muted);font-size:11px">内置管理员不可删</span>'
+      : '<button class="kc-op-btn" type="button" onclick="kcEditUser(\'' + u.id + '\')">✏️ 编辑</button>'
+        + '<button class="kc-op-btn" type="button" onclick="kcResetPw(\'' + u.id + '\')">🔑 重置密码</button>'
+        + '<button class="kc-op-btn danger" type="button" onclick="kcDelUser(\'' + u.id + '\')">🗑️ 删除</button>';
+    return '<tr><td><b>' + kcEsc(u.username) + '</b></td><td>' + kcEsc(u.name) + '</td><td><span class="kc-role-badge ' + (u.role || 'editor') + '">' + (KC_ROLE_SHORT[u.role] || u.role) + '</span></td><td>' + (kcFmtDateTime(u.lastLogin) || '—') + '</td><td>' + (u.createdAt || '—') + '</td><td>' + ops + '</td></tr>';
+  }).join('');
+  document.getElementById('userTableWrap').innerHTML =
+    '<thead><tr><th>用户名</th><th>姓名</th><th>角色</th><th>最后登录</th><th>创建时间</th><th style="width:240px">操作</th></tr></thead><tbody>' + rows + '</tbody>';
+}
+function kcOpenForm(id) {
+  document.getElementById('uf-id').value = '';
+  document.getElementById('uf-username').value = '';
+  document.getElementById('uf-name').value = '';
+  document.getElementById('uf-role').value = 'editor';
+  document.getElementById('uf-password').value = '';
+  document.getElementById('uf-pw-group').style.display = '';
+  if (id) {
+    const u = kcEnsureUsers().find(x => x.id === id);
+    if (!u) return;
+    document.getElementById('userFormTitle').textContent = '编辑用户';
+    document.getElementById('uf-id').value = u.id;
+    document.getElementById('uf-username').value = u.username;
+    document.getElementById('uf-name').value = u.name;
+    document.getElementById('uf-role').value = (u.role === 'admin' || u.role === 'viewer') ? u.role : 'editor';
+    document.getElementById('uf-pw-group').style.display = 'none';
+  } else {
+    document.getElementById('userFormTitle').textContent = '新增用户';
+  }
+  document.getElementById('userFormModal').classList.add('active');
+}
+function kcEditUser(id) { kcOpenForm(id); }
+function kcCloseForm() { document.getElementById('userFormModal').classList.remove('active'); }
+async function kcSaveUser() {
+  const id = document.getElementById('uf-id').value;
+  const username = document.getElementById('uf-username').value.trim();
+  const name = document.getElementById('uf-name').value.trim();
+  const role = document.getElementById('uf-role').value;
+  const password = document.getElementById('uf-password').value;
+  if (!username || !name) { alert('用户名和姓名必填'); return; }
+  const data = loadLocalData();
+  kcEnsureUsers();
+  const users = data.users;
+  if (id) {
+    const u = users.find(x => x.id === id);
+    if (!u) { alert('用户不存在'); return; }
+    if (users.some(x => x.username === username && x.id !== id)) { alert('用户名已存在'); return; }
+    u.username = username; u.name = name; u.role = role;
+  } else {
+    if (!password || password.length < 6) { alert('初始密码至少 6 位'); return; }
+    if (users.some(x => x.username === username)) { alert('用户名已存在'); return; }
+    users.push({ id: 'u_' + Date.now(), username: username, name: name, role: role, password: password, createdAt: kcFmtDate(new Date()), lastLogin: null });
+  }
+  saveLocalData(data);
+  let ok = true;
+  try { ok = await pushCloud(); } catch (e) { ok = false; }
+  renderKcUserTable();
+  kcCloseForm();
+  alert((id ? '用户信息已更新' : '用户创建成功') + (ok ? '，并已同步到云端' : '，但云端同步失败（本地已保存，请点页面顶部“保存”重试）'));
+}
+function kcResetPw(id) {
+  const u = kcEnsureUsers().find(x => x.id === id);
+  if (!u) return;
+  if (!confirm('确认将用户「' + u.name + '（' + u.username + '）」的密码重置为 123456 吗？')) return;
+  const data = loadLocalData();
+  const t = data.users.find(x => x.id === id);
+  if (!t) return;
+  t.password = '123456';
+  saveLocalData(data);
+  pushCloud().then(() => renderKcUserTable()).catch(() => renderKcUserTable());
+  alert('密码已重置为 123456');
+}
+function kcDelUser(id) {
+  if (id === 'u1') { alert('内置管理员账号不可删除'); return; }
+  const u = kcEnsureUsers().find(x => x.id === id);
+  if (!u) return;
+  if (!confirm('确认删除用户「' + u.name + '（' + u.username + '）」吗？\n删除后该账号将无法登录。')) return;
+  const data = loadLocalData();
+  data.users = data.users.filter(x => x.id !== id);
+  saveLocalData(data);
+  pushCloud().catch(() => {});
+  renderKcUserTable();
+  alert('用户已删除');
+}
 async function migrateOldLocalData() {
   const old = localStorage.getItem(STORAGE_KEY);
   if (!old) { alert('本机未检测到旧数据'); return; }
@@ -3487,6 +3718,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (e.key === 'Enter') document.getElementById('loginPass').focus();
   });
   document.getElementById('btnLogout').addEventListener('click', doLogout);
+  const _kcBtnUsers = document.getElementById('btnUsers');
+  if (_kcBtnUsers) _kcBtnUsers.addEventListener('click', kcOpenUsers);
+  const _kcBtnClose = document.getElementById('btnCloseUsers');
+  if (_kcBtnClose) _kcBtnClose.addEventListener('click', kcCloseUsers);
+  const _kcBtnAdd = document.getElementById('btnAddUser');
+  if (_kcBtnAdd) _kcBtnAdd.addEventListener('click', () => kcOpenForm(null));
+  const _kcUfCancel = document.getElementById('uf-cancel');
+  if (_kcUfCancel) _kcUfCancel.addEventListener('click', kcCloseForm);
+  const _kcUfSave = document.getElementById('uf-save');
+  if (_kcUfSave) _kcUfSave.addEventListener('click', kcSaveUser);
+  const _kcUm = document.getElementById('userModal');
+  if (_kcUm) _kcUm.addEventListener('click', e => { if (e.target.id === 'userModal') kcCloseUsers(); });
+  const _kcUfm = document.getElementById('userFormModal');
+  if (_kcUfm) _kcUfm.addEventListener('click', e => { if (e.target.id === 'userFormModal') kcCloseForm(); });
 // document.getElementById('linkMigrate').addEventListener('click', migrateOldLocalData); // 已删除导入旧数据功能
 
   // Tab 切换：半成品仓 / 装配成品仓
@@ -3525,8 +3770,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (_mode === 'standalone') {
     // Standalone mode: check for saved user session
     if (_user) {
-      // Verify user is valid in local accounts
-      const localAccount = LOCAL_ACCOUNTS[_user.username];
+      // Verify user is valid in cloud-synced managed users or built-in local accounts
+      let dbUser = null;
+      try { dbUser = kcEnsureUsers().find(u => u.username === _user.username); } catch (e) { dbUser = null; }
+      const localAccount = dbUser || LOCAL_ACCOUNTS[_user.username];
+      if (dbUser) { _user = { id: dbUser.id, username: dbUser.username, name: dbUser.name, role: dbUser.role || 'editor' }; }
       if (localAccount) {
         hideLoginMask();
         updateUserDisplay();
