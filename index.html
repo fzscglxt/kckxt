@@ -418,7 +418,7 @@
     </div>
     <div class="login-error" id="loginError" data-inspector-id="html:e79a0f13:12"></div>
     <button class="login-btn" id="btnLogin" type="button" data-inspector-id="html:e79a0f13:13" data-scu-ref="e2">登 录</button>
-    <div class="login-hint" data-inspector-id="html:e79a0f13:14">默认账号 admin / 123456</div>
+    <div class="login-hint" data-inspector-id="html:e79a0f13:14">默认账号 admin / 88888888aa</div>
     <div class="login-mode-hint server" id="loginModeHint" data-inspector-id="html:e79a0f13:15">已同步云端最新数据</div>
   </div>
 </div>
@@ -1359,8 +1359,8 @@ try { _user = JSON.parse(sessionStorage.getItem('wh_user') || 'null'); } catch {
 
 /* ===== Local accounts (fallback when server unavailable) ===== */
 const LOCAL_ACCOUNTS = {
-  admin: { password: '123456', name: '管理员', role: 'admin' },
-  operator: { password: '123456', name: '操作员', role: 'user' }
+  admin: { password: '88888888aa', name: '管理员', role: 'admin' },
+  operator: { password: '88888888aa', name: '操作员', role: 'user' }
 };
 
 /* ===== Standalone data persistence (localStorage) ===== */
@@ -3552,8 +3552,8 @@ function kcFmtDateTime(v) { if (!v) return ''; const d = new Date(v); if (isNaN(
 function kcDefaultUsers() {
   const today = kcFmtDate(new Date());
   return [
-    { id: 'u1', username: 'admin', password: '123456', name: '管理员', role: 'admin', createdAt: today, lastLogin: null },
-    { id: 'u2', username: 'operator', password: '123456', name: '操作员', role: 'editor', createdAt: today, lastLogin: null }
+    { id: 'u1', username: 'admin', password: '88888888aa', name: '管理员', role: 'admin', createdAt: today, lastLogin: null },
+    { id: 'u2', username: 'operator', password: '88888888aa', name: '操作员', role: 'editor', createdAt: today, lastLogin: null }
   ];
 }
 function kcEnsureUsers() {
@@ -3654,14 +3654,14 @@ async function kcSaveUser() {
 function kcResetPw(id) {
   const u = kcEnsureUsers().find(x => x.id === id);
   if (!u) return;
-  if (!confirm('确认将用户「' + u.name + '（' + u.username + '）」的密码重置为 123456 吗？')) return;
+  if (!confirm('确认将用户「' + u.name + '（' + u.username + '）」的密码重置为 88888888aa 吗？')) return;
   const data = loadLocalData();
   const t = data.users.find(x => x.id === id);
   if (!t) return;
-  t.password = '123456';
+  t.password = '88888888aa';
   saveLocalData(data);
   pushCloud().then(() => renderKcUserTable()).catch(() => renderKcUserTable());
-  alert('密码已重置为 123456');
+  alert('密码已重置为 88888888aa');
 }
 function kcDelUser(id) {
   if (id === 'u1') { alert('内置管理员账号不可删除'); return; }
