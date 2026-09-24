@@ -393,6 +393,8 @@
   .kc-op-btn.danger:hover{background:rgba(239,68,68,.15)}
   select.modal-input{background:#0a1930;color:var(--cyan-light);font-family:inherit}
   body.role-viewer #btnImport,body.role-viewer #btnSaveCloud{display:none!important}
+  /* ===== 大屏看板（Kiosk）只读模式：隐藏用户栏与保存/导入/备份按钮 ===== */
+  body.kiosk-mode #userBar,body.kiosk-mode #btnSaveCloud,body.kiosk-mode #btnImport,body.kiosk-mode #btnBackupLocal{display:none!important}
 
   /* Mode Banner */
   .mode-banner{background:linear-gradient(90deg,rgba(245,158,11,.15),rgba(245,158,11,.05));border:1px solid rgba(245,158,11,.5);border-radius:4px;padding:6px 14px;text-align:center;font-size:12px;color:var(--orange);letter-spacing:2px;margin-bottom:4px;flex-shrink:0}
@@ -3434,6 +3436,9 @@ function updateTime() {
 }
 
 /* ===== Login / Auth ===== */
+function isKioskMode() {
+  try { return new URLSearchParams(location.search).has('kiosk'); } catch (e) { return false; }
+}
 function showLoginMask() {
   document.getElementById('loginOverlay').classList.remove('hide');
   document.querySelector('.page').style.display = 'none';
@@ -3584,6 +3589,7 @@ function kcApplyUserUI() {
   document.body.classList.remove('role-admin', 'role-editor', 'role-viewer');
   const r = _user.role === 'admin' ? 'admin' : (_user.role === 'viewer' ? 'viewer' : 'editor');
   document.body.classList.add('role-' + r);
+  if (_user.kiosk || isKioskMode()) document.body.classList.add('kiosk-mode'); else document.body.classList.remove('kiosk-mode');
 }
 function kcOpenUsers() { renderKcUserTable(); document.getElementById('userModal').classList.add('active'); }
 function kcCloseUsers() { document.getElementById('userModal').classList.remove('active'); }
@@ -3767,12 +3773,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   // 探测登录状态
   if (_mode === 'standalone') {
+    // 大屏 Kiosk：无登录态时自动以只读查看员身份进入
+    if (!_user && isKioskMode()) {
+      _user = { id: 'kiosk_screen', username: 'kiosk_viewer', name: '大屏看板', role: 'viewer', kiosk: true };
+      try { sessionStorage.setItem('wh_user', JSON.stringify(_user)); } catch (e) {}
+    }
     // Standalone mode: check for saved user session
     if (_user) {
       // Verify user is valid in cloud-synced managed users or built-in local accounts
       let dbUser = null;
       try { dbUser = kcEnsureUsers().find(u => u.username === _user.username); } catch (e) { dbUser = null; }
-      const localAccount = dbUser || LOCAL_ACCOUNTS[_user.username];
+      const localAccount = dbUser || LOCAL_ACCOUNTS[_user.username] || (_user.kiosk ? _user : null);
       if (dbUser) { _user = { id: dbUser.id, username: dbUser.username, name: dbUser.name, role: dbUser.role || 'editor' }; }
       if (localAccount) {
         hideLoginMask();
