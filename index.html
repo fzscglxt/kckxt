@@ -3773,8 +3773,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   // 探测登录状态
   if (_mode === 'standalone') {
-    // 大屏 Kiosk：无登录态时自动以只读查看员身份进入
-    if (!_user && isKioskMode()) {
+    // 大屏 Kiosk：检测到 kiosk 参数即无条件强制只读 viewer（覆盖任何残留会话，保证大屏永远只读）
+    if (isKioskMode()) {
       _user = { id: 'kiosk_screen', username: 'kiosk_viewer', name: '大屏看板', role: 'viewer', kiosk: true };
       try { sessionStorage.setItem('wh_user', JSON.stringify(_user)); } catch (e) {}
     }
