@@ -2344,7 +2344,8 @@ let _whCarouselTimer = null, _whCarouselBusy = false;
 function startWarehouseCarouselIfNeeded() {
   let p;
   try { p = new URLSearchParams(location.search); } catch (e) { return; }
-  if (!p.has('warehouse') || _whCarouselTimer) return;
+  if (p.get('kiosk') !== 'warehouse' && !p.has('warehouse')) return;
+  if (_whCarouselTimer) return;
   const order = ['semi', 'assembly', 'selfmade'];
   const dwell = parseInt(p.get('dwell')) || 60000;
   _whCarouselTimer = setInterval(() => {
