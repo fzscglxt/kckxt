@@ -2338,6 +2338,26 @@ function switchWarehouse(whType) {
   });
 }
 
+/* Kiosk 三仓库自动轮播：半成品仓(semi) → 装配成品仓(assembly) → 自制成品仓(selfmade)，循环。
+   入口 URL 需含 warehouse 参数，例如 ?kiosk=warehouse；可用 &dwell=毫秒 设置停留（默认60秒） */
+let _whCarouselTimer = null, _whCarouselBusy = false;
+function startWarehouseCarouselIfNeeded() {
+  let p;
+  try { p = new URLSearchParams(location.search); } catch (e) { return; }
+  if (!p.has('warehouse') || _whCarouselTimer) return;
+  const order = ['semi', 'assembly', 'selfmade'];
+  const dwell = parseInt(p.get('dwell')) || 60000;
+  _whCarouselTimer = setInterval(() => {
+    if (_whCarouselBusy) return;
+    const ci = order.indexOf(_currentSet);
+    const next = order[((ci < 0 ? 0 : ci) + 1) % order.length];
+    if (next === _currentSet) return;
+    _whCarouselBusy = true;
+    try { switchWarehouse(next); } catch (e) {}
+    setTimeout(() => { _whCarouselBusy = false; }, 5000);
+  }, dwell);
+}
+
 function renderWarehouse() {
   if (!_cache) return;
   const { cells } = _cache;
@@ -3804,7 +3824,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           u.searchParams.delete('reset');
           window.history.replaceState({}, '', u);
         }
-        loadData().then(() => { renderAll(); }).catch(()=>{});
+        loadData().then(() => { renderAll(); startWarehouseCarouselIfNeeded(); }).catch(()=>{});
 
       } else {
         showLoginMask();
