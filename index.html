@@ -2340,7 +2340,7 @@ function switchWarehouse(whType) {
 
 /* Kiosk 四仓库自动轮播：半成品仓(semi) → 装配成品仓(assembly) → 自制成品仓(selfmade) → 原材料仓(raw)，循环。
    入口 URL 需含 warehouse 参数，例如 ?kiosk=warehouse；可用 &dwell=毫秒 设置停留（默认60秒） */
-let _whCarouselTimer = null, _whCarouselBusy = false;
+let _whCarouselTimer = null;
 function startWarehouseCarouselIfNeeded() {
   let p;
   try { p = new URLSearchParams(location.search); } catch (e) { return; }
@@ -2348,15 +2348,14 @@ function startWarehouseCarouselIfNeeded() {
   if (_whCarouselTimer) return;
   const order = ['semi', 'assembly', 'selfmade', 'raw'];
   const dwell = parseInt(p.get('dwell')) || 60000;
-  _whCarouselTimer = setInterval(() => {
-    if (_whCarouselBusy) return;
+  // 递归调度：每次切换后精确等待 dwell 再切下一个，无 busy 锁/无竞态，四仓库都完整停留
+  const tick = () => {
     const ci = order.indexOf(_currentSet);
     const next = order[((ci < 0 ? 0 : ci) + 1) % order.length];
-    if (next === _currentSet) return;
-    _whCarouselBusy = true;
     try { switchWarehouse(next); } catch (e) {}
-    setTimeout(() => { _whCarouselBusy = false; }, 5000);
-  }, dwell);
+    _whCarouselTimer = setTimeout(tick, dwell);
+  };
+  _whCarouselTimer = setTimeout(tick, dwell);
 }
 
 function renderWarehouse() {
