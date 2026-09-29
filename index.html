@@ -395,6 +395,7 @@
   body.role-viewer #btnImport,body.role-viewer #btnSaveCloud{display:none!important}
   /* ===== 大屏看板（Kiosk）只读模式：隐藏用户栏与保存/导入/备份按钮 ===== */
   body.kiosk-mode #userBar,body.kiosk-mode #btnSaveCloud,body.kiosk-mode #btnImport,body.kiosk-mode #btnBackupLocal{display:none!important}
+  body.kiosk-fixedwh .panel-tabs{display:none!important}
 
   /* Mode Banner */
   .mode-banner{background:linear-gradient(90deg,rgba(245,158,11,.15),rgba(245,158,11,.05));border:1px solid rgba(245,158,11,.5);border-radius:4px;padding:6px 14px;text-align:center;font-size:12px;color:var(--orange);letter-spacing:2px;margin-bottom:4px;flex-shrink:0}
@@ -3824,6 +3825,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           u.searchParams.delete('reset');
           window.history.replaceState({}, '', u);
         }
+        (function(){ try{ var p=new URLSearchParams(location.search); var wh=p.get('wh'); if(wh && WH_TYPES.includes(wh)){ _currentSet=wh; document.body.classList.add('kiosk-fixedwh'); } }catch(e){} })();
         loadData().then(() => { renderAll(); startWarehouseCarouselIfNeeded(); }).catch(()=>{});
 
       } else {
