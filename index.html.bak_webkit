@@ -4014,7 +4014,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         }
       }
-      if ((document.activeElement||{}).tagName !== 'BUTTON') doInbound();
+      if (document.activeElement?.tagName !== 'BUTTON') doInbound();
     }
   });
 
