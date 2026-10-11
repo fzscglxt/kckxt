@@ -93,6 +93,8 @@
   /* Cells - each cell is independent */
   .w-cell{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;padding:3px 4px 3px;background:var(--bg-empty);border-bottom:1px solid var(--border);border-radius:0;font-size:10px;color:var(--text-dim);font-family:'Consolas',monospace;cursor:pointer;transition:all .12s;user-select:none;position:relative;min-width:42px;gap:1px;overflow:hidden}
   .w-cell:hover{background:rgba(14,165,233,.12);z-index:10}
+  .section-body .w-cell.w-cell-blank{background:transparent;border-top:none;border-bottom:none;cursor:default;pointer-events:none}
+  .section-body .w-cell.w-cell-blank:hover{background:transparent;z-index:auto}
   .w-cell .w-code{font-size:9px;font-weight:500;text-align:center;line-height:1.1;padding-top:1px;opacity:.85}
   .w-cell .w-product{font-size:10px;color:#fff;text-align:center;line-height:1.15;font-weight:bold;font-family:"Microsoft YaHei",sans-serif;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;min-height:22px;align-content:center;padding:1px 0}
   .w-cell .w-batches{display:flex;flex-direction:column;gap:1px;margin-top:auto}
@@ -1867,8 +1869,9 @@ async function standaloneApi(path, opts = {}) {
       const allKeys = [];
       sections.forEach(sec => {
         for (let i = 1; i <= sec.count; i++) {
-          allKeys.push(`${sec.p1}${i}`);
-          if (!sec.single) allKeys.push(`${sec.p2}${i}`);
+          const _k1 = `${sec.p1}${i}`;
+          if (!isSectionBlankKey(sec, _k1)) allKeys.push(_k1);
+          if (!sec.single) { const _k2 = `${sec.p2}${i}`; if (!isSectionBlankKey(sec, _k2)) allKeys.push(_k2); }
         }
       });
       const usedKeys = new Set(Object.keys(slot.cells).filter(k => cellHasBatch(slot.cells[k])));
@@ -1968,6 +1971,7 @@ const whSections = [
   { name: '', p1: 'I', p2: 'J', count: 8 },
   { name: '', p1: 'K', p2: 'L', count: 8 },
   { name: '', p1: 'M', p2: 'N', count: 8 },
+  { name: '', p1: 'O', p2: 'P', count: 8, blank: ['O1'] },
 ];
 
 const whAssemblySections = [
@@ -2011,11 +2015,13 @@ function cellKeysForPair(sec, i) {
   if (sec.count2 != null && i > sec.count2) return [`${sec.p1}${i}`];
   return [`${sec.p1}${i}`, `${sec.p2}${i}`];
 }
+function isSectionBlankKey(sec, k) { return Array.isArray(sec.blank) && sec.blank.indexOf(k) !== -1; }
 function totalCellsOfSections(sections) {
   let n = 0;
   sections.forEach(sec => {
     if (sec.single) { n += sec.count; }
     else { n += sec.count + (sec.count2 != null ? sec.count2 : sec.count); }
+    if (Array.isArray(sec.blank)) n -= sec.blank.length;
   });
   return n;
 }
@@ -2402,7 +2408,11 @@ function renderWarehouse() {
         const keys = cellKeysForPair(sec, i);
         keys.forEach(k => {
           // 双列 section 时取对应列字母；单列时直接用 sec.p1
-          cellsHtml.push(buildCellHtml(k, cells[k], k));
+          if (isSectionBlankKey(sec, k)) {
+            cellsHtml.push('<div class="w-cell w-cell-blank"></div>');
+          } else {
+            cellsHtml.push(buildCellHtml(k, cells[k], k));
+          }
         });
       }
       mainHtml += `
@@ -2417,7 +2427,7 @@ function renderWarehouse() {
 
   container.innerHTML = layoutHtml;
 
-  container.querySelectorAll('.w-cell').forEach(cell => {
+  container.querySelectorAll('.w-cell[data-key]').forEach(cell => {
     cell.addEventListener('click', onCellClick);
     cell.addEventListener('mouseenter', onCellHover);
     cell.addEventListener('mousemove', onCellMove);
@@ -3396,7 +3406,7 @@ function getAllCellKeys() {
   const keys = [];
   currentSections().forEach(sec => {
     for (let i = 1; i <= sec.count; i++) {
-      cellKeysForPair(sec, i).forEach(k => keys.push(k));
+      cellKeysForPair(sec, i).forEach(k => { if (!isSectionBlankKey(sec, k)) keys.push(k); });
     }
   });
   return keys;
