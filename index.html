@@ -1590,16 +1590,34 @@ function _canWriteCloud() {
   return true;
 }
 function _setCloudStatus(state) {
+  // 兼容历史 cloudStatus 元素（若存在）
   const el = document.getElementById('cloudStatus');
-  if (!el) return;
-  const map = {
-    pending: '有改动，正在自动保存到云端…',
-    saving: '正在保存到云端…',
-    synced: '已自动同步到云端',
-    error: '云端暂未连接，改动已存本机，将自动重试',
-    conflict: '数据已被他人更新，已刷新为最新'
-  };
-  if (map[state]) el.textContent = map[state];
+  if (el) {
+    const map = {
+      pending: '有改动，正在自动保存到云端…',
+      saving: '正在保存到云端…',
+      synced: '已自动同步到云端',
+      error: '云端暂未连接，改动已存本机，将自动重试',
+      conflict: '数据已被他人更新，已刷新为最新'
+    };
+    if (map[state]) el.textContent = map[state];
+  }
+  // 顶部保存按钮给出可见反馈（库位页面实际可见的云状态入口）
+  const btn = document.getElementById('btnSaveCloud');
+  if (btn) {
+    if (state === 'pending' || state === 'saving') btn.textContent = '⏳ 自动保存中…';
+    else if (state === 'synced') {
+      btn.textContent = '✅ 已同步云端';
+      setTimeout(() => { if (!_cloudDirty) btn.textContent = '💾 保存'; }, 1500);
+    }
+    else if (state === 'error') btn.textContent = '⚠️ 本机已存·重试中';
+    else if (state === 'conflict') btn.textContent = '💾 保存';
+  }
+  const ss = document.getElementById('syncStatus');
+  if (ss && state === 'synced') {
+    ss.style.display = 'inline-block';
+    setTimeout(() => { if (!_cloudDirty) ss.style.display = 'none'; }, 1500);
+  }
 }
 // 业务数据变化后调用：合并 1.5s 内的连续录入，只推送一次
 function scheduleCloudAutoSave() {
