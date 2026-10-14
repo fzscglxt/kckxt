@@ -1402,7 +1402,11 @@ function loadLocalData() {
 function saveLocalData(data) {
   WH_TYPES.forEach(t => { if (data[t]) data[t].updatedAt = Date.now(); });
   try { localStorage.setItem(STANDALONE_KEY, JSON.stringify(data)); } catch {}
+  // 业务数据写入本机后，自动防抖上云（系统内部用 _applyingCloud 包裹的云端回写除外）
+  try { if (!_applyingCloud) scheduleCloudAutoSave(); } catch (e) {}
 }
+// 正在应用云端数据时置为 true，期间 saveLocalData 不触发回推，避免循环
+let _applyingCloud = false;
 function buildDemoData() {
   const now = Date.now();
   const day = 86400000;
@@ -1568,6 +1572,136 @@ async function pushCloud() {
     throw e;
   }
 }
+
+/* ===== 业务数据自动上云（防抖）：录入即存云，避免刷新丢失 ===== */
+const CLOUD_EVER_PULLED_KEY = 'warehouse_cloud_ever_pulled';
+let _cloudAutoTimer = null;   // 防抖定时器
+let _cloudRetryTimer = null;  // 失败重试定时器
+let _cloudPushing = false;    // 推送并发锁
+let _cloudDirty = false;      // 是否有未推送的本机改动
+const CLOUD_AUTO_DELAY = 1500;
+const CLOUD_RETRY_DELAY = 30000;
+
+// 只判断"是否允许写入云端"（大屏 kiosk / 只读账号 / 未登录不允许）；是否就绪由 flush 处理
+function _canWriteCloud() {
+  if (typeof _user !== 'undefined' && _user) {
+    if (_user.kiosk || _user.role === 'viewer') return false;
+  }
+  return true;
+}
+function _setCloudStatus(state) {
+  const el = document.getElementById('cloudStatus');
+  if (!el) return;
+  const map = {
+    pending: '有改动，正在自动保存到云端…',
+    saving: '正在保存到云端…',
+    synced: '已自动同步到云端',
+    error: '云端暂未连接，改动已存本机，将自动重试',
+    conflict: '数据已被他人更新，已刷新为最新'
+  };
+  if (map[state]) el.textContent = map[state];
+}
+// 业务数据变化后调用：合并 1.5s 内的连续录入，只推送一次
+function scheduleCloudAutoSave() {
+  if (!_canWriteCloud()) return;
+  _cloudDirty = true;
+  if (_cloudRetryTimer) { clearTimeout(_cloudRetryTimer); _cloudRetryTimer = null; }
+  if (_cloudAutoTimer) clearTimeout(_cloudAutoTimer);
+  _cloudAutoTimer = setTimeout(() => { flushCloudAutoSave(); }, CLOUD_AUTO_DELAY);
+  _setCloudStatus('pending');
+}
+// 云端未就绪（启动时断网）时补拉一次；返回 true 表示就绪
+async function _ensureCloudReady() {
+  if (cloud.ready) return true;
+  const resp = await fetch('/api/db', { method: 'GET' });
+  const d = await resp.json();
+  if (!d || !d.db) throw new Error('云端无数据');
+  cloud.version = d.version || 0;
+  cloudVersion = d.version || 0;
+  const everPulled = localStorage.getItem(CLOUD_EVER_PULLED_KEY) === '1';
+  if (!everPulled) {
+    // 本机是首次进入的演示数据、不可信：以云端为准，放弃本机录入，避免演示数据覆盖云端
+    _applyingCloud = true;
+    try { localStorage.setItem(STANDALONE_KEY, JSON.stringify(d.db)); } catch (e) {}
+    _applyingCloud = false;
+    _cache = null;
+    if (typeof renderAll === 'function') renderAll();
+    _cloudDirty = false;
+    cloud.ready = true;
+    try { localStorage.setItem(CLOUD_EVER_PULLED_KEY, '1'); } catch (e) {}
+    return false;
+  }
+  // 本机数据源自云端（可能含离线录入）：不覆盖本机，仅更新版本后继续推送
+  cloud.ready = true;
+  return true;
+}
+// 立即把本机改动推送云端（手动按钮 / 防抖到期 / 离开页面前调用）
+async function flushCloudAutoSave() {
+  if (_cloudAutoTimer) { clearTimeout(_cloudAutoTimer); _cloudAutoTimer = null; }
+  if (!_canWriteCloud()) { _cloudDirty = false; return false; }
+  if (_cloudPushing) { // 推送中又有新改动，稍后再推一次
+    _cloudDirty = true;
+    if (_cloudAutoTimer) clearTimeout(_cloudAutoTimer);
+    _cloudAutoTimer = setTimeout(() => flushCloudAutoSave(), CLOUD_AUTO_DELAY);
+    return false;
+  }
+  // 云端未就绪（启动断网）：先补拉；仍断网则 30s 后重试，本机改动保留
+  if (!cloud.ready) {
+    try {
+      const ready = await _ensureCloudReady();
+      if (!ready) return false; // 首次进入，已用云端数据替换本机演示数据
+    } catch (e) {
+      _cloudDirty = true;
+      _setCloudStatus('error');
+      if (_cloudRetryTimer) clearTimeout(_cloudRetryTimer);
+      _cloudRetryTimer = setTimeout(() => flushCloudAutoSave(), CLOUD_RETRY_DELAY);
+      return false;
+    }
+  }
+  _cloudPushing = true;
+  _cloudDirty = false;
+  _setCloudStatus('saving');
+  try {
+    const ok = await pushCloud();
+    if (ok) {
+      _setCloudStatus('synced');
+      try { if (window.localBackup && localBackup.dirHandle) localBackup.save(); } catch (e) {}
+      return true;
+    }
+    // 冲突：pushCloud 内部已把本机刷新为云端最新，避免覆盖他人数据
+    _setCloudStatus('conflict');
+    return false;
+  } catch (e) {
+    console.warn('自动上云失败，本机改动保留，稍后重试', e);
+    _cloudDirty = true;
+    _setCloudStatus('error');
+    if (_cloudRetryTimer) clearTimeout(_cloudRetryTimer);
+    _cloudRetryTimer = setTimeout(() => flushCloudAutoSave(), CLOUD_RETRY_DELAY);
+    return false;
+  } finally {
+    _cloudPushing = false;
+  }
+}
+// 关闭/切走页面前的最后兜底：用 keepalive 尽力把未推送改动发出去
+function _cloudBeaconFlush() {
+  if (!_cloudDirty || !_canWriteCloud() || !cloud.ready) return;
+  try {
+    const data = loadLocalData();
+    fetch('/api/db', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'If-Version': String(cloudVersion) },
+      body: JSON.stringify({ db: data, savedBy: (_user && _user.username) || '' }),
+      keepalive: true
+    }).catch(() => {});
+  } catch (e) {}
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && _cloudDirty && _canWriteCloud()) {
+    flushCloudAutoSave();
+    _cloudBeaconFlush();
+  }
+});
+window.addEventListener('pagehide', () => { if (_cloudDirty) _cloudBeaconFlush(); });
 
 // 本地自动备份
 const localBackup = {
@@ -3788,7 +3922,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!cloudDB[t].cells) cloudDB[t].cells = {};
         if (!cloudDB[t].records) cloudDB[t].records = [];
       });
+      _applyingCloud = true;
       localStorage.setItem(STANDALONE_KEY, JSON.stringify(cloudDB));
+      _applyingCloud = false;
+      try { localStorage.setItem(CLOUD_EVER_PULLED_KEY, '1'); } catch (e) {}
       const verify = JSON.parse(localStorage.getItem(STANDALONE_KEY));
       console.log('云端数据拉取成功，semi cells:', Object.keys(verify.semi.cells).length);
       const statusEl = document.getElementById('cloudStatus');
@@ -3884,19 +4021,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btnImport').addEventListener('click', onImportClick);
   document.getElementById('importFile').addEventListener('change', onFileSelected);
 
-  // 保存到云端
+  // 保存到云端（手动立即保存，取消防抖立即推送；无改动时也可强制推一次）
   document.getElementById('btnSaveCloud').addEventListener('click', async () => {
     const statusEl = document.getElementById('syncStatus');
     const btn = document.getElementById('btnSaveCloud');
     btn.disabled = true;
     btn.textContent = '保存中...';
+    let ok = false;
     try {
-      await pushCloud();
+      if (_cloudDirty || _cloudAutoTimer) {
+        ok = await flushCloudAutoSave();
+      } else {
+        try { ok = await pushCloud(); } catch (e) { ok = false; alert('保存失败：' + e.message); }
+      }
       if (window.localBackup && localBackup.dirHandle) localBackup.save();
-      // 自动备份下载
+      // 自动备份提示
       statusEl.style.display = 'inline-block';
       setTimeout(() => statusEl.style.display = 'none', 3000);
-      btn.textContent = '保存成功';
+      btn.textContent = ok ? '保存成功' : '保存失败';
       setTimeout(() => btn.textContent = '保存', 2000);
     } catch(e) {
       btn.textContent = '保存失败';
