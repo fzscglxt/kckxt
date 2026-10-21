@@ -1274,6 +1274,7 @@ const cloud = {
   remoteUpdatedAt: 0,
   ready: false,
   pending: false,
+  bootstrapped: false, // 首次成功拉取云端最新前禁止自动推送，避免启动/登录阶段旧数据覆盖云端
   saveTimer: null
 };
 
@@ -1582,8 +1583,9 @@ let _cloudDirty = false;      // 是否有未推送的本机改动
 const CLOUD_AUTO_DELAY = 1500;
 const CLOUD_RETRY_DELAY = 30000;
 
-// 只判断"是否允许写入云端"（大屏 kiosk / 只读账号 / 未登录不允许）；是否就绪由 flush 处理
+// 只判断"是否允许写入云端"（大屏 kiosk / 只读账号 / 未登录不允许；首次成功拉取云端最新前也不允许）；是否就绪由 flush 处理
 function _canWriteCloud() {
+  if (!cloud.bootstrapped) return false; // 启动/登录引导未完成前禁止自动推送，避免本地旧数据覆盖云端
   if (typeof _user !== 'undefined' && _user) {
     if (_user.kiosk || _user.role === 'viewer') return false;
   }
@@ -3656,7 +3658,10 @@ async function doLogin() {
     if (_mode === 'standalone') {
       // Standalone mode: check cloud-synced managed users, fallback to built-in local accounts
       let dbUser = null;
+      // 登录时补全用户字段属于确定性初始化，不触发回推
+      _applyingCloud = true;
       try { dbUser = kcEnsureUsers().find(u => u.username === username); } catch (e) { dbUser = null; }
+      _applyingCloud = false;
       const localFallback = !dbUser ? LOCAL_ACCOUNTS[username] : null;
       if (dbUser) {
         if (dbUser.password !== password) {
@@ -3666,7 +3671,11 @@ async function doLogin() {
         try {
           const _d = loadLocalData();
           const _t = (_d.users || []).find(x => x.username === username);
-          if (_t) { _t.lastLogin = Date.now(); saveLocalData(_d); }
+          if (_t) {
+            _t.lastLogin = Date.now();
+            // 登录仅本地记录登录时间：不调 saveLocalData（不更新各仓 updatedAt、不触发防抖推送），避免登录瞬间把本地整库推上云
+            try { localStorage.setItem(STANDALONE_KEY, JSON.stringify(_d)); } catch (e2) {}
+          }
         } catch (e) {}
       } else if (localFallback) {
         if (localFallback.password !== password) {
@@ -3683,7 +3692,7 @@ async function doLogin() {
       updateUserDisplay();
       invalidateCache();
       loadData().then(() => { renderAll(); }).catch(()=>{});
-      if (dbUser) { pushCloud().catch(()=>{}); }
+      // 登录本身不触发整库推送；云端数据在登录页启动时已拉取，之后只有用户真正编辑才会防抖上云
 
     } else {
       // Server mode: try API first
@@ -3952,10 +3961,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.log('云端暂无数据，使用本地数据');
     }
     cloud.ready = true;
+    // 成功拉取（无论云端有无数据）：引导完成，打开自动推送，清掉启动阶段残留的本地改动标记
+    cloud.bootstrapped = true;
+    _cloudDirty = false;
+    if (_cloudAutoTimer) { clearTimeout(_cloudAutoTimer); _cloudAutoTimer = null; }
+    if (_cloudRetryTimer) { clearTimeout(_cloudRetryTimer); _cloudRetryTimer = null; }
   } catch(e) {
     console.warn('云端连接失败，使用本地缓存数据', e);
     const statusEl = document.getElementById('cloudStatus');
     if (statusEl) statusEl.textContent = '本地模式（云端连接失败）';
+    // 断网兜底：本机曾成功拉取过云端（本地数据源自云端）则视为已引导，允许离线编辑、恢复后重推；首次即断网保持未引导
+    if (localStorage.getItem(CLOUD_EVER_PULLED_KEY) === '1') cloud.bootstrapped = true;
   }
   // 探测登录状态
   if (_mode === 'standalone') {
@@ -3968,7 +3984,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (_user) {
       // Verify user is valid in cloud-synced managed users or built-in local accounts
       let dbUser = null;
+      // 会话恢复时补全用户字段属于确定性初始化，不触发回推
+      _applyingCloud = true;
       try { dbUser = kcEnsureUsers().find(u => u.username === _user.username); } catch (e) { dbUser = null; }
+      _applyingCloud = false;
       const localAccount = dbUser || LOCAL_ACCOUNTS[_user.username] || (_user.kiosk ? _user : null);
       if (dbUser) { _user = { id: dbUser.id, username: dbUser.username, name: dbUser.name, role: dbUser.role || 'editor' }; }
       if (localAccount) {
