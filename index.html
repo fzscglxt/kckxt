@@ -340,6 +340,11 @@
     .w-cell .w-product{font-size:8px;min-height:16px;-webkit-line-clamp:1}
     .side-zones{width:34px}
     .side-zone{font-size:9px;letter-spacing:1px}
+    /* 弹窗与商品下拉在窄屏自适应，避免横向溢出；输入框字号≥16px 防止 iOS 聚焦放大 */
+    .modal{width:calc(100vw - 28px);max-width:360px;padding:18px 16px}
+    .modal-input,.modal-input::placeholder{font-size:16px}
+    .product-dropdown{max-width:calc(100vw - 28px)}
+    .modal-btn{min-height:44px}
   }
 
   /* ===== Login Overlay ===== */
