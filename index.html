@@ -259,7 +259,7 @@
   .product-dropdown::-webkit-scrollbar{width:5px}
   .product-dropdown::-webkit-scrollbar-thumb{background:var(--cyan-dim);border-radius:3px}
   .product-dropdown::-webkit-scrollbar-track{background:rgba(10,22,40,.4)}
-  .product-item{padding:8px 12px;border-bottom:1px solid rgba(26,58,92,.4);cursor:pointer;transition:background .12s;display:flex;flex-direction:column;gap:3px}
+  .product-item{padding:10px 12px;border-bottom:1px solid rgba(26,58,92,.4);cursor:pointer;transition:background .12s;display:flex;flex-direction:column;gap:3px;min-height:44px;box-sizing:border-box;touch-action:manipulation}
   .product-item:last-child{border-bottom:none}
   .product-item:hover,.product-item.active{background:rgba(0,212,255,.12)}
   .product-item-head{display:flex;align-items:center;gap:8px;font-size:12px}
@@ -1942,7 +1942,9 @@ async function standaloneApi(path, opts = {}) {
         cell.batches[batchIndex].quantity = (cell.batches[batchIndex].quantity || 0) + q;
         mode = 'add_qty';
       } else {
-        const sameIdx = cellBatches(cell).findIndex(b => b.batch === batch);
+        // 仅当"批次号 + 商品编码"都相同时才累加数量；名称相同但编码不同
+        // （如左/右件、不同型号）必须作为不同批次分别存放，不能默认合并
+        const sameIdx = cellBatches(cell).findIndex(b => b.batch === batch && (b.code || '') === (code || ''));
         if (sameIdx >= 0) {
           cell.batches[sameIdx].quantity += q;
           mode = 'merge';
@@ -2054,7 +2056,8 @@ async function standaloneApi(path, opts = {}) {
         const isNewCell = !cellHasBatch(cell);
         usedKeys.add(cellKey);
 
-        const sameIdx = cellBatches(cell).findIndex(b => b.batch === batch);
+        // 同样按"批次号 + 编码"识别，名称相同但编码不同的导入数据不合并
+        const sameIdx = cellBatches(cell).findIndex(b => b.batch === batch && (b.code || '') === (code || ''));
         if (sameIdx >= 0) {
           cell.batches[sameIdx].quantity += quantity;
         } else {
@@ -2457,6 +2460,65 @@ const productDB = [
   { code: '102003', name: 'PM.JS292764.white.ColorSaint', spec: '', type: '实物', category: '硅胶' }
 ];;
 
+/* ===== External Product CSV（外部「商品数据.csv」，运行时加载，用户维护后随部署生效） ===== */
+let externalProductDB = [];
+let _csvLoaded = false;
+let _csvLoadingPromise = null;
+
+function decodeBytesSmart(bytes) {
+  // UTF-8 BOM
+  if (bytes.length >= 3 && bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
+    return new TextDecoder('utf-8').decode(bytes.subarray(3));
+  }
+  // 先按严格 UTF-8 解码，失败则按 GBK 解码（当前「商品数据.csv」为 GBK 编码）
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  } catch (e) {
+    return new TextDecoder('gbk').decode(bytes);
+  }
+}
+
+function loadProductsFromCSV() {
+  if (_csvLoadingPromise) return _csvLoadingPromise;
+  _csvLoadingPromise = (async () => {
+    try {
+      // 同源固定路径，时间戳防缓存；CSV 需随站点一起部署到根目录
+      const resp = await fetch('商品数据.csv?ts=' + Date.now(), { cache: 'no-store' });
+      if (!resp.ok) throw new Error('CSV HTTP ' + resp.status);
+      const buf = await resp.arrayBuffer();
+      const text = decodeBytesSmart(new Uint8Array(buf));
+      const { headers, rows } = parseCSV(text);
+      const iCode = detectColumn(headers, ['商品编码', '物料编码', '编码', 'code', '物料号']);
+      const iName = detectColumn(headers, ['商品名称', '名称', 'name']);
+      const iSpec = detectColumn(headers, ['规格型号', '规格', '型号', 'spec']);
+      const iType = detectColumn(headers, ['商品类型', '类型', 'type']);
+      const iCat = detectColumn(headers, ['商品分类', '分类', 'category']);
+      const list = [];
+      rows.forEach(r => {
+        const cell = i => (i >= 0 ? String(r[i] == null ? '' : r[i]) : '');
+        const code = cell(iCode).trim();
+        if (!code) return;
+        list.push({
+          code,
+          name: cell(iName).trim(),
+          spec: cell(iSpec).trim(),
+          type: cell(iType).trim() || '实物',
+          category: cell(iCat).trim()
+        });
+      });
+      externalProductDB = list;
+      _csvLoaded = true;
+      return list;
+    } catch (e) {
+      // 加载失败不阻塞系统，回退到内置 productDB
+      externalProductDB = [];
+      _csvLoaded = true;
+      return [];
+    }
+  })();
+  return _csvLoadingPromise;
+}
+
 /* ===== Render Warehouse ===== */
 function buildCellHtml(key, cell, label) {
   const batches = cellBatches(cell);
@@ -2837,6 +2899,19 @@ function getProductList() {
   const map = new Map();
   productDB.forEach(p => map.set(p.code, { ...p, _stockWhs: new Set() }));
 
+  // 外部「商品数据.csv」为用户维护的商品目录：同编码用 CSV 信息更新，CSV 独有编码新增
+  externalProductDB.forEach(p => {
+    let ex = map.get(p.code);
+    if (!ex) {
+      map.set(p.code, { ...p, _stockWhs: new Set() });
+    } else {
+      if (p.name) ex.name = p.name;
+      if (p.spec) ex.spec = p.spec;
+      if (p.category) ex.category = p.category;
+      if (p.type) ex.type = p.type;
+    }
+  });
+
   const mergeCells = (cells, wh) => {
     if (!cells) return;
     Object.values(cells).forEach(cell => {
@@ -2958,7 +3033,9 @@ function renderProductDropdown(query) {
   }).join('');
   dd.classList.add('show');
   dd.querySelectorAll('.product-item').forEach(item => {
-    item.addEventListener('mousedown', e => {
+    // 用 pointerdown 统一鼠标/触摸/触控笔：触摸时 pointerdown 在 touchstart 阶段、
+    // 早于搜索框 blur 触发（blur 后 150ms 才关闭下拉），桌面与手机都能可靠选中
+    item.addEventListener('pointerdown', e => {
       e.preventDefault();
       const code = item.dataset.code;
       const p = getProductList().find(x => x.code === code);
@@ -3936,10 +4013,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     tab.addEventListener('click', () => switchWarehouse(tab.dataset.wh));
   });
 
-  // 自动探测服务器可用性
-  // 启动时从云端拉取数据
-  // 启动时从云端拉取数据
+  // 启动时从云端拉取数据，同时加载外部「商品数据.csv」商品目录（登录前就绪）
   try {
+    await loadProductsFromCSV();
     console.log('正在从云端拉取最新数据...');
     const cloudDB = await pullCloudDB();
     if (cloudDB) {
